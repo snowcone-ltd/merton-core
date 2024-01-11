@@ -1,9 +1,9 @@
-[submodule "Genesis-Plus-GX/Genesis-Plus-GX"]
-	path = Genesis-Plus-GX/Genesis-Plus-GX
+[submodule "genesis-plus-gx/Genesis-Plus-GX"]
+	path = genesis-plus-gx/Genesis-Plus-GX
 	url = git@github.com:ekeeke/Genesis-Plus-GX
 	branch = master
-[submodule "Mesen2/Mesen2"]
-	path = Mesen2/Mesen2
+[submodule "mesen2/Mesen2"]
+	path = mesen2/Mesen2
 	url = git@github.com:snowcone-ltd/Mesen2
 	branch = triangle
 [submodule "mgba/mgba"]
