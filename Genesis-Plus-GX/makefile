@@ -77,6 +77,7 @@ FLAGS = \
 
 INCLUDES = \
 	-I. \
+	-I.. \
 	-I../../libmatoya/src \
 	-I$(PROJ)/core \
 	-I$(PROJ)/core/cart_hw \
