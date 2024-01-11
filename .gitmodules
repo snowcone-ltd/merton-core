@@ -6,3 +6,19 @@
 	path = Mesen2/Mesen2
 	url = git@github.com:snowcone-ltd/Mesen2
 	branch = triangle
+[submodule "mgba/mgba"]
+	path = mgba/mgba
+	url = git@github.com:mgba-emu/mgba
+	branch = master
+[submodule "stella/stella"]
+	path = stella/stella
+	url = git@github.com:stella-emu/stella
+	branch = master
+[submodule "duckstation/duckstation"]
+	path = duckstation/duckstation
+	url = git@github.com:stenzek/duckstation
+	branch = master
+[submodule "mupen64-plus/mupen64plus-core"]
+	path = mupen64-plus/mupen64plus-core
+	url = git@github.com:mupen64plus/mupen64plus-core
+	branch = master
