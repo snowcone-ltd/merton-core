@@ -5,4 +5,4 @@
 [submodule "Mesen2/Mesen2"]
 	path = Mesen2/Mesen2
 	url = git@github.com:snowcone-ltd/Mesen2
-	branch = backend
+	branch = triangle
