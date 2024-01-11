@@ -1,0 +1,10 @@
+*.exp
+*.lib
+*.dll
+*.dylib
+*.so
+
+*.obj
+*.o
+
+core.h
