@@ -34,6 +34,7 @@ struct Core {
 	struct mRumble rumble;
 	struct mRotationSource rotation;
 	struct GBALuminanceSource lux;
+	struct mLogger logger;
 
 	int32_t l;
 	int32_t r;
@@ -77,6 +78,24 @@ static void core_log(const char *fmt, ...)
 	}
 
 	va_end(arg);
+}
+
+static void core_mgba_log(struct mLogger *logger, int category, enum mLogLevel level, const char *format, va_list args)
+{
+	if (!CORE_LOG_FUNC)
+		return;
+
+	// TODO This generates tons of spam, better filters?
+	if (level == mLOG_GAME_ERROR || level == mLOG_INFO || level == mLOG_DEBUG)
+		return;
+
+	char msg[512];
+	vsnprintf(msg, 512, format, args);
+
+	char wnl[512];
+	snprintf(wnl, 512, "%s\n", msg);
+
+	CORE_LOG_FUNC(wnl, CORE_LOG_OPAQUE);
 }
 
 static uint8_t core_read_luminance(struct GBALuminanceSource *lux)
@@ -137,6 +156,9 @@ Core *CoreLoad(const char *systemDir, const char *saveDir)
 	ctx->lux.sample = core_luminance_sample;
 
 	ctx->settings.lpass = 60;
+
+	ctx->logger.log = core_mgba_log;
+	mLogSetDefaultLogger(&ctx->logger);
 
 	return ctx;
 }
