@@ -34,6 +34,13 @@ struct Core {
 	struct mRumble rumble;
 	struct mRotationSource rotation;
 	struct GBALuminanceSource lux;
+
+	int32_t l;
+	int32_t r;
+
+	struct {
+		uint8_t lpass;
+	} settings;
 };
 
 static CoreLogFunc CORE_LOG_FUNC;
@@ -129,6 +136,8 @@ Core *CoreLoad(const char *systemDir, const char *saveDir)
 	ctx->lux.readLuminance = core_read_luminance;
 	ctx->lux.sample = core_luminance_sample;
 
+	ctx->settings.lpass = 60;
+
 	return ctx;
 }
 
@@ -222,6 +231,7 @@ void CoreUnloadGame(Core *ctx)
 	ctx->core->deinit(ctx->core);
 
 	mappedMemoryFree(ctx->flash, GBA_SIZE_FLASH1M);
+	ctx->flash = NULL;
 
 	ctx->loaded = false;
 }
@@ -251,6 +261,20 @@ float CoreGetAspectRatio(Core *ctx)
 	return (float) width / height;
 }
 
+static void core_audio_filter(Core *ctx, uint8_t level, int16_t *buf, size_t count)
+{
+	int32_t a = level * 0x10000 / 100;
+	int32_t b = 0x10000 - a;
+
+	for (size_t x = 0, y = 0; x < count; x++, y += 2) {
+		ctx->l = (ctx->l * a + buf[y] * b) >> 16;
+		ctx->r = (ctx->r * a + buf[y + 1] * b) >> 16;
+
+		buf[y] = (int16_t) ctx->l;
+		buf[y + 1] = (int16_t) ctx->r;
+	}
+}
+
 void CoreRun(Core *ctx)
 {
 	if (!ctx || !ctx->loaded)
@@ -275,6 +299,9 @@ void CoreRun(Core *ctx)
 		if (available > 0) {
 			int frames = blip_read_samples(l, ctx->samples, SAMPLES_MAX, true);
 			blip_read_samples(r, ctx->samples + 1, SAMPLES_MAX, true);
+
+			if (ctx->settings.lpass > 0)
+				core_audio_filter(ctx, ctx->settings.lpass, ctx->samples, frames);
 
 			ctx->audio_func(ctx->samples, frames, SAMPLE_RATE, ctx->audio_opaque);
 		}
