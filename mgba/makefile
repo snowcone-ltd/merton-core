@@ -10,6 +10,7 @@ CORE_OBJS = \
 	$(PROJ)/src/core/interface.obj \
 	$(PROJ)/src/core/log.obj \
 	$(PROJ)/src/core/map-cache.obj \
+	$(PROJ)/src/core/serialize.obj \
 	$(PROJ)/src/core/sync.obj \
 	$(PROJ)/src/core/tile-cache.obj \
 	$(PROJ)/src/core/timing.obj
@@ -112,6 +113,7 @@ FLAGS = \
 	/wd4457 \
 	/wd4701 \
 	/wd4702 \
+	/wd4706 \
 	/wd4996 \
 	/volatile:iso \
 	/std:c11 \
@@ -137,9 +139,6 @@ LINK_FLAGS = \
 	/nologo \
 	/dll
 
-LIB_FLAGS = \
-	/nologo
-
 LIBS = \
 	libvcruntime.lib \
 	libucrt.lib \
@@ -153,11 +152,9 @@ LIBS = \
 !IFDEF DEBUG
 FLAGS = $(FLAGS) /Ob0 /Zi /Oy-
 LINK_FLAGS = $(LINK_FLAGS) /debug
-LIB_FLAGS = $(LIB_FLAGS) /debug
 !ELSE
 FLAGS = $(FLAGS) /O2 /GS- /Gw /GL
 LINK_FLAGS = $(LINK_FLAGS) /LTCG
-LIB_FLAGS = $(LIB_FLAGS) /LTCG
 !ENDIF
 
 !IFDEF EMU
@@ -174,12 +171,12 @@ all: clean clear
 	@nmake /nologo objs BASE=1
 	@nmake /nologo objs EMU=1
 	@nmake /nologo main-obj
-	link /out:$(NAME).dll $(LINK_FLAGS) *.obj base.lib emu.lib $(LIBS)
+	link /out:$(NAME).dll $(LINK_FLAGS) core.obj base.lib emu.lib $(LIBS)
 
 main-obj: clean-obj core.obj
 
 objs: clean-obj $(OBJS)
-	lib /out:$(LIB_NAME) $(LIB_FLAGS) *.obj
+	lib /nologo /out:$(LIB_NAME) *.obj
 
 clean-obj:
 	@-del /q *.obj 2>nul

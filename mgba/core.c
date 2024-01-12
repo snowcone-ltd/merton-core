@@ -6,12 +6,17 @@
 
 #include "mgba/include/mgba/core/core.h"
 #include "mgba/include/mgba/core/blip_buf.h"
+#include "mgba/include/mgba/core/serialize.h"
+#include "mgba/include/mgba/internal/gba/gba.h"
 #include "mgba/include/mgba/internal/gba/memory.h"
 #include "mgba/include/mgba/gba/interface.h"
 #include "mgba/include/mgba-util/memory.h"
 #include "mgba/include/mgba-util/vfs.h"
 
-#define SAMPLE_RATE 32768
+#define FRAME_WIDTH  256
+#define FRAME_HEIGHT 224
+#define SAMPLE_RATE  48000
+#define SAMPLES_MAX  0x4000
 
 struct Core {
 	struct mCore *core;
@@ -21,7 +26,11 @@ struct Core {
 	void *audio_opaque;
 	void *video_opaque;
 
-	color_t frame[224][256];
+	color_t frame[FRAME_HEIGHT][FRAME_WIDTH];
+	int16_t samples[SAMPLES_MAX];
+	uint32_t keys;
+
+	void *flash;
 	struct mRumble rumble;
 	struct mRotationSource rotation;
 	struct GBALuminanceSource lux;
@@ -65,33 +74,44 @@ static void core_log(const char *fmt, ...)
 
 static uint8_t core_read_luminance(struct GBALuminanceSource *lux)
 {
+	// TODO
+
 	return 0;
 }
 
 static void core_luminance_sample(struct GBALuminanceSource *lux)
 {
+	// TODO
 }
 
 static void core_set_rumble(struct mRumble *rumble, int enable)
 {
+	// TODO
 }
 
 static void core_rotation_sample(struct mRotationSource *source)
 {
+	// TODO
 }
 
 static int32_t core_read_tilt_x(struct mRotationSource *source)
 {
+	// TODO
+
 	return 0;
 }
 
 static int32_t core_read_tilt_y(struct mRotationSource *source)
 {
+	// TODO
+
 	return 0;
 }
 
 static int32_t core_read_gyro_z(struct mRotationSource *source)
 {
+	// TODO
+
 	return 0;
 }
 
@@ -118,6 +138,8 @@ void CoreUnload(Core **core)
 		return;
 
 	Core *ctx = *core;
+
+	CoreUnloadGame(ctx);
 
 	free(ctx);
 	*core = NULL;
@@ -158,13 +180,13 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 	ctx->core->init(ctx->core);
 
 	if (ctx->core->platform(ctx->core) != mPLATFORM_GBA) {
-		// XXX gogo free
+		rom->close(rom);
 		return false;
 	}
 
 	memset(ctx->frame, 0xFF, sizeof(ctx->frame));
-	ctx->core->setVideoBuffer(ctx->core, (color_t *) ctx->frame, 256);
-	ctx->core->setAudioBufferSize(ctx->core, 0x4000);
+	ctx->core->setVideoBuffer(ctx->core, (color_t *) ctx->frame, FRAME_WIDTH);
+	ctx->core->setAudioBufferSize(ctx->core, SAMPLES_MAX);
 
 	blip_set_rates(ctx->core->getAudioChannel(ctx->core, 0), ctx->core->frequency(ctx->core), SAMPLE_RATE);
 	blip_set_rates(ctx->core->getAudioChannel(ctx->core, 1), ctx->core->frequency(ctx->core), SAMPLE_RATE);
@@ -172,12 +194,19 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 	ctx->core->setPeripheral(ctx->core, mPERIPH_RUMBLE, &ctx->rumble);
 	ctx->core->setPeripheral(ctx->core, mPERIPH_ROTATION, &ctx->rotation);
 
-	void *flash = anonymousMemoryMap(GBA_SIZE_FLASH1M);
-	memset(flash, 0xFF, GBA_SIZE_FLASH1M);
+	ctx->flash = anonymousMemoryMap(GBA_SIZE_FLASH1M);
+	memset(ctx->flash, 0xFF, GBA_SIZE_FLASH1M);
 
 	ctx->core->loadROM(ctx->core, rom);
 	ctx->core->setPeripheral(ctx->core, mPERIPH_GBA_LUMINANCE, &ctx->lux);
 	ctx->core->reset(ctx->core);
+
+	if (saveData && saveDataSize > 0 && saveDataSize <= GBA_SIZE_FLASH1M)
+		memcpy(ctx->flash, saveData, saveDataSize);
+
+	struct VFile *sdf = VFileFromMemory(ctx->flash, GBA_SIZE_FLASH1M);
+	if (!ctx->core->loadSave(ctx->core, sdf))
+		sdf->close(sdf);
 
 	ctx->loaded = true;
 
@@ -186,6 +215,15 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 
 void CoreUnloadGame(Core *ctx)
 {
+	if (!ctx || !ctx->loaded)
+		return;
+
+	mCoreConfigDeinit(&ctx->core->config);
+	ctx->core->deinit(ctx->core);
+
+	mappedMemoryFree(ctx->flash, GBA_SIZE_FLASH1M);
+
+	ctx->loaded = false;
 }
 
 bool CoreGameIsLoaded(Core *ctx)
@@ -195,12 +233,22 @@ bool CoreGameIsLoaded(Core *ctx)
 
 double CoreGetFrameRate(Core *ctx)
 {
-	return 60.0;
+	if (!ctx || !ctx->loaded)
+		return 60.0;
+
+	return ctx->core->frequency(ctx->core) / (double) ctx->core->frameCycles(ctx->core);
 }
 
 float CoreGetAspectRatio(Core *ctx)
 {
-	return 1.0f;
+	if (!ctx || !ctx->loaded)
+		return 1.0f;
+
+	unsigned width = 0;
+	unsigned height = 0;
+	ctx->core->baseVideoSize(ctx->core, &width, &height);
+
+	return (float) width / height;
 }
 
 void CoreRun(Core *ctx)
@@ -216,20 +264,82 @@ void CoreRun(Core *ctx)
 
 	if (ctx->video_func)
 		ctx->video_func(ctx->frame, CORE_COLOR_FORMAT_B5G6R5,
-			width, height, width * 2, ctx->video_opaque);
+			width, height, FRAME_WIDTH * sizeof(color_t), ctx->video_opaque);
+
+	if (ctx->audio_func) {
+		blip_t *l = ctx->core->getAudioChannel(ctx->core, 0);
+		blip_t *r = ctx->core->getAudioChannel(ctx->core, 1);
+
+		int available = blip_samples_avail(l);
+
+		if (available > 0) {
+			int frames = blip_read_samples(l, ctx->samples, SAMPLES_MAX, true);
+			blip_read_samples(r, ctx->samples + 1, SAMPLES_MAX, true);
+
+			ctx->audio_func(ctx->samples, frames, SAMPLE_RATE, ctx->audio_opaque);
+		}
+	}
 }
 
 void *CoreGetSaveData(Core *ctx, size_t *size)
 {
-	return NULL;
+	if (!ctx || !ctx->loaded)
+		return NULL;
+
+	if (ctx->core->platform(ctx->core) != mPLATFORM_GBA)
+		return NULL;
+
+	struct GBA *gba = (struct GBA *) ctx->core->board;
+
+	if (gba->memory.savedata.type == SAVEDATA_AUTODETECT) {
+		*size = GBA_SIZE_FLASH1M;
+
+	} else {
+		*size = GBASavedataSize(&gba->memory.savedata);
+	}
+
+	void *sd = malloc(*size);
+	memcpy(sd, ctx->flash, *size);
+
+	return sd;
 }
 
 void CoreReset(Core *ctx)
 {
+	if (!ctx || !ctx->loaded)
+		return;
+
+	ctx->core->reset(ctx->core);
 }
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
+	if (!ctx || !ctx->loaded)
+		return;
+
+	uint32_t k = 0;
+
+	switch (button) {
+		case CORE_BUTTON_A:      k = 0x001; break;
+		case CORE_BUTTON_B:      k = 0x002; break;
+		case CORE_BUTTON_SELECT: k = 0x004; break;
+		case CORE_BUTTON_START:  k = 0x008; break;
+		case CORE_BUTTON_DPAD_R: k = 0x010; break;
+		case CORE_BUTTON_DPAD_L: k = 0x020; break;
+		case CORE_BUTTON_DPAD_U: k = 0x040; break;
+		case CORE_BUTTON_DPAD_D: k = 0x080; break;
+		case CORE_BUTTON_R:      k = 0x100; break;
+		case CORE_BUTTON_L:      k = 0x200; break;
+	}
+
+	if (pressed) {
+		ctx->keys |= k;
+
+	} else {
+		ctx->keys &= ~k;
+	}
+
+	ctx->core->setKeys(ctx->core, ctx->keys);
 }
 
 void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
@@ -238,12 +348,34 @@ void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 
 void *CoreGetState(Core *ctx, size_t *size)
 {
-	return NULL;
+	if (!ctx || !ctx->loaded)
+		return NULL;
+
+	struct VFile *vfm = VFileMemChunk(NULL, 0);
+	mCoreSaveStateNamed(ctx->core, vfm, SAVESTATE_SAVEDATA | SAVESTATE_RTC);
+
+	*size = vfm->size(vfm);
+
+	void *state = malloc(*size);
+
+	vfm->seek(vfm, 0, SEEK_SET);
+	vfm->read(vfm, state, *size);
+	vfm->close(vfm);
+
+	return state;
 }
 
 bool CoreSetState(Core *ctx, const void *state, size_t size)
 {
-	return false;
+	if (!ctx || !ctx->loaded)
+		return false;
+
+	struct VFile *vfm = VFileFromConstMemory(state, size);
+
+	bool success = mCoreLoadStateNamed(ctx->core, vfm, SAVESTATE_RTC);
+	vfm->close(vfm);
+
+	return success;
 }
 
 uint8_t CoreGetNumDisks(Core *ctx)
@@ -263,6 +395,8 @@ bool CoreSetDisk(Core *ctx, int8_t disk, const char *path)
 
 const CoreSetting *CoreGetAllSettings(Core *ctx, uint32_t *len)
 {
+	// TODO
+
 	*len = 0;
 
 	return NULL;
@@ -270,13 +404,17 @@ const CoreSetting *CoreGetAllSettings(Core *ctx, uint32_t *len)
 
 const char *CoreGetSetting(Core *ctx, const char *key)
 {
+	// TODO
+
 	return NULL;
 }
 
 void CoreSetSetting(Core *ctx, const char *key, const char *val)
 {
+	// TODO
 }
 
 void CoreResetSettings(Core *ctx)
 {
+	// TODO
 }

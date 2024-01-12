@@ -354,7 +354,7 @@ void CoreReset(Core *ctx)
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
-	if (player >= MAX_INPUTS)
+	if (!ctx || !ctx->loaded || player >= MAX_INPUTS)
 		return;
 
 	uint16 b = 0;
