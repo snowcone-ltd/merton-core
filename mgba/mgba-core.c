@@ -5,7 +5,13 @@
 #include <stdarg.h>
 
 #include "mgba/include/mgba/core/core.h"
+#include "mgba/include/mgba/core/blip_buf.h"
+#include "mgba/include/mgba/internal/gba/memory.h"
+#include "mgba/include/mgba/gba/interface.h"
+#include "mgba/include/mgba-util/memory.h"
 #include "mgba/include/mgba-util/vfs.h"
+
+#define SAMPLE_RATE 32768
 
 struct Core {
 	struct mCore *core;
@@ -14,6 +20,11 @@ struct Core {
 	CoreAudioFunc audio_func;
 	void *audio_opaque;
 	void *video_opaque;
+
+	color_t frame[224][256];
+	struct mRumble rumble;
+	struct mRotationSource rotation;
+	struct GBALuminanceSource lux;
 };
 
 static CoreLogFunc CORE_LOG_FUNC;
@@ -37,9 +48,51 @@ static void core_log(const char *fmt, ...)
 	va_end(arg);
 }
 
+static uint8_t core_read_luminance(struct GBALuminanceSource *lux)
+{
+	return 0;
+}
+
+static void core_luminance_sample(struct GBALuminanceSource *lux)
+{
+}
+
+static void core_set_rumble(struct mRumble *rumble, int enable)
+{
+}
+
+static void core_rotation_sample(struct mRotationSource *source)
+{
+}
+
+static int32_t core_read_tilt_x(struct mRotationSource *source)
+{
+	return 0;
+}
+
+static int32_t core_read_tilt_y(struct mRotationSource *source)
+{
+	return 0;
+}
+
+static int32_t core_read_gyro_z(struct mRotationSource *source)
+{
+	return 0;
+}
+
 Core *CoreLoad(const char *name, const char *systemDir, const char *saveDir)
 {
 	Core *ctx = calloc(1, sizeof(Core));
+
+	ctx->rumble.setRumble = core_set_rumble;
+
+	ctx->rotation.sample = core_rotation_sample;
+	ctx->rotation.readTiltX = core_read_tilt_x;
+	ctx->rotation.readTiltY = core_read_tilt_y;
+	ctx->rotation.readGyroZ = core_read_gyro_z;
+
+	ctx->lux.readLuminance = core_read_luminance;
+	ctx->lux.sample = core_luminance_sample;
 
 	return ctx;
 }
@@ -87,8 +140,33 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 	}
 
 	mCoreInitConfig(ctx->core, NULL);
+	ctx->core->init(ctx->core);
 
-	return false;
+	if (ctx->core->platform(ctx->core) != mPLATFORM_GBA) {
+		// XXX gogo free
+		return false;
+	}
+
+	memset(ctx->frame, 0xFF, sizeof(ctx->frame));
+	ctx->core->setVideoBuffer(ctx->core, (color_t *) ctx->frame, 256);
+	ctx->core->setAudioBufferSize(ctx->core, 0x4000);
+
+	blip_set_rates(ctx->core->getAudioChannel(ctx->core, 0), ctx->core->frequency(ctx->core), SAMPLE_RATE);
+	blip_set_rates(ctx->core->getAudioChannel(ctx->core, 1), ctx->core->frequency(ctx->core), SAMPLE_RATE);
+
+	ctx->core->setPeripheral(ctx->core, mPERIPH_RUMBLE, &ctx->rumble);
+	ctx->core->setPeripheral(ctx->core, mPERIPH_ROTATION, &ctx->rotation);
+
+	void *flash = anonymousMemoryMap(GBA_SIZE_FLASH1M);
+	memset(flash, 0xFF, GBA_SIZE_FLASH1M);
+
+	ctx->core->loadROM(ctx->core, rom);
+	ctx->core->setPeripheral(ctx->core, mPERIPH_GBA_LUMINANCE, &ctx->lux);
+	ctx->core->reset(ctx->core);
+
+	ctx->loaded = true;
+
+	return true;
 }
 
 void CoreUnloadGame(Core *ctx)
@@ -112,6 +190,18 @@ float CoreGetAspectRatio(Core *ctx)
 
 void CoreRun(Core *ctx)
 {
+	if (!ctx || !ctx->loaded)
+		return;
+
+	ctx->core->runFrame(ctx->core);
+
+	unsigned width = 0;
+	unsigned height = 0;
+	ctx->core->currentVideoSize(ctx->core, &width, &height);
+
+	if (ctx->video_func)
+		ctx->video_func(ctx->frame, CORE_COLOR_FORMAT_B5G6R5,
+			width, height, width * 2, ctx->video_opaque);
 }
 
 void *CoreGetSaveData(Core *ctx, size_t *size)
