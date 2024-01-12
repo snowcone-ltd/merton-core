@@ -80,7 +80,7 @@ static int32_t core_read_gyro_z(struct mRotationSource *source)
 	return 0;
 }
 
-Core *CoreLoad(const char *name, const char *systemDir, const char *saveDir)
+Core *CoreLoad(const char *systemDir, const char *saveDir)
 {
 	Core *ctx = calloc(1, sizeof(Core));
 

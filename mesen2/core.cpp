@@ -52,7 +52,7 @@ void sound_mixer_set_audio_func(CoreAudioFunc func, void *opaque);
 
 static void core_reset_settings(Core *ctx);
 
-Core *CoreLoad(const char *name, const char *system_dir, const char *save_dir)
+Core *CoreLoad(const char *system_dir, const char *save_dir)
 {
 	Core *ctx = (Core *) calloc(1, sizeof(Core));
 

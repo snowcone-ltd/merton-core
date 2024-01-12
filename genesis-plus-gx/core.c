@@ -143,7 +143,7 @@ static void core_reset_settings(void)
 		config.input[x].padtype = DEVICE_PAD2B | DEVICE_PAD3B | DEVICE_PAD6B;
 }
 
-Core *CoreLoad(const char *name, const char *systemDir, const char *saveDir)
+Core *CoreLoad(const char *systemDir, const char *saveDir)
 {
 	Core *ctx = calloc(1, sizeof(Core));
 
