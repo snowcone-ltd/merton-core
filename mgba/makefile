@@ -36,6 +36,9 @@ THIRD_PARTY_OBJS = \
 	$(PROJ)/src/third-party/blip_buf/blip_buf.obj \
 	$(PROJ)/src/third-party/inih/ini.obj
 
+GB_OBJS = \
+	$(PROJ)/src/gb/audio.obj
+
 ARM_OBJS = \
 	$(PROJ)/src/arm/arm.obj \
 	$(PROJ)/src/arm/decoder-arm.obj \
@@ -44,7 +47,6 @@ ARM_OBJS = \
 	$(PROJ)/src/arm/isa-thumb.obj
 
 GBA_OBJS = \
-	$(PROJ)/src/gb/_audio.obj \
 	$(PROJ)/src/gba/cart/ereader.obj \
 	$(PROJ)/src/gba/cart/gpio.obj \
 	$(PROJ)/src/gba/cart/matrix.obj \
@@ -52,7 +54,7 @@ GBA_OBJS = \
 	$(PROJ)/src/gba/cheats/codebreaker.obj \
 	$(PROJ)/src/gba/cheats/gameshark.obj \
 	$(PROJ)/src/gba/cheats/parv3.obj \
-	$(PROJ)/src/gba/renderers/_cache-set.obj \
+	$(PROJ)/src/gba/renderers/cache-set.obj \
 	$(PROJ)/src/gba/renderers/common.obj \
 	$(PROJ)/src/gba/renderers/software-bg.obj \
 	$(PROJ)/src/gba/renderers/software-mode0.obj \
@@ -61,27 +63,29 @@ GBA_OBJS = \
 	$(PROJ)/src/gba/sio/gbp.obj \
 	$(PROJ)/src/gba/audio.obj \
 	$(PROJ)/src/gba/bios.obj \
-	$(PROJ)/src/gba/_cheats.obj \
-	$(PROJ)/src/gba/_core.obj \
+	$(PROJ)/src/gba/cheats.obj \
+	$(PROJ)/src/gba/core.obj \
 	$(PROJ)/src/gba/dma.obj \
 	$(PROJ)/src/gba/gba.obj \
 	$(PROJ)/src/gba/hle-bios.obj \
 	$(PROJ)/src/gba/io.obj \
-	$(PROJ)/src/gba/_memory.obj \
+	$(PROJ)/src/gba/memory.obj \
 	$(PROJ)/src/gba/overrides.obj \
 	$(PROJ)/src/gba/savedata.obj \
-	$(PROJ)/src/gba/_serialize.obj \
+	$(PROJ)/src/gba/serialize.obj \
 	$(PROJ)/src/gba/sio.obj \
 	$(PROJ)/src/gba/timer.obj \
 	$(PROJ)/src/gba/video.obj
 
-OBJS = \
+BASE_OBJS = \
 	$(CORE_OBJS) \
 	$(THIRD_PARTY_OBJS) \
 	$(UTIL_OBJS) \
+	$(GB_OBJS)
+
+EMU_OBJS = \
 	$(ARM_OBJS) \
-	$(GBA_OBJS) \
-	mgba-core.obj
+	$(GBA_OBJS)
 
 FLAGS = \
 	/W4 \
@@ -133,6 +137,9 @@ LINK_FLAGS = \
 	/nologo \
 	/dll
 
+LIB_FLAGS = \
+	/nologo
+
 LIBS = \
 	libvcruntime.lib \
 	libucrt.lib \
@@ -146,18 +153,38 @@ LIBS = \
 !IFDEF DEBUG
 FLAGS = $(FLAGS) /Ob0 /Zi /Oy-
 LINK_FLAGS = $(LINK_FLAGS) /debug
+LIB_FLAGS = $(LIB_FLAGS) /debug
 !ELSE
 FLAGS = $(FLAGS) /O2 /GS- /Gw /GL
 LINK_FLAGS = $(LINK_FLAGS) /LTCG
+LIB_FLAGS = $(LIB_FLAGS) /LTCG
+!ENDIF
+
+!IFDEF EMU
+LIB_NAME = emu.lib
+OBJS = $(EMU_OBJS)
+!ELSE
+LIB_NAME = base.lib
+OBJS = $(BASE_OBJS)
 !ENDIF
 
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
 
-all: clean clear $(OBJS)
-	link /out:$(NAME).dll $(LINK_FLAGS) *.obj $(LIBS)
+all: clean clear
+	@nmake /nologo objs BASE=1
+	@nmake /nologo objs EMU=1
+	@nmake /nologo main-obj
+	link /out:$(NAME).dll $(LINK_FLAGS) *.obj base.lib emu.lib $(LIBS)
 
-clean:
+main-obj: clean-obj core.obj
+
+objs: clean-obj $(OBJS)
+	lib /out:$(LIB_NAME) $(LIB_FLAGS) *.obj
+
+clean-obj:
 	@-del /q *.obj 2>nul
+
+clean: clean-obj
 	@-del /q *.lib 2>nul
 	@-del /q *.dll 2>nul
 	@-del /q *.ilk 2>nul
