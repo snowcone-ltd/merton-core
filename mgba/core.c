@@ -50,21 +50,6 @@ static void *CORE_LOG_OPAQUE;
 const char * const projectName = "";
 const char * const projectVersion = "";
 
-int read(int const fd, void * const buffer, unsigned const buffer_size)
-{
-	return _read(fd, buffer, buffer_size);
-}
-
-int write(int fd, const void *buffer, unsigned int count)
-{
-	return _write(fd, buffer, count);
-}
-
-int close(int fd)
-{
-	return _close(fd);
-}
-
 static void core_log(const char *fmt, ...)
 {
 	va_list arg;

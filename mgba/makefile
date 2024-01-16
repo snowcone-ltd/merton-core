@@ -148,6 +148,7 @@ LIBS = \
 	shlwapi.lib \
 	ole32.lib \
 	ws2_32.lib \
+	oldnames.lib
 
 !IFDEF DEBUG
 FLAGS = $(FLAGS) /Ob0 /Zi /Oy-
