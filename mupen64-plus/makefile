@@ -70,7 +70,6 @@ CORE_OBJS = \
 	$(PROJ)/src/device/r4300/cp1.obj \
 	$(PROJ)/src/device/r4300/cp2.obj \
 	$(PROJ)/src/device/r4300/idec.obj \
-	$(PROJ)/src/device/r4300/instr_counters.obj \
 	$(PROJ)/src/device/r4300/interrupt.obj \
 	$(PROJ)/src/device/r4300/pure_interp.obj \
 	$(PROJ)/src/device/r4300/r4300_core.obj \
@@ -89,16 +88,13 @@ CORE_OBJS = \
 	$(PROJ)/src/main/cheat.obj \
 	$(PROJ)/src/main/eventloop.obj \
 	$(PROJ)/src/main/main.obj \
-	$(PROJ)/src/main/profile.obj \
 	$(PROJ)/src/main/rom.obj \
 	$(PROJ)/src/main/savestates.obj \
-	$(PROJ)/src/main/sdl_key_converter.obj \
 	$(PROJ)/src/main/util.obj \
 	$(PROJ)/src/osal/files_win32.obj \
 	$(PROJ)/src/plugin/dummy_audio.obj \
 	$(PROJ)/src/plugin/dummy_input.obj \
 	$(PROJ)/src/plugin/dummy_rsp.obj \
-	$(PROJ)/src/plugin/dummy_video.obj \
 	$(PROJ)/src/plugin/dummy_video.obj \
 	$(PROJ)/src/plugin/plugin.obj
 

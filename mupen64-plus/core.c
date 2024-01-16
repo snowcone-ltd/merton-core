@@ -216,7 +216,7 @@ void CoreRun(Core *ctx)
 	MTY_CondWait(CORE_COND, CORE_MUTEX, 200);
 
 	if (ctx->video_func && CORE_WIDTH > 0 && CORE_HEIGHT > 0)
-		ctx->video_func(CORE_FRAME, CORE_COLOR_FORMAT_BGRA,
+		ctx->video_func(CORE_FRAME, CORE_COLOR_FORMAT_RGBA,
 			CORE_WIDTH, CORE_HEIGHT, CORE_WIDTH * 4, ctx->video_opaque);
 
 	MTY_MutexUnlock(CORE_MUTEX);
