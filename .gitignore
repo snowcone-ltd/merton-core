@@ -1,10 +1,12 @@
+*.obj
 *.exp
 *.lib
 *.dll
+*.ilk
+*.pdb
+
 *.dylib
 *.so
-
-*.obj
 *.o
 
 core.h
