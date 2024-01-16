@@ -19,4 +19,6 @@
 #define FBRead RDP_FBRead
 #define FBGetFrameBufferInfo RDP_FBGetFrameBufferInfo
 
+#define gfx gfx_
+
 #include "../../../angrylion-rdp-plus/src/plugin/mupen64plus/gfx_m64p.c"

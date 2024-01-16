@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-static char PREFIX[32] = {0};
+static char PREFIX[32];
 
 void osal_dynlib_set_prefix(const char *prefix)
 {
@@ -22,5 +22,5 @@ void *osal_dynlib_getproc(m64p_dynlib_handle LibHandle, const char *pccProcedure
 	char name[1024];
 	snprintf(name, 1024, "%s%s", PREFIX, pccProcedureName);
 
-	return GetProcAddress(GetModuleHandle("mupen64plus.dll"), name);
+	return GetProcAddress(LibHandle, name);
 }

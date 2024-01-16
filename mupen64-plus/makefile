@@ -41,10 +41,6 @@ CORE_OBJS = \
 	$(PROJ)/src/backends/clock_ctime_plus_delta.obj \
 	$(PROJ)/src/backends/dummy_video_capture.obj \
 	$(PROJ)/src/backends/file_storage.obj \
-	$(PROJ)/src/debugger/dbg_breakpoints.obj \
-	$(PROJ)/src/debugger/dbg_debugger.obj \
-	$(PROJ)/src/debugger/dbg_decoder.obj \
-	$(PROJ)/src/debugger/dbg_memory.obj \
 	$(PROJ)/src/device/cart/af_rtc.obj \
 	$(PROJ)/src/device/cart/cart.obj \
 	$(PROJ)/src/device/cart/cart_rom.obj \
@@ -202,7 +198,8 @@ LIBS = \
 	oldnames.lib \
 	ws2_32.lib \
 	shlwapi.lib \
-	shell32.lib
+	shell32.lib \
+	winmm.lib
 
 !IFDEF DEBUG
 FLAGS = $(FLAGS) /Ob0 /Zi /Oy-
