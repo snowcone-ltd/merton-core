@@ -9,6 +9,7 @@
 #define M64P_CORE_PROTOTYPES
 #include "mupen64plus-core/src/api/m64p_frontend.h"
 #include "mupen64plus-core/src/main/version.h"
+#include "mupen64plus-core/src/main/savestates.h"
 
 
 // Plugins
@@ -36,6 +37,18 @@ m64p_error RSP_PluginShutdown(void);
 
 // Shim
 
+void osal_set_dir(const char *dir);
+
+void osal_startup(void);
+void osal_shutdown(void);
+
+void osal_lock(void);
+void osal_unlock(void);
+bool osal_wait(int32_t timeout);
+
+const void *osal_get_write_buf(size_t *size);
+void osal_set_read_data(const void *buf, size_t size);
+
 void osal_dynlib_set_prefix(const char *prefix);
 m64p_dynlib_handle osal_dynlib_get_handle(const char *name);
 
@@ -60,7 +73,7 @@ static int32_t CORE_HEIGHT;
 static CoreLogFunc CORE_LOG_FUNC;
 static void *CORE_LOG_OPAQUE;
 
-static void core_log(const char *fmt, ...)
+void core_log(const char *fmt, ...)
 {
 	va_list arg;
 	va_start(arg, fmt);
@@ -90,6 +103,9 @@ Core *CoreLoad(const char *systemDir, const char *saveDir)
 
 	ctx->system_dir = MTY_Strdup(systemDir);
 
+	osal_set_dir(ctx->system_dir);
+	osal_startup();
+
 	CORE_MUTEX = MTY_MutexCreate();
 	CORE_COND = MTY_CondCreate();
 
@@ -109,6 +125,9 @@ void CoreUnload(Core **core)
 	MTY_MutexDestroy(&CORE_MUTEX);
 
 	audio_set_callback(NULL, NULL);
+
+	osal_shutdown();
+	osal_set_dir("");
 
 	MTY_Free(ctx->system_dir);
 
@@ -289,22 +308,38 @@ void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 
 void *CoreGetState(Core *ctx, size_t *size)
 {
-	// TODO
-
 	if (!ctx || !ctx->loaded)
 		return NULL;
 
-	return NULL;
+	void *state = NULL;
+	*size = 0;
+
+	osal_lock();
+
+	m64p_error r = CoreDoCommand(M64CMD_STATE_SAVE, savestates_type_m64p, "memory");
+
+	if (r == M64ERR_SUCCESS) {
+		if (osal_wait(1000)) {
+			const void *buf = osal_get_write_buf(size);
+			state = MTY_Dup(buf, *size);
+		}
+	}
+
+	osal_unlock();
+
+	return state;
 }
 
 bool CoreSetState(Core *ctx, const void *state, size_t size)
 {
-	// TODO
-
 	if (!ctx || !ctx->loaded)
 		return false;
 
-	return false;
+	osal_set_read_data(state, size);
+
+	m64p_error r = CoreDoCommand(M64CMD_STATE_LOAD, 0, "memory");
+
+	return r == M64ERR_SUCCESS;
 }
 
 uint8_t CoreGetNumDisks(Core *ctx)

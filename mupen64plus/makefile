@@ -91,7 +91,6 @@ CORE_OBJS = \
 	$(PROJ)/src/main/rom.obj \
 	$(PROJ)/src/main/savestates.obj \
 	$(PROJ)/src/main/util.obj \
-	$(PROJ)/src/osal/files_win32.obj \
 	$(PROJ)/src/plugin/dummy_audio.obj \
 	$(PROJ)/src/plugin/dummy_input.obj \
 	$(PROJ)/src/plugin/dummy_rsp.obj \
@@ -107,15 +106,12 @@ SHIM_OBJS = \
 	shim/$(PROJ)/zlib/adler32.obj \
 	shim/$(PROJ)/zlib/crc32.obj \
 	shim/$(PROJ)/zlib/deflate.obj \
-	shim/$(PROJ)/zlib/gzclose.obj \
-	shim/$(PROJ)/zlib/gzlib.obj \
-	shim/$(PROJ)/zlib/gzread.obj \
-	shim/$(PROJ)/zlib/gzwrite.obj \
 	shim/$(PROJ)/zlib/inffast.obj \
 	shim/$(PROJ)/zlib/inflate.obj \
 	shim/$(PROJ)/zlib/inftrees.obj \
 	shim/$(PROJ)/zlib/trees.obj \
 	shim/$(PROJ)/zlib/zutil.obj \
+	shim/$(PROJ)/files.obj \
 	shim/$(PROJ)/screenshot.obj \
 	shim/$(PROJ)/vidext.obj
 
