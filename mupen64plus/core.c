@@ -44,6 +44,7 @@ m64p_dynlib_handle osal_dynlib_get_handle(const char *name);
 
 struct Core {
 	bool loaded;
+	char *system_dir;
 	MTY_Thread *game_thread;
 	CoreVideoFunc video_func;
 	void *video_opaque;
@@ -87,6 +88,8 @@ Core *CoreLoad(const char *systemDir, const char *saveDir)
 {
 	Core *ctx = calloc(1, sizeof(Core));
 
+	ctx->system_dir = MTY_Strdup(systemDir);
+
 	CORE_MUTEX = MTY_MutexCreate();
 	CORE_COND = MTY_CondCreate();
 
@@ -106,6 +109,8 @@ void CoreUnload(Core **core)
 	MTY_MutexDestroy(&CORE_MUTEX);
 
 	audio_set_callback(NULL, NULL);
+
+	MTY_Free(ctx->system_dir);
 
 	free(ctx);
 	*core = NULL;
@@ -131,8 +136,8 @@ void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
 bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *saveData,
 	size_t saveDataSize)
 {
-	m64p_error r = CoreStartup(FRONTEND_API_VERSION, ".", ".", NULL, core_debug_callback,
-		NULL, core_state_callback);
+	m64p_error r = CoreStartup(FRONTEND_API_VERSION, ctx->system_dir, ctx->system_dir,
+		NULL, core_debug_callback, NULL, core_state_callback);
 
 	if (r != M64ERR_SUCCESS)
 		return false;
@@ -213,14 +218,8 @@ static void core_frame_callback(unsigned int index)
 
 static void *core_game_thread(void *opaque)
 {
-	Core *ctx = opaque;
-
-	core_log("Game thread started\n");
-
 	CoreDoCommand(M64CMD_SET_FRAME_CALLBACK, 0, core_frame_callback);
-	m64p_error r = CoreDoCommand(M64CMD_EXECUTE, 0, NULL);
-
-	core_log("Game thread ended: %d\n", r);
+	CoreDoCommand(M64CMD_EXECUTE, 0, NULL);
 
 	return NULL;
 }
@@ -231,11 +230,11 @@ void CoreRun(Core *ctx)
 		return;
 
 	if (!ctx->game_thread)
-		ctx->game_thread = MTY_ThreadCreate(core_game_thread, ctx);
+		ctx->game_thread = MTY_ThreadCreate(core_game_thread, NULL);
 
 	MTY_MutexLock(CORE_MUTEX);
 
-	MTY_CondWait(CORE_COND, CORE_MUTEX, 200);
+	MTY_CondWait(CORE_COND, CORE_MUTEX, -1);
 
 	if (ctx->video_func && CORE_WIDTH > 0 && CORE_HEIGHT > 0)
 		ctx->video_func(CORE_FRAME, CORE_COLOR_FORMAT_RGBA,

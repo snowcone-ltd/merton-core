@@ -142,3 +142,28 @@ EXPORT void INPUT_SDL_KeyDown(int keymod, int keysym)
 EXPORT void INPUT_SDL_KeyUp(int keymod, int keysym)
 {
 }
+
+EXPORT void INPUT_RenderCallback(void)
+{
+}
+
+EXPORT void INPUT_SendVRUWord(uint16_t length, uint16_t *word, uint8_t lang)
+{
+}
+
+EXPORT void INPUT_SetMicState(int state)
+{
+}
+
+EXPORT void INPUT_ReadVRUResults(uint16_t *error_flags, uint16_t *num_results, uint16_t *mic_level,
+	uint16_t *voice_level, uint16_t *voice_length, uint16_t *matches)
+{
+}
+
+EXPORT void INPUT_ClearVRUWords(uint8_t length)
+{
+}
+
+EXPORT void INPUT_SetVRUWordMask(uint8_t length, uint8_t *mask)
+{
+}
