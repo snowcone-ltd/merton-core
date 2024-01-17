@@ -18,13 +18,15 @@
 	path = duckstation/duckstation
 	url = git@github.com:stenzek/duckstation
 	branch = master
-[submodule "mupen64-plus/mupen64plus-core"]
-	path = mupen64-plus/mupen64plus-core
+[submodule "mupen64plus/mupen64plus-core"]
+	path = mupen64plus/mupen64plus-core
 	url = git@github.com:mupen64plus/mupen64plus-core
 	branch = master
-[submodule "mupen64-plus/angrylion-rdp-plus"]
-	path = mupen64-plus/angrylion-rdp-plus
+[submodule "mupen64plus/angrylion-rdp-plus"]
+	path = mupen64plus/angrylion-rdp-plus
 	url = git@github.com:ata4/angrylion-rdp-plus
-[submodule "mupen64-plus/mupen64plus-rsp-cxd4"]
-	path = mupen64-plus/mupen64plus-rsp-cxd4
+	branch = master
+[submodule "mupen64plus/mupen64plus-rsp-cxd4"]
+	path = mupen64plus/mupen64plus-rsp-cxd4
 	url = git@github.com:mupen64plus/mupen64plus-rsp-cxd4
+	branch = master
