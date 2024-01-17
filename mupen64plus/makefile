@@ -126,7 +126,9 @@ OBJS = \
 	$(SUB_OBJS) \
 	$(CORE_OBJS) \
 	$(SHIM_OBJS) \
-	core.obj
+	core.obj \
+	core-audio.obj \
+	core-input.obj
 
 FLAGS = \
 	/W4 \

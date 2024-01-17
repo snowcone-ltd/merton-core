@@ -13,14 +13,25 @@
 
 // Plugins
 
-m64p_error RSP_PluginStartup(m64p_dynlib_handle handle, void *opaque,
-	void (*debug_callback)(void *opaque, int level, const char *msg));
-m64p_error RSP_PluginShutdown(void);
-
 m64p_error RDP_PluginStartup(m64p_dynlib_handle handle, void *opaque,
 	void (*debug_callback)(void *opaque, int level, const char *msg));
 m64p_error RDP_PluginShutdown(void);
 void RDP_ReadScreen2(void *dest, int *width, int *height, int front);
+
+m64p_error AUDIO_PluginStartup(m64p_dynlib_handle handle, void *opaque,
+	void (*debug_callback)(void *opaque, int level, const char *msg));
+m64p_error AUDIO_PluginShutdown(void);
+void audio_set_callback(CoreAudioFunc func, void *opaque);
+
+m64p_error INPUT_PluginStartup(m64p_dynlib_handle handle, void *opaque,
+	void (*debug_callback)(void *opaque, int level, const char *msg));
+m64p_error INPUT_PluginShutdown(void);
+void input_set_button(uint8_t player, CoreButton button, bool pressed);
+void input_set_axis(uint8_t player, CoreAxis axis, int16_t value);
+
+m64p_error RSP_PluginStartup(m64p_dynlib_handle handle, void *opaque,
+	void (*debug_callback)(void *opaque, int level, const char *msg));
+m64p_error RSP_PluginShutdown(void);
 
 
 // Shim
@@ -35,8 +46,6 @@ struct Core {
 	bool loaded;
 	MTY_Thread *game_thread;
 	CoreVideoFunc video_func;
-	CoreAudioFunc audio_func;
-	void *audio_opaque;
 	void *video_opaque;
 };
 
@@ -96,6 +105,8 @@ void CoreUnload(Core **core)
 	MTY_CondDestroy(&CORE_COND);
 	MTY_MutexDestroy(&CORE_MUTEX);
 
+	audio_set_callback(NULL, NULL);
+
 	free(ctx);
 	*core = NULL;
 }
@@ -108,8 +119,7 @@ void CoreSetLogFunc(Core *ctx, CoreLogFunc func, void *opaque)
 
 void CoreSetAudioFunc(Core *ctx, CoreAudioFunc func, void *opaque)
 {
-	ctx->audio_func = func;
-	ctx->audio_opaque = opaque;
+	audio_set_callback(func, opaque);
 }
 
 void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
@@ -139,10 +149,18 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 	m64p_dynlib_handle h = osal_dynlib_get_handle("mupen64plus.dll");
 
 	RDP_PluginStartup(h, NULL, core_debug_callback);
+	AUDIO_PluginStartup(h, NULL, core_debug_callback);
+	INPUT_PluginStartup(h, NULL, core_debug_callback);
 	RSP_PluginStartup(h, NULL, core_debug_callback);
 
 	osal_dynlib_set_prefix("RDP_");
 	CoreAttachPlugin(M64PLUGIN_GFX, h);
+
+	osal_dynlib_set_prefix("AUDIO_");
+	CoreAttachPlugin(M64PLUGIN_AUDIO, h);
+
+	osal_dynlib_set_prefix("INPUT_");
+	CoreAttachPlugin(M64PLUGIN_INPUT, h);
 
 	osal_dynlib_set_prefix("RSP_");
 	CoreAttachPlugin(M64PLUGIN_RSP, h);
@@ -165,9 +183,13 @@ void CoreUnloadGame(Core *ctx)
 		MTY_ThreadDestroy(&ctx->game_thread);
 
 	CoreDetachPlugin(M64PLUGIN_RSP);
+	CoreDetachPlugin(M64PLUGIN_INPUT);
+	CoreDetachPlugin(M64PLUGIN_AUDIO);
 	CoreDetachPlugin(M64PLUGIN_GFX);
 
 	RSP_PluginShutdown();
+	INPUT_PluginShutdown();
+	AUDIO_PluginShutdown();
 	RDP_PluginShutdown();
 
 	CoreDoCommand(M64CMD_ROM_CLOSE, 0, NULL);
@@ -252,15 +274,18 @@ void *CoreGetSaveData(Core *ctx, size_t *size)
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
-	// TODO
-
 	if (!ctx || !ctx->loaded)
 		return;
+
+	input_set_button(player, button, pressed);
 }
 
 void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 {
-	// TODO
+	if (!ctx || !ctx->loaded)
+		return;
+
+	input_set_axis(player, axis, value);
 }
 
 void *CoreGetState(Core *ctx, size_t *size)
