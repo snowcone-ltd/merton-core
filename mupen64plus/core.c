@@ -8,8 +8,11 @@
 
 #define M64P_CORE_PROTOTYPES
 #include "mupen64plus-core/src/api/m64p_frontend.h"
-#include "mupen64plus-core/src/main/version.h"
+#include "mupen64plus-core/src/backends/file_storage.h"
+#include "mupen64plus-core/src/main/main.h"
+#include "mupen64plus-core/src/main/rom.h"
 #include "mupen64plus-core/src/main/savestates.h"
+#include "mupen64plus-core/src/main/version.h"
 
 
 // Plugins
@@ -189,6 +192,9 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 	osal_dynlib_set_prefix("RSP_");
 	CoreAttachPlugin(M64PLUGIN_RSP, h);
 
+	if (saveData)
+		osal_set_read_data(saveData, saveDataSize);
+
 	ctx->loaded = true;
 
 	return true;
@@ -282,12 +288,36 @@ float CoreGetAspectRatio(Core *ctx)
 
 void *CoreGetSaveData(Core *ctx, size_t *size)
 {
-	// TODO
-
 	if (!ctx || !ctx->loaded)
 		return NULL;
 
-	return NULL;
+	void *sd = NULL;
+	void *ptr = NULL;
+
+	struct file_storage *eeprom = g_dev.cart.eeprom.storage;
+	struct file_storage *sram = g_dev.cart.sram.storage;
+
+	switch (ROM_SETTINGS.savetype) {
+		case SAVETYPE_EEPROM_4K:
+			*size = 0x200;
+			ptr = eeprom->data;
+			break;
+		case SAVETYPE_EEPROM_16K:
+			*size = 0x800;
+			ptr = eeprom->data;
+			break;
+		case SAVETYPE_SRAM:
+			*size = SRAM_SIZE;
+			ptr = sram->data;
+			break;
+	}
+
+	if (ptr) {
+		sd = malloc(*size);
+		memcpy(sd, ptr, *size);
+	}
+
+	return sd;
 }
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "main/rom.h"
 #include "osal/files.h"
 
 #include "matoya.h"
@@ -60,7 +61,18 @@ FILE *osal_file_open(const char *filename, const char *mode)
 			rewind(tmp);
 		}
 	} else {
-		core_log("fopen: %s\n", filename);
+		const char *ext = MTY_GetFileExtension(filename);
+
+		if ((!strcmp(ext, "sra") && ROM_SETTINGS.savetype == SAVETYPE_SRAM) ||
+			(!strcmp(ext, "epr") && ROM_SETTINGS.savetype == SAVETYPE_EEPROM_4K) ||
+			(!strcmp(ext, "epr") && ROM_SETTINGS.savetype == SAVETYPE_EEPROM_16K))
+		{
+			fwrite(OSAL_READ_BUF, 1, OSAL_READ_SIZE, tmp);
+			rewind(tmp);
+
+		} else {
+			// core_log("fopen [%s]: (%s) %s\n", mode, ext, filename);
+		}
 	}
 
 	return tmp;
