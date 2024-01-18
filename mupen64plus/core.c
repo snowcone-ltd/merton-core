@@ -296,12 +296,10 @@ void *CoreGetSaveData(Core *ctx, size_t *size)
 
 	struct file_storage *eeprom = g_dev.cart.eeprom.storage;
 	struct file_storage *sram = g_dev.cart.sram.storage;
+	struct file_storage *flashram = g_dev.cart.flashram.storage;
 
 	switch (ROM_SETTINGS.savetype) {
 		case SAVETYPE_EEPROM_4K:
-			*size = 0x200;
-			ptr = eeprom->data;
-			break;
 		case SAVETYPE_EEPROM_16K:
 			*size = 0x800;
 			ptr = eeprom->data;
@@ -309,6 +307,10 @@ void *CoreGetSaveData(Core *ctx, size_t *size)
 		case SAVETYPE_SRAM:
 			*size = SRAM_SIZE;
 			ptr = sram->data;
+			break;
+		case SAVETYPE_FLASH_RAM:
+			*size = FLASHRAM_SIZE;
+			ptr = flashram->data;
 			break;
 	}
 

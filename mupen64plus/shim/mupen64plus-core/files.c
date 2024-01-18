@@ -63,9 +63,10 @@ FILE *osal_file_open(const char *filename, const char *mode)
 	} else {
 		const char *ext = MTY_GetFileExtension(filename);
 
-		if ((!strcmp(ext, "sra") && ROM_SETTINGS.savetype == SAVETYPE_SRAM) ||
-			(!strcmp(ext, "epr") && ROM_SETTINGS.savetype == SAVETYPE_EEPROM_4K) ||
-			(!strcmp(ext, "epr") && ROM_SETTINGS.savetype == SAVETYPE_EEPROM_16K))
+		if ((!strcmp(ext, "eep") && ROM_SETTINGS.savetype == SAVETYPE_EEPROM_4K) ||
+			(!strcmp(ext, "eep") && ROM_SETTINGS.savetype == SAVETYPE_EEPROM_16K) ||
+			(!strcmp(ext, "sra") && ROM_SETTINGS.savetype == SAVETYPE_SRAM) ||
+			(!strcmp(ext, "fla") && ROM_SETTINGS.savetype == SAVETYPE_FLASH_RAM))
 		{
 			fwrite(OSAL_READ_BUF, 1, OSAL_READ_SIZE, tmp);
 			rewind(tmp);
