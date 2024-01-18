@@ -99,7 +99,6 @@ CORE_OBJS = \
 
 SHIM_OBJS = \
 	shim/$(PROJ_RSP)/module.obj \
-	shim/$(PROJ_RSP)/osal_dynamiclib_win32.obj \
 	shim/$(PROJ_RDP)/gfx_m64p.obj \
 	shim/$(PROJ_RDP)/vdac.obj \
 	shim/$(PROJ)/SDL/SDL.obj \
@@ -113,7 +112,8 @@ SHIM_OBJS = \
 	shim/$(PROJ)/zlib/zutil.obj \
 	shim/$(PROJ)/files.obj \
 	shim/$(PROJ)/screenshot.obj \
-	shim/$(PROJ)/vidext.obj
+	shim/$(PROJ)/vidext.obj \
+	shim/osal_dynamiclib_win32.obj
 
 OBJS = \
 	$(ASM_OBJ) \
