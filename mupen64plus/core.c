@@ -20,7 +20,6 @@
 m64p_error RDP_PluginStartup(m64p_dynlib_handle handle, void *opaque,
 	void (*debug_callback)(void *opaque, int level, const char *msg));
 m64p_error RDP_PluginShutdown(void);
-void RDP_ReadScreen2(void *dest, int *width, int *height, int front);
 
 m64p_error AUDIO_PluginStartup(m64p_dynlib_handle handle, void *opaque,
 	void (*debug_callback)(void *opaque, int level, const char *msg));
@@ -55,23 +54,28 @@ void osal_set_read_data(const void *buf, size_t size);
 void osal_dynlib_set_prefix(const char *prefix);
 m64p_dynlib_handle osal_dynlib_get_handle(const char *name);
 
+void vdac_set_video_func(void (*func)(void *, uint32_t, uint32_t, void *), void *opaque);
+
 
 // Core
 
 struct Core {
 	bool loaded;
 	char *system_dir;
+
+	uint32_t frame[1024][1024];
+	uint32_t w;
+	uint32_t h;
+
+	uint64_t frame_ctr;
+	uint64_t prev_frame_ctr;
 	MTY_Thread *game_thread;
+	MTY_Mutex *mutex;
+	MTY_Cond *cond;
+
 	CoreVideoFunc video_func;
 	void *video_opaque;
 };
-
-static MTY_Mutex *CORE_MUTEX;
-static MTY_Cond *CORE_COND;
-
-static uint32_t CORE_FRAME[1024][1024];
-static int32_t CORE_WIDTH;
-static int32_t CORE_HEIGHT;
 
 static CoreLogFunc CORE_LOG_FUNC;
 static void *CORE_LOG_OPAQUE;
@@ -109,8 +113,8 @@ Core *CoreLoad(const char *systemDir, const char *saveDir)
 	osal_set_dir(ctx->system_dir);
 	osal_startup();
 
-	CORE_MUTEX = MTY_MutexCreate();
-	CORE_COND = MTY_CondCreate();
+	ctx->mutex = MTY_MutexCreate();
+	ctx->cond = MTY_CondCreate();
 
 	return ctx;
 }
@@ -124,8 +128,8 @@ void CoreUnload(Core **core)
 
 	CoreUnloadGame(ctx);
 
-	MTY_CondDestroy(&CORE_COND);
-	MTY_MutexDestroy(&CORE_MUTEX);
+	MTY_CondDestroy(&ctx->cond);
+	MTY_MutexDestroy(&ctx->mutex);
 
 	audio_set_callback(NULL, NULL);
 
@@ -212,6 +216,8 @@ void CoreUnloadGame(Core *ctx)
 	if (ctx->game_thread)
 		MTY_ThreadDestroy(&ctx->game_thread);
 
+	vdac_set_video_func(NULL, NULL);
+
 	CoreDetachPlugin(M64PLUGIN_RSP);
 	CoreDetachPlugin(M64PLUGIN_INPUT);
 	CoreDetachPlugin(M64PLUGIN_AUDIO);
@@ -233,17 +239,28 @@ bool CoreGameIsLoaded(Core *ctx)
 
 static void core_frame_callback(unsigned int index)
 {
-	MTY_MutexLock(CORE_MUTEX);
+}
 
-	RDP_ReadScreen2(CORE_FRAME, &CORE_WIDTH, &CORE_HEIGHT, 0);
-	MTY_CondSignal(CORE_COND);
+static void core_vdac_sync(void *pixels, uint32_t width, uint32_t height, void *opaque)
+{
+	Core *ctx = opaque;
 
-	MTY_MutexUnlock(CORE_MUTEX);
+	MTY_MutexLock(ctx->mutex);
+
+	ctx->w = width;
+	ctx->h = height;
+	memcpy(ctx->frame, pixels, width * height * 4);
+
+	ctx->frame_ctr++;
+	MTY_CondSignal(ctx->cond);
+
+	MTY_MutexUnlock(ctx->mutex);
 }
 
 static void *core_game_thread(void *opaque)
 {
-	CoreDoCommand(M64CMD_SET_FRAME_CALLBACK, 0, core_frame_callback);
+	vdac_set_video_func(core_vdac_sync, opaque);
+
 	CoreDoCommand(M64CMD_EXECUTE, 0, NULL);
 
 	return NULL;
@@ -255,17 +272,20 @@ void CoreRun(Core *ctx)
 		return;
 
 	if (!ctx->game_thread)
-		ctx->game_thread = MTY_ThreadCreate(core_game_thread, NULL);
+		ctx->game_thread = MTY_ThreadCreate(core_game_thread, ctx);
 
-	MTY_MutexLock(CORE_MUTEX);
+	MTY_MutexLock(ctx->mutex);
 
-	MTY_CondWait(CORE_COND, CORE_MUTEX, -1);
+	if (ctx->prev_frame_ctr == ctx->frame_ctr)
+		MTY_CondWait(ctx->cond, ctx->mutex, -1);
 
-	if (ctx->video_func && CORE_WIDTH > 0 && CORE_HEIGHT > 0)
-		ctx->video_func(CORE_FRAME, CORE_COLOR_FORMAT_RGBA,
-			CORE_WIDTH, CORE_HEIGHT, CORE_WIDTH * 4, ctx->video_opaque);
+	ctx->prev_frame_ctr = ctx->frame_ctr;
 
-	MTY_MutexUnlock(CORE_MUTEX);
+	if (ctx->video_func && ctx->w > 0 && ctx->h > 0)
+		ctx->video_func(ctx->frame, CORE_COLOR_FORMAT_RGBA, ctx->w, ctx->h,
+			ctx->w * 4, ctx->video_opaque);
+
+	MTY_MutexUnlock(ctx->mutex);
 }
 
 void CoreReset(Core *ctx)
