@@ -10,11 +10,11 @@
 #include "Core/Shared/MessageManager.h"
 #include "Utilities/VirtualFile.h"
 #include "Utilities/FolderUtilities.h"
+#include "Utilities/miniz.h"
 
 #include "Shim/ShimKeyManager.h"
 
-#include "MesenDB.inc"
-
+#include "rom-db.h"
 #include "palette.h"
 
 #if defined(_MSC_VER)
@@ -52,14 +52,26 @@ void sound_mixer_set_audio_func(CoreAudioFunc func, void *opaque);
 
 static void core_reset_settings(Core *ctx);
 
+static void core_load_rom_db(void)
+{
+	uLongf usize = MESEN_DB_USIZE;
+	unsigned char *ubuf = (unsigned char *) malloc(usize);
+
+	if (uncompress(ubuf, &usize, MESEN_DB, sizeof(MESEN_DB)) == Z_OK) {
+		std::stringstream db;
+		db.write((const char *) ubuf, usize);
+		GameDatabase::LoadGameDb(db);
+		MessageManager::ClearLog();
+	}
+
+	free(ubuf);
+}
+
 Core *CoreLoad(const char *system_dir, const char *save_dir)
 {
 	Core *ctx = (Core *) calloc(1, sizeof(Core));
 
-	std::stringstream db;
-	db.write((const char *) MesenDatabase, sizeof(MesenDatabase));
-	GameDatabase::LoadGameDb(db);
-	MessageManager::ClearLog();
+	core_load_rom_db();
 
 	FolderUtilities::SetFolderOverrides("", "", "", system_dir);
 

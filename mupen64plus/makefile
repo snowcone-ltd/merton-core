@@ -109,6 +109,7 @@ SHIM_OBJS = \
 	shim/$(PROJ)/zlib/inflate.obj \
 	shim/$(PROJ)/zlib/inftrees.obj \
 	shim/$(PROJ)/zlib/trees.obj \
+	shim/$(PROJ)/zlib/uncompr.obj \
 	shim/$(PROJ)/zlib/zutil.obj \
 	shim/$(PROJ)/files.obj \
 	shim/$(PROJ)/screenshot.obj \

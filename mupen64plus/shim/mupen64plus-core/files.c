@@ -5,6 +5,8 @@
 #include "main/rom.h"
 #include "osal/files.h"
 
+#include "../../rom-db.h"
+
 #include "matoya.h"
 
 static char OSAL_DIR[2048];
@@ -52,14 +54,16 @@ FILE *osal_file_open(const char *filename, const char *mode)
 		rewind(tmp);
 
 	} else if (strstr(filename, "mupen64plus.ini")) {
-		// TODO This could be embedded in the binary
-		size_t size = 0;
-		void *buf = MTY_ReadFile(filename, &size);
+		uLongf usize = M64P_DB_USIZE;
+		void *ubuf = malloc(usize);
 
-		if (buf) {
-			fwrite(buf, 1, size, tmp);
+		if (uncompress(ubuf, &usize, M64P_DB, sizeof(M64P_DB)) == Z_OK) {
+			fwrite(ubuf, 1, usize, tmp);
 			rewind(tmp);
 		}
+
+		free(ubuf);
+
 	} else {
 		const char *ext = MTY_GetFileExtension(filename);
 
