@@ -224,20 +224,19 @@ CORE_SNES_OBJS = \
 	$(PROJ)/Core/SNES/Spc.Instructions.obj
 
 SHIM_OBJS = \
-	Shim/Audio/SoundMixer.obj \
-	Shim/Debugger/Debugger.obj \
-	Shim/Debugger/PpuTools.obj \
-	Shim/Debugger/ScriptManager.obj \
-	Shim/Movies/MovieManager.obj \
-	Shim/Movies/MovieRecorder.obj \
-	Shim/SNES/Debugger/SnesPpuTools.obj \
-	Shim/Utilities/FolderUtilities.obj \
-	Shim/Video/VideoDecoder.obj \
-	Shim/Video/VideoRenderer.obj \
-	Shim/BatteryManager.obj \
-	Shim/Emulator.obj \
-	Shim/SaveStateManager.obj \
-	Shim/ShimKeyManager.obj
+	shim/SoundMixer.obj \
+	shim/Debugger.obj \
+	shim/PpuTools.obj \
+	shim/ScriptManager.obj \
+	shim/MovieManager.obj \
+	shim/MovieRecorder.obj \
+	shim/SnesPpuTools.obj \
+	shim/FolderUtilities.obj \
+	shim/VideoDecoder.obj \
+	shim/VideoRenderer.obj \
+	shim/BatteryManager.obj \
+	shim/Emulator.obj \
+	shim/SaveStateManager.obj
 
 OBJS = \
 	$(SZ_OBJS) \
@@ -250,6 +249,7 @@ OBJS = \
 	$(CORE_SNES_OBJS) \
 	$(SHIM_OBJS) \
 	core.obj \
+	core-key-manager.obj \
 	settings.obj
 
 FLAGS = \

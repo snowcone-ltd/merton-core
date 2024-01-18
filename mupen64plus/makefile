@@ -4,7 +4,7 @@ PROJ_RDP = angrylion-rdp-plus
 NAME = mupen64plus
 
 .asm.obj:
-	nasm -f win64 -d WIN64 -i $(PROJ)\src\asm_defines\ $< -o linkage_x64.obj
+	deps\nasm -f win64 -d WIN64 -i $(PROJ)\src\asm_defines\ $< -o linkage_x64.obj
 
 ASM_OBJ = \
 	$(PROJ)/src/device/r4300/new_dynarec/x64/linkage_x64.obj
@@ -101,20 +101,22 @@ SHIM_OBJS = \
 	shim/$(PROJ_RSP)/module.obj \
 	shim/$(PROJ_RDP)/gfx_m64p.obj \
 	shim/$(PROJ_RDP)/vdac.obj \
-	shim/$(PROJ)/SDL/SDL.obj \
-	shim/$(PROJ)/zlib/adler32.obj \
-	shim/$(PROJ)/zlib/crc32.obj \
-	shim/$(PROJ)/zlib/deflate.obj \
-	shim/$(PROJ)/zlib/inffast.obj \
-	shim/$(PROJ)/zlib/inflate.obj \
-	shim/$(PROJ)/zlib/inftrees.obj \
-	shim/$(PROJ)/zlib/trees.obj \
-	shim/$(PROJ)/zlib/uncompr.obj \
-	shim/$(PROJ)/zlib/zutil.obj \
 	shim/$(PROJ)/files.obj \
 	shim/$(PROJ)/screenshot.obj \
 	shim/$(PROJ)/vidext.obj \
 	shim/osal_dynamiclib_win32.obj
+
+DEPS_OBJS = \
+	deps/SDL/SDL_win32.obj \
+	deps/zlib/adler32.obj \
+	deps/zlib/crc32.obj \
+	deps/zlib/deflate.obj \
+	deps/zlib/inffast.obj \
+	deps/zlib/inflate.obj \
+	deps/zlib/inftrees.obj \
+	deps/zlib/trees.obj \
+	deps/zlib/uncompr.obj \
+	deps/zlib/zutil.obj
 
 OBJS = \
 	$(ASM_OBJ) \
@@ -123,6 +125,7 @@ OBJS = \
 	$(SUB_OBJS) \
 	$(CORE_OBJS) \
 	$(SHIM_OBJS) \
+	$(DEPS_OBJS) \
 	core.obj \
 	core-audio.obj \
 	core-input.obj
@@ -167,8 +170,8 @@ INCLUDES = \
 	-I$(PROJ)/subprojects/xxhash \
 	-I$(PROJ)/subprojects/minizip \
 	-Ishim/$(PROJ_RDP) \
-	-Ishim/$(PROJ)/SDL \
-	-Ishim/$(PROJ)/zlib
+	-Ideps/SDL \
+	-Ideps/zlib
 
 DEFS = \
 	-DWIN32 \

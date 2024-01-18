@@ -1,18 +1,18 @@
-#include "ShimKeyManager.h"
+#include "core-key-manager.h"
 
 #define MAX_PLAYERS 8
 
 static bool BUTTONS[3][MAX_PLAYERS][CORE_BUTTON_MAX];
 
-ShimKeyManager::ShimKeyManager(Emulator* emu)
+CoreKeyManager::CoreKeyManager(Emulator* emu)
 {
 }
 
-ShimKeyManager::~ShimKeyManager()
+CoreKeyManager::~CoreKeyManager()
 {
 }
 
-void ShimKeyManager::RefreshState()
+void CoreKeyManager::RefreshState()
 {
 	this->m.lock();
 
@@ -22,7 +22,7 @@ void ShimKeyManager::RefreshState()
 	this->m.unlock();
 }
 
-bool ShimKeyManager::IsKeyPressed(uint16_t key)
+bool CoreKeyManager::IsKeyPressed(uint16_t key)
 {
 	uint8_t player = (key & 0xFF00) >> 8;
 	CoreButton button = (CoreButton) (key & 0xFF);
@@ -33,44 +33,44 @@ bool ShimKeyManager::IsKeyPressed(uint16_t key)
 	return BUTTONS[0][player][button];
 }
 
-bool ShimKeyManager::IsMouseButtonPressed(MouseButton button)
+bool CoreKeyManager::IsMouseButtonPressed(MouseButton button)
 {
 	return false;
 }
 
-vector<uint16_t> ShimKeyManager::GetPressedKeys()
+vector<uint16_t> CoreKeyManager::GetPressedKeys()
 {
 	return vector<uint16_t>();
 }
 
-string ShimKeyManager::GetKeyName(uint16_t keyCode)
+string CoreKeyManager::GetKeyName(uint16_t keyCode)
 {
 	return "";
 }
 
-uint16_t ShimKeyManager::GetKeyCode(string keyName)
+uint16_t CoreKeyManager::GetKeyCode(string keyName)
 {
 	return 0;
 }
 
-void ShimKeyManager::UpdateDevices()
+void CoreKeyManager::UpdateDevices()
 {
 }
 
-bool ShimKeyManager::SetKeyState(uint16_t scanCode, bool state)
+bool CoreKeyManager::SetKeyState(uint16_t scanCode, bool state)
 {
 	return false;
 }
 
-void ShimKeyManager::SetDisabled(bool disabled)
+void CoreKeyManager::SetDisabled(bool disabled)
 {
 }
 
-void ShimKeyManager::ResetKeyState()
+void CoreKeyManager::ResetKeyState()
 {
 }
 
-void ShimKeyManager::SetButton(uint8_t player, CoreButton button, bool pressed)
+void CoreKeyManager::SetButton(uint8_t player, CoreButton button, bool pressed)
 {
 	if (player < MAX_PLAYERS) {
 		this->m.lock();

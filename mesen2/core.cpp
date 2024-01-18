@@ -12,10 +12,9 @@
 #include "Utilities/FolderUtilities.h"
 #include "Utilities/miniz.h"
 
-#include "Shim/ShimKeyManager.h"
-
-#include "rom-db.h"
+#include "core-key-manager.h"
 #include "palette.h"
+#include "rom-db.h"
 
 #if defined(_MSC_VER)
 	#define strdup _strdup
@@ -26,7 +25,7 @@ struct Core {
 	CoreLogFunc log_func;
 	CoreVideoFunc video_func;
 	BaseVideoFilter *filter;
-	ShimKeyManager *km;
+	CoreKeyManager *km;
 	void *log_opaque;
 	void *video_opaque;
 	void *audio_opaque;
@@ -79,7 +78,7 @@ Core *CoreLoad(const char *system_dir, const char *save_dir)
 
 	KeyManager::SetSettings(ctx->emu->GetSettings());
 
-	ctx->km = new ShimKeyManager(ctx->emu);
+	ctx->km = new CoreKeyManager(ctx->emu);
 	KeyManager::RegisterKeyManager(ctx->km);
 
 	core_reset_settings(ctx);

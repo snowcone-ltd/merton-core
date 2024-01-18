@@ -8,14 +8,14 @@
 
 class Emulator;
 
-class ShimKeyManager : public IKeyManager
+class CoreKeyManager : public IKeyManager
 {
 private:
 	std::mutex m;
 
 public:
-	ShimKeyManager(Emulator* emu);
-	~ShimKeyManager();
+	CoreKeyManager(Emulator* emu);
+	~CoreKeyManager();
 
 	void RefreshState();
 	bool IsKeyPressed(uint16_t key);
