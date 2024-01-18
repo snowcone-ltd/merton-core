@@ -97,6 +97,10 @@ void core_log(const char *fmt, ...)
 
 static void core_debug_callback(void *aContext, int aLevel, const char *aMessage)
 {
+	// Filter messages about empty config
+	if (strstr(aMessage, "No version number"))
+		return;
+
 	core_log("%s\n", aMessage);
 }
 

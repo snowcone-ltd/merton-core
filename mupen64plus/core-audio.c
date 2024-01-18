@@ -59,7 +59,7 @@ EXPORT void AUDIO_AiDacrateChanged(int SystemType)
 
 EXPORT void AUDIO_AiLenChanged(void)
 {
-	int16_t *buf = AI.RDRAM + (*AI.AI_DRAM_ADDR_REG & 0xFFFFFF);
+	int16_t *buf = (int16_t *) (AI.RDRAM + (*AI.AI_DRAM_ADDR_REG & 0xFFFFFF));
 	size_t frames = *AI.AI_LEN_REG / 4;
 
 	if (CORE_AUDIO) {
