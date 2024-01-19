@@ -2,6 +2,7 @@ PROJ = stella
 NAME = stella
 
 OBJS = \
+	core.obj \
 	$(PROJ)/src/common/audio/ConvolutionBuffer.obj \
 	$(PROJ)/src/common/audio/HighPass.obj \
 	$(PROJ)/src/common/audio/LanczosResampler.obj \
@@ -26,9 +27,7 @@ OBJS = \
 	$(PROJ)/src/common/Bezel.obj \
 	$(PROJ)/src/common/DevSettingsHandler.obj \
 	$(PROJ)/src/common/FpsMeter.obj \
-	$(PROJ)/src/common/FSNodeZIP.obj \
 	$(PROJ)/src/common/JoyMap.obj \
-	$(PROJ)/src/common/JPGLibrary.obj \
 	$(PROJ)/src/common/KeyMap.obj \
 	$(PROJ)/src/common/Logger.obj \
 	$(PROJ)/src/common/MouseControl.obj \
@@ -37,14 +36,11 @@ OBJS = \
 	$(PROJ)/src/common/PhysicalJoystick.obj \
 	$(PROJ)/src/common/PJoystickHandler.obj \
 	$(PROJ)/src/common/PKeyboardHandler.obj \
-	$(PROJ)/src/common/PNGLibrary.obj \
 	$(PROJ)/src/common/RewindManager.obj \
 	$(PROJ)/src/common/StaggeredLogger.obj \
 	$(PROJ)/src/common/StateManager.obj \
-	$(PROJ)/src/common/ThreadDebugging.obj \
 	$(PROJ)/src/common/TimerManager.obj \
 	$(PROJ)/src/common/VideoModeHandler.obj \
-	$(PROJ)/src/common/ZipHandler.obj \
 	$(PROJ)/src/emucore/tia/frame-manager/AbstractFrameManager.obj \
 	$(PROJ)/src/emucore/tia/frame-manager/FrameLayoutDetector.obj \
 	$(PROJ)/src/emucore/tia/frame-manager/FrameManager.obj \
@@ -157,8 +153,7 @@ OBJS = \
 	$(PROJ)/src/lib/sqlite/sqlite3.obj \
 	$(PROJ)/src/os/windows/FSNodeWINDOWS.obj \
 	$(PROJ)/src/os/windows/OSystemWINDOWS.obj \
-	$(PROJ)/src/os/windows/SerialPortWINDOWS.obj \
-	core-fs-node.obj
+	$(PROJ)/src/os/windows/SerialPortWINDOWS.obj
 
 FLAGS = \
 	/W4 \

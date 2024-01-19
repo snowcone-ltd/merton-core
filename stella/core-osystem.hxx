@@ -1,9 +1,6 @@
 #pragma once
 
-#include "FSNode.hxx"
 #include "OSystem.hxx"
-#include "core-osystem.hxx"
-#include "repository/KeyValueRepositoryNoop.hxx"
 #include "repository/CompositeKeyValueRepositoryNoop.hxx"
 
 #ifdef _WIN32
