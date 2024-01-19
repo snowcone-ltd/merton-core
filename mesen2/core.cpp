@@ -1,6 +1,7 @@
 #include "core.h"
 
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "Core/NES/GameDatabase.h"
 #include "Core/Shared/Emulator.h"
@@ -22,11 +23,9 @@
 
 struct Core {
 	Emulator *emu;
-	CoreLogFunc log_func;
 	CoreVideoFunc video_func;
 	BaseVideoFilter *filter;
 	CoreKeyManager *km;
-	void *log_opaque;
 	void *video_opaque;
 	void *audio_opaque;
 	uint8_t pr_initial[0x20];
@@ -37,6 +36,9 @@ struct Core {
 		bool wait_for_pr;
 	} settings;
 };
+
+static CoreLogFunc CORE_LOG_FUNC;
+static void *CORE_LOG_OPAQUE;
 
 
 // Shimmed
@@ -50,6 +52,21 @@ void sound_mixer_set_audio_func(CoreAudioFunc func, void *opaque);
 // API
 
 static void core_reset_settings(Core *ctx);
+
+void core_log(const char *fmt, ...)
+{
+	va_list arg;
+	va_start(arg, fmt);
+
+	if (CORE_LOG_FUNC) {
+		char msg[1024];
+		vsnprintf(msg, 1024, fmt, arg);
+
+		CORE_LOG_FUNC(msg, CORE_LOG_OPAQUE);
+	}
+
+	va_end(arg);
+}
 
 static void core_load_rom_db(void)
 {
@@ -150,7 +167,7 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 		}
 	}
 
-	core_get_logs(ctx->log_func, ctx->log_opaque);
+	core_get_logs(CORE_LOG_FUNC, CORE_LOG_OPAQUE);
 
 	return ctx->loaded;
 }
@@ -193,8 +210,11 @@ static void core_get_frame(Core *ctx, CoreVideoFunc func, void *opaque)
 	if (!func)
 		return;
 
-	if (!core_palette_ram_written(ctx))
+	if (!core_palette_ram_written(ctx)) {
+		uint32_t dummy[16][16] = {0};
+		func(dummy, CORE_COLOR_FORMAT_BGRA, 16, 16, 16 * 4, opaque);
 		return;
+	}
 
 	PpuFrameInfo pi = ctx->emu->GetPpuFrame();
 	ctx->filter->SetBaseFrameInfo({pi.Width, pi.Height});
@@ -213,7 +233,7 @@ void CoreRun(Core *ctx)
 	ctx->emu->Run();
 
 	core_get_frame(ctx, ctx->video_func, ctx->video_opaque);
-	core_get_logs(ctx->log_func, ctx->log_opaque);
+	core_get_logs(CORE_LOG_FUNC, CORE_LOG_OPAQUE);
 }
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
@@ -316,8 +336,8 @@ float CoreGetAspectRatio(Core *ctx)
 
 void CoreSetLogFunc(Core *ctx, CoreLogFunc func, void *opaque)
 {
-	ctx->log_func = func;
-	ctx->log_opaque = opaque;
+	CORE_LOG_FUNC = func;
+	CORE_LOG_OPAQUE = opaque;
 }
 
 void CoreSetAudioFunc(Core *ctx, CoreAudioFunc func, void *opaque)
