@@ -50,10 +50,18 @@ void SoundMixer::PlayAudioBuffer(int16_t* samples, uint32_t sampleCount, uint32_
 	if (SOUND_MIXER_AUDIO_FUNC) {
 		ConsoleType t = _emu->GetConsole()->GetConsoleType();
 
-		if (t == ConsoleType::Nes) {
+		double multi = 0;
+
+		if (t == ConsoleType::Nes)
+			multi = 1.6;
+
+		if (t == ConsoleType::Gameboy)
+			multi = 1.3;
+
+		if (multi > 1) {
 			// Audio volume seems to be lower compared to previous versions of Mesen / other emulators?
 			for (uint32_t x = 0; x < sampleCount * 2; x++)
-				samples[x] = lrint(samples[x] * 1.6);
+				samples[x] = lrint(samples[x] * multi);
 		}
 
 		for (IAudioProvider *provider : _audioProviders)
