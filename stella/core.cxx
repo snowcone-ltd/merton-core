@@ -3,17 +3,17 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include "core-osystem.hxx"
-
 #include "EventHandler.hxx"
 #include "FBSurface.hxx"
 #include "M6532.hxx"
 #include "PaletteHandler.hxx"
-#include "SoundLIBRETRO.hxx"
 #include "StateManager.hxx"
 #include "Switches.hxx"
 #include "TIA.hxx"
 #include "TIASurface.hxx"
+
+#include "shim/SoundCore.hxx"
+#include "osystem-core.hxx"
 
 #define SAMPLE_RATE ((262 * 76 * 60) / 38.0)
 
@@ -178,7 +178,7 @@ void CoreRun(Core *ctx)
 	// Audio
 	if (ctx->audio_func) {
 		uInt32 audio_samples = 0;
-		static_cast<SoundLIBRETRO&>(ctx->sys->sound()).dequeue(ctx->audio_buf, &audio_samples);
+		static_cast<SoundCore&>(ctx->sys->sound()).dequeue(ctx->audio_buf, &audio_samples);
 
 		if (audio_samples > 0)
 			ctx->audio_func(ctx->audio_buf, audio_samples, SAMPLE_RATE, ctx->audio_opaque);

@@ -165,6 +165,7 @@ FLAGS = \
 	/nologo
 
 INCLUDES = \
+	-Ishim \
 	-I$(PROJ)/src/common \
 	-I$(PROJ)/src/common\tv_filters \
 	-I$(PROJ)/src/common\repository\sqlite \
@@ -173,15 +174,13 @@ INCLUDES = \
 	-I$(PROJ)/src/emucore/tia/frame-manager \
 	-I$(PROJ)/src/lib/json \
 	-I$(PROJ)/src/lib/sqlite \
-	-I$(PROJ)/src/os/windows \
-	-I$(PROJ)/src/os/libretro
+	-I$(PROJ)/src/os/windows
 
 DEFS = \
 	-DCORE_EXPORT \
 	-DBSPF_WINDOWS \
 	-DNOMINMAX \
-	-DSOUND_SUPPORT \
-	-D__LIB_RETRO__
+	-DSOUND_SUPPORT
 
 LINK_FLAGS = \
 	/nodefaultlib \
