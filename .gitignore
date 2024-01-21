@@ -4,6 +4,7 @@
 *.dll
 *.ilk
 *.pdb
+*.ifc
 
 *.dylib
 *.so
