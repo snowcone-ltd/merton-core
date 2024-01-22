@@ -1,14 +1,25 @@
 #include "util/gpu_device.h"
 
-GPUDevice::~GPUDevice() = default;
-GPUPipeline::GPUPipeline() = default;
-GPUPipeline::~GPUPipeline() = default;
-GPUShader::~GPUShader() = default;
-GPUSampler::GPUSampler() = default;
-GPUSampler::~GPUSampler() = default;
-
 std::unique_ptr<GPUDevice> g_gpu_device;
 size_t GPUDevice::s_total_vram_usage;
+
+
+// NullDevice
+
+class NullDevice : GPUDevice {
+	NullDevice();
+};
+
+NullDevice::NullDevice()
+{
+}
+
+
+// GPUDevice
+
+GPUDevice::~GPUDevice()
+{
+}
 
 bool GPUDevice::Create(const std::string_view& adapter, const std::string_view& shader_cache_path,
 	u32 shader_cache_version, bool debug_device, bool vsync, bool threaded_presentation,
@@ -96,6 +107,10 @@ void GPUDevice::UploadUniformBuffer(const void* data, u32 data_size)
 
 
 // Unmodified
+
+GPUShaderCache::GPUShaderCache()
+{
+}
 
 GPUShaderCache::~GPUShaderCache()
 {
@@ -206,6 +221,7 @@ GPUPipeline::RasterizationState GPUPipeline::RasterizationState::GetNoCullState(
 {
 	RasterizationState ret = {};
 	ret.cull_mode = CullMode::None;
+
 	return ret;
 }
 
@@ -229,6 +245,11 @@ const char* GPUDevice::RenderAPIToString(RenderAPI api)
 
 std::unique_ptr<GPUDevice> GPUDevice::CreateDeviceForAPI(RenderAPI api)
 {
+	//std::unique_ptr<GPUDevice> device(new NullDevice());
+
+	//return device;
+
+	// FIXME This needs to be instantiated
 	return {};
 }
 

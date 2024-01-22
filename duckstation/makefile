@@ -2,7 +2,6 @@ PROJ = duckstation
 NAME = duckstation
 
 UTIL_OBJS = \
-	$(PROJ)/src/util/audio_stream.obj \
 	$(PROJ)/src/util/cd_image.obj \
 	$(PROJ)/src/util/cd_image_bin.obj \
 	$(PROJ)/src/util/cd_image_chd.obj \
@@ -64,20 +63,6 @@ DEPS_OBJS = \
 	$(PROJ)/dep/reshadefx/src/effect_parser_exp.obj \
 	$(PROJ)/dep/reshadefx/src/effect_parser_stmt.obj \
 	$(PROJ)/dep/reshadefx/src/effect_symbol_table.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/AAFilter.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/BPMDetect.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/cpu_detect_x86.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/FIFOSampleBuffer.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/FIRFilter.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/InterpolateCubic.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/InterpolateLinear.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/InterpolateShannon.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/mmx_optimized.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/PeakFinder.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/RateTransposer.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/SoundTouch.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/sse_optimized.obj \
-	$(PROJ)/dep/soundtouch/source/SoundTouch/TDStretch.obj \
 	$(PROJ)/dep/stb/src/stb_image.obj \
 	$(PROJ)/dep/stb/src/stb_image_resize.obj \
 	$(PROJ)/dep/stb/src/stb_image_write.obj \
@@ -200,6 +185,7 @@ OBJS = \
 	rename/zstd_threading.obj \
 	rename/zstd_xxhash.obj \
 	shim/achievements.obj \
+	shim/audio_stream.obj \
 	shim/fullscreen_ui.obj \
 	shim/game_list.obj \
 	shim/gpu_device.obj \
@@ -255,7 +241,6 @@ INCLUDES = \
 	-I$(PROJ)/dep/rapidjson/include \
 	-I$(PROJ)/dep/reshadefx/include \
 	-I$(PROJ)/dep/simpleini/include \
-	-I$(PROJ)/dep/soundtouch/include \
 	-I$(PROJ)/dep/stb/include \
 	-I$(PROJ)/dep/xbyak/xbyak \
 	-I$(PROJ)/dep/xxhash/include \
