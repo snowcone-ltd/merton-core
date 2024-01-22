@@ -56,6 +56,9 @@ void AudioStream::SetStretchMode(AudioStretchMode mode)
 {
 }
 
+
+// Virtual
+
 void AudioStream::SetPaused(bool paused)
 {
 }
