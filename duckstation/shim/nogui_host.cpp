@@ -1,34 +1,45 @@
 #include "core/host.h"
 #include "core/system.h"
+#include "common/log.h"
 #include "util/gpu_device.h"
+
+void core_log(const char *fmt, ...);
 
 const char *g_scm_tag_str = "";
 
 void Host::ReportErrorAsync(const std::string_view& title, const std::string_view& message)
 {
+	core_log("%s\n", std::string(message).c_str());
+}
+
+void Host::ReportDebuggerMessage(const std::string_view& message)
+{
+	core_log("%s\n", std::string(message).c_str());
 }
 
 std::optional<std::string> Host::ReadResourceFileToString(std::string_view filename, bool allow_override)
 {
+	core_log("READ RESOURCE: %s\n", std::string(filename).c_str());
+
 	return "";
 }
 
 std::optional<std::time_t> Host::GetResourceFileTimestamp(std::string_view filename, bool allow_override)
 {
-	return 0;
-}
+	core_log("TS RESOURCE: %s\n", std::string(filename).c_str());
 
-void Host::ReportDebuggerMessage(const std::string_view& message)
-{
+	return 0;
 }
 
 bool Host::ConfirmMessage(const std::string_view& title, const std::string_view& message)
 {
+	core_log("CONFIRM\n");
 	return false;
 }
 
 void Host::RunOnCPUThread(std::function<void()> function, bool block)
 {
+	core_log("RUN ON CPU THREAD\n");
 }
 
 void Host::RequestSystemShutdown(bool allow_confirm, bool save_state)
@@ -46,11 +57,15 @@ void Host::SetFullscreen(bool enabled)
 
 bool Host::ResourceFileExists(std::string_view filename, bool allow_override)
 {
+	core_log("RESOURCE EXISTS: %s\n", std::string(filename).c_str());
+
 	return false;
 }
 
 std::optional<std::vector<u8>> Host::ReadResourceFile(std::string_view filename, bool allow_override)
 {
+	core_log("READF RESOURCE: %s\n", std::string(filename).c_str());
+
 	return std::vector<u8>();
 }
 
@@ -102,6 +117,7 @@ void Host::OnGameChanged(const std::string& disc_path, const std::string& game_s
 
 void Host::PumpMessagesOnCPUThread()
 {
+	core_log("PUMP\n");
 }
 
 void Host::RequestResizeHostDisplay(s32 width, s32 height)

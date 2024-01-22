@@ -177,13 +177,8 @@ CORE_OBJS = \
 	$(PROJ)/src/core/timers.obj \
 	$(PROJ)/src/core/timing_event.obj
 
-OBJS = \
-	rename/core_host.obj \
-	rename/effect_preprocessor.obj \
-	rename/format.obj \
-	rename/os.obj \
-	rename/zstd_threading.obj \
-	rename/zstd_xxhash.obj \
+SHIM_OBJS = \
+	core.obj \
 	shim/achievements.obj \
 	shim/audio_stream.obj \
 	shim/fullscreen_ui.obj \
@@ -194,6 +189,15 @@ OBJS = \
 	shim/imgui_overlays.obj \
 	shim/input_manager.obj \
 	shim/nogui_host.obj \
+
+OBJS = \
+	rename/core_host.obj \
+	rename/effect_preprocessor.obj \
+	rename/format.obj \
+	rename/os.obj \
+	rename/zstd_threading.obj \
+	rename/zstd_xxhash.obj \
+	$(SHIM_OBJS) \
 	$(DEPS_OBJS) \
 	$(UTIL_OBJS) \
 	$(COMMON_OBJS) \
@@ -228,6 +232,7 @@ FLAGS = \
 	/nologo
 
 INCLUDES = \
+	-I../../libmatoya/src \
 	-Irename \
 	-I$(PROJ)/src \
 	-I$(PROJ)/dep \
@@ -252,8 +257,7 @@ DEFS = \
 	-DCORE_EXPORT \
 	-DENABLE_RECOMPILER_SUPPORT \
 	-DENABLE_NEWREC \
-	-D_7ZIP_ST \
-	-DEXPORT=
+	-D_7ZIP_ST
 
 LINK_FLAGS = \
 	/nodefaultlib \
@@ -261,6 +265,7 @@ LINK_FLAGS = \
 	/dll
 
 LIBS = \
+	..\..\libmatoya\bin\windows\x64\matoya.lib \
 	libvcruntime.lib \
 	libucrt.lib \
 	libcmt.lib \
@@ -286,7 +291,7 @@ CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
 CPPFLAGS = $(CFLAGS) /EHsc /std:c++20
 AFLAGS = /nologo /D _M_X86_64
 
-all: clean clear fmt-interface $(OBJS)
+all: clear $(SHIM_OBJS) $(CORE_OBJS)
 	link /out:$(NAME).dll $(LINK_FLAGS) *.obj $(LIBS)
 
 fmt-interface:

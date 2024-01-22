@@ -3,10 +3,63 @@
 std::unique_ptr<GPUDevice> g_gpu_device;
 size_t GPUDevice::s_total_vram_usage;
 
+void core_log(const char *fmt, ...);
+
+
+// NullShader
+
+class NullShader final : public GPUShader {
+public:
+	NullShader(GPUShaderStage stage);
+	void SetDebugName(const std::string_view& name);
+};
+
+GPUShader::GPUShader(GPUShaderStage stage) : m_stage(stage)
+{
+}
+
+GPUShader::~GPUShader()
+{
+}
+
+NullShader::NullShader(GPUShaderStage stage) : GPUShader(stage)
+{
+}
+
+void NullShader::SetDebugName(const std::string_view& name)
+{
+}
+
+
+// NullPipeline
+
+class NullPipeline final : public GPUPipeline {
+public:
+	NullPipeline();
+	void SetDebugName(const std::string_view& name);
+};
+
+GPUPipeline::GPUPipeline()
+{
+}
+
+GPUPipeline::~GPUPipeline()
+{
+}
+
+NullPipeline::NullPipeline() : GPUPipeline()
+{
+}
+
+void NullPipeline::SetDebugName(const std::string_view& name)
+{
+}
+
 
 // NullDevice
 
-class NullDevice : GPUDevice {
+class NullDevice final : public GPUDevice {
+public:
 	NullDevice();
 	RenderAPI NullDevice::GetRenderAPI() const;
 	bool HasSurface() const;
@@ -32,20 +85,31 @@ class NullDevice : GPUDevice {
 	void MapIndexBuffer(u32 index_count, DrawIndex** map_ptr, u32* map_space, u32* map_base_index);
 	void UnmapIndexBuffer(u32 used_size);
 	void PushUniformBuffer(const void* data, u32 data_size);
-	void DestroyDevice();
 	void ResizeWindow(s32 new_window_width, s32 new_window_height, float new_window_scale);
 	void CopyTextureRegion(GPUTexture* dst, u32 dst_x, u32 dst_y, u32 dst_layer, u32 dst_level,
 		GPUTexture* src, u32 src_x, u32 src_y, u32 src_layer, u32 src_level, u32 width, u32 height);
 	void ResolveTextureRegion(GPUTexture* dst, u32 dst_x, u32 dst_y, u32 dst_layer, u32 dst_level,
 		GPUTexture* src, u32 src_x, u32 src_y, u32 width, u32 height);
+	std::string GetDriverInfo() const;
+	bool BeginPresent(bool skip_present);
+	bool SupportsTextureFormat(GPUTexture::Format format) const;
+	bool DownloadTexture(GPUTexture* texture, u32 x, u32 y, u32 width, u32 height,
+		void* out_data, u32 out_data_stride);
+	std::unique_ptr<GPUTexture> CreateTexture(u32 width, u32 height, u32 layers, u32 levels, u32 samples,
+		GPUTexture::Type type, GPUTexture::Format format, const void* data = nullptr, u32 data_stride = 0);
+	std::unique_ptr<GPUSampler> CreateSampler(const GPUSampler::Config& config);
+	std::unique_ptr<GPUTextureBuffer> CreateTextureBuffer(GPUTextureBuffer::Format format, u32 size_in_elements);
+	std::unique_ptr<GPUPipeline> CreatePipeline(const GPUPipeline::GraphicsConfig& config);
+	void* MapUniformBuffer(u32 size);
+
+protected:
+	bool CreateDevice(const std::string_view& adapter, bool threaded_presentation,
+		std::optional<bool> exclusive_fullscreen_control, FeatureMask disabled_features);
+	void DestroyDevice();
+	std::unique_ptr<GPUShader> CreateShaderFromBinary(GPUShaderStage stage, std::span<const u8> data);
+	std::unique_ptr<GPUShader> CreateShaderFromSource(GPUShaderStage stage, const std::string_view& source,
+		const char* entry_point, DynamicHeapArray<u8>* out_binary);
 };
-
-NullDevice::NullDevice()
-{
-}
-
-
-// GPUDevice
 
 bool GPUDevice::Create(const std::string_view& adapter, const std::string_view& shader_cache_path,
 	u32 shader_cache_version, bool debug_device, bool vsync, bool threaded_presentation,
@@ -54,8 +118,8 @@ bool GPUDevice::Create(const std::string_view& adapter, const std::string_view& 
 	m_vsync_enabled = vsync;
 	m_debug_device = debug_device;
 
-	m_max_texture_size = UINT32_MAX;
-	m_max_multisamples = UINT32_MAX;
+	m_max_texture_size = INT32_MAX;
+	m_max_multisamples = INT32_MAX;
 
 	m_features = {};
 	// m_features.dual_source_blend : 1;
@@ -99,12 +163,16 @@ bool GPUDevice::ShouldSkipDisplayingFrame()
 std::unique_ptr<GPUShader> GPUDevice::CreateShader(GPUShaderStage stage, const std::string_view& source,
 	const char* entry_point)
 {
-	return {};
+	std::unique_ptr<NullShader> shader(new NullShader(stage));
+
+	return shader;
 }
 
 std::unique_ptr<GPUTexture> GPUDevice::FetchTexture(u32 width, u32 height, u32 layers, u32 levels, u32 samples,
 	GPUTexture::Type type, GPUTexture::Format format, const void* data, u32 data_stride)
 {
+	core_log("FetchTexture\n");
+
 	return {};
 }
 
@@ -123,9 +191,6 @@ void GPUDevice::SetRenderTarget(GPUTexture* rt, GPUTexture* ds)
 void GPUDevice::UploadUniformBuffer(const void* data, u32 data_size)
 {
 }
-
-
-// Unmodified
 
 GPUShaderCache::GPUShaderCache()
 {
@@ -264,12 +329,9 @@ const char* GPUDevice::RenderAPIToString(RenderAPI api)
 
 std::unique_ptr<GPUDevice> GPUDevice::CreateDeviceForAPI(RenderAPI api)
 {
-	//std::unique_ptr<GPUDevice> device(new NullDevice());
+	std::unique_ptr<GPUDevice> device(new NullDevice());
 
-	//return device;
-
-	// FIXME This needs to be instantiated
-	return {};
+	return device;
 }
 
 void GPUDevice::Destroy()
@@ -301,6 +363,10 @@ void GPUDevice::RenderImGui()
 
 // Virutal
 
+NullDevice::NullDevice()
+{
+}
+
 GPUDevice::~GPUDevice()
 {
 }
@@ -312,16 +378,22 @@ bool GPUDevice::SupportsExclusiveFullscreen() const
 
 void GPUDevice::ClearRenderTarget(GPUTexture* t, u32 c)
 {
+	core_log("ClearRenderTarget\n");
+
 	t->SetClearColor(c);
 }
 
 void GPUDevice::ClearDepth(GPUTexture* t, float d)
 {
+	core_log("ClearDepth\n");
+
 	t->SetClearDepth(d);
 }
 
 void GPUDevice::InvalidateRenderTarget(GPUTexture* t)
 {
+	core_log("InvalidateRanderTarget\n");
+
 	t->SetState(GPUTexture::State::Invalidated);
 }
 
@@ -334,16 +406,25 @@ bool GPUDevice::GetHostRefreshRate(float* refresh_rate)
 
 bool GPUDevice::SetGPUTimingEnabled(bool enabled)
 {
+	core_log("SetGPUTimingEnabled\n");
+
 	return false;
 }
 
 float GPUDevice::GetAndResetAccumulatedGPUTime()
 {
+	core_log("GetAndResetAccumulatedGPUTime\n");
+
 	return 0.0f;
 }
 
+
+// Virtual protected
+
 bool GPUDevice::ReadPipelineCache(const std::string& filename)
 {
+	core_log("ReadPipelineCache\n");
+
 	return false;
 }
 
@@ -362,7 +443,7 @@ RenderAPI NullDevice::GetRenderAPI() const
 
 bool NullDevice::HasSurface() const
 {
-	return false;
+	return true;
 }
 
 void NullDevice::DestroySurface()
@@ -376,6 +457,8 @@ bool NullDevice::UpdateWindow()
 
 GPUDevice::AdapterAndModeList NullDevice::GetAdapterAndModeList()
 {
+	core_log("GetAdapterAndModeList\n");
+
 	return {};
 }
 
@@ -435,15 +518,7 @@ void NullDevice::InsertDebugMessage(const char* msg)
 {
 }
 
-void NullDevice::MapVertexBuffer(u32 vertex_size, u32 vertex_count, void** map_ptr, u32* map_space, u32* map_base_vertex)
-{
-}
-
 void NullDevice::UnmapVertexBuffer(u32 vertex_size, u32 vertex_count)
-{
-}
-
-void NullDevice::MapIndexBuffer(u32 index_count, DrawIndex** map_ptr, u32* map_space, u32* map_base_index)
 {
 }
 
@@ -452,10 +527,6 @@ void NullDevice::UnmapIndexBuffer(u32 used_size)
 }
 
 void NullDevice::PushUniformBuffer(const void* data, u32 data_size)
-{
-}
-
-void NullDevice::DestroyDevice()
 {
 }
 
@@ -473,56 +544,95 @@ void NullDevice::ResolveTextureRegion(GPUTexture* dst, u32 dst_x, u32 dst_y, u32
 {
 }
 
-/* TODO
-
 std::string NullDevice::GetDriverInfo() const
 {
+	return "Null";
 }
 
-std::unique_ptr<GPUTexture> NullDevice::CreateTexture(u32 width, u32 height, u32 layers, u32 levels, u32 samples,
-	GPUTexture::Type type, GPUTexture::Format format, const void* data = nullptr, u32 data_stride = 0)
+bool NullDevice::BeginPresent(bool skip_present)
 {
+	return true;
 }
 
-std::unique_ptr<GPUSampler> NullDevice::CreateSampler(const GPUSampler::Config& config)
+bool NullDevice::SupportsTextureFormat(GPUTexture::Format format) const
 {
-}
-
-std::unique_ptr<GPUTextureBuffer> NullDevice::CreateTextureBuffer(GPUTextureBuffer::Format format, u32 size_in_elements)
-{
+	return true;
 }
 
 bool NullDevice::DownloadTexture(GPUTexture* texture, u32 x, u32 y, u32 width, u32 height,
 	void* out_data, u32 out_data_stride)
 {
+	core_log("DownloadTexture\n");
+
+	return true;
 }
 
-std::unique_ptr<GPUPipeline> NullDevice::CreatePipeline(const GPUPipeline::GraphicsConfig& config)
+void NullDevice::MapIndexBuffer(u32 index_count, DrawIndex** map_ptr, u32* map_space, u32* map_base_index)
 {
+	core_log("MapIndexBuffer\n");
+}
+
+void NullDevice::MapVertexBuffer(u32 vertex_size, u32 vertex_count, void** map_ptr, u32* map_space, u32* map_base_vertex)
+{
+	core_log("MapVertexBuffer\n");
 }
 
 void* NullDevice::MapUniformBuffer(u32 size)
 {
+	core_log("MapUniformBuffer\n");
+
+	return NULL;
 }
 
-bool NullDevice::BeginPresent(bool skip_present)
+std::unique_ptr<GPUTexture> NullDevice::CreateTexture(u32 width, u32 height, u32 layers, u32 levels, u32 samples,
+	GPUTexture::Type type, GPUTexture::Format format, const void* data, u32 data_stride)
 {
+	core_log("CreateTexture\n");
+
+	return {};
 }
-bool NullDevice::SupportsTextureFormat(GPUTexture::Format format) const
+
+std::unique_ptr<GPUSampler> NullDevice::CreateSampler(const GPUSampler::Config& config)
 {
+	core_log("CreateSampler\n");
+
+	return {};
 }
+
+std::unique_ptr<GPUTextureBuffer> NullDevice::CreateTextureBuffer(GPUTextureBuffer::Format format, u32 size_in_elements)
+{
+	core_log("CreateTextureBuffer\n");
+
+	return {};
+}
+
+std::unique_ptr<GPUPipeline> NullDevice::CreatePipeline(const GPUPipeline::GraphicsConfig& config)
+{
+	std::unique_ptr<GPUPipeline> pipeline(new NullPipeline());
+
+	return pipeline;
+}
+
+
+// Pure virtual protected
 
 bool NullDevice::CreateDevice(const std::string_view& adapter, bool threaded_presentation,
 	std::optional<bool> exclusive_fullscreen_control, FeatureMask disabled_features)
+{
+	return true;
+}
+
+void NullDevice::DestroyDevice()
 {
 }
 
 std::unique_ptr<GPUShader> NullDevice::CreateShaderFromBinary(GPUShaderStage stage, std::span<const u8> data)
 {
+	return {};
 }
 
 std::unique_ptr<GPUShader> NullDevice::CreateShaderFromSource(GPUShaderStage stage, const std::string_view& source,
 	const char* entry_point, DynamicHeapArray<u8>* out_binary)
 {
+	return {};
 }
-*/

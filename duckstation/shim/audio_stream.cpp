@@ -7,9 +7,13 @@ static s16 AUDIO_STREAM_BUF[AUDIO_STREAM_MAX];
 class soundtouch::SoundTouch {
 };
 
+void core_log(const char *fmt, ...);
+
 AudioStream::AudioStream(u32 sample_rate, u32 channels, u32 buffer_ms, AudioStretchMode stretch) :
 	m_sample_rate(sample_rate), m_channels(channels), m_buffer_ms(buffer_ms), m_stretch_mode(stretch)
 {
+	m_buffer_size = AUDIO_STREAM_MAX;
+	core_log("BUFFER CREATE: %d\n", buffer_ms);
 }
 
 AudioStream::~AudioStream()
@@ -41,6 +45,8 @@ void AudioStream::BeginWrite(SampleType** buffer_ptr, u32* num_frames)
 
 void AudioStream::EndWrite(u32 num_frames)
 {
+	core_log("FRAMES: %u\n", num_frames);
+
 	// TODO Fire audio callback here
 }
 
