@@ -17,34 +17,13 @@ UTIL_OBJS = \
 	$(PROJ)/src/util/cd_image_ppf.obj \
 	$(PROJ)/src/util/cd_subchannel_replacement.obj \
 	$(PROJ)/src/util/cd_xa.obj \
-	$(PROJ)/src/util/cubeb_audio_stream.obj \
 	$(PROJ)/src/util/cue_parser.obj \
-	$(PROJ)/src/util/d3d_common.obj \
-	$(PROJ)/src/util/d3d11_device.obj \
-	$(PROJ)/src/util/d3d11_pipeline.obj \
-	$(PROJ)/src/util/d3d11_stream_buffer.obj \
-	$(PROJ)/src/util/d3d11_texture.obj \
-	$(PROJ)/src/util/d3d12_builders.obj \
-	$(PROJ)/src/util/d3d12_descriptor_heap_manager.obj \
-	$(PROJ)/src/util/d3d12_device.obj \
-	$(PROJ)/src/util/d3d12_pipeline.obj \
-	$(PROJ)/src/util/d3d12_stream_buffer.obj \
-	$(PROJ)/src/util/d3d12_texture.obj \
-	$(PROJ)/src/util/dinput_source.obj \
-	$(PROJ)/src/util/gpu_device.obj \
-	$(PROJ)/src/util/gpu_shader_cache.obj \
 	$(PROJ)/src/util/gpu_texture.obj \
-	$(PROJ)/src/util/http_downloader.obj \
-	$(PROJ)/src/util/http_downloader_winhttp.obj \
-	$(PROJ)/src/util/imgui_fullscreen.obj \
-	$(PROJ)/src/util/imgui_manager.obj \
+	$(PROJ)/src/util/host.obj \
 	$(PROJ)/src/util/ini_settings_interface.obj \
-	$(PROJ)/src/util/input_manager.obj \
-	$(PROJ)/src/util/input_source.obj \
 	$(PROJ)/src/util/iso_reader.obj \
 	$(PROJ)/src/util/jit_code_buffer.obj \
 	$(PROJ)/src/util/page_fault_handler.obj \
-	$(PROJ)/src/util/pch.obj \
 	$(PROJ)/src/util/platform_misc_win32.obj \
 	$(PROJ)/src/util/postprocessing.obj \
 	$(PROJ)/src/util/postprocessing_shader.obj \
@@ -53,27 +32,9 @@ UTIL_OBJS = \
 	$(PROJ)/src/util/shadergen.obj \
 	$(PROJ)/src/util/shiftjis.obj \
 	$(PROJ)/src/util/state_wrapper.obj \
-	$(PROJ)/src/util/wav_writer.obj \
-	$(PROJ)/src/util/win32_raw_input_source.obj \
-	$(PROJ)/src/util/window_info.obj \
-	$(PROJ)/src/util/xaudio2_audio_stream.obj
+	$(PROJ)/src/util/wav_writer.obj
 
 DEPS_OBJS = \
-	$(PROJ)/dep/cubeb/subprojects/speex/resample.obj \
-	$(PROJ)/dep/cubeb/src/cubeb.obj \
-	$(PROJ)/dep/cubeb/src/cubeb_log.obj \
-	$(PROJ)/dep/cubeb/src/cubeb_mixer.obj \
-	$(PROJ)/dep/cubeb/src/cubeb_resampler.obj \
-	$(PROJ)/dep/cubeb/src/cubeb_strings.obj \
-	$(PROJ)/dep/cubeb/src/cubeb_utils.obj \
-	$(PROJ)/dep/cubeb/src/cubeb_wasapi.obj \
-	$(PROJ)/dep/d3d12ma/src/D3D12MemAlloc.obj \
-	$(PROJ)/dep/imgui/src/imgui.obj \
-	$(PROJ)/dep/imgui/src/imgui_demo.obj \
-	$(PROJ)/dep/imgui/src/imgui_draw.obj \
-	$(PROJ)/dep/imgui/src/imgui_stdlib.obj \
-	$(PROJ)/dep/imgui/src/imgui_tables.obj \
-	$(PROJ)/dep/imgui/src/imgui_widgets.obj \
 	$(PROJ)/dep/libchdr/src/libchdr_bitstream.obj \
 	$(PROJ)/dep/libchdr/src/libchdr_cdrom.obj \
 	$(PROJ)/dep/libchdr/src/libchdr_chd.obj \
@@ -159,14 +120,12 @@ DEPS_OBJS = \
 	$(PROJ)/dep/zstd/lib/decompress/zstd_decompress.obj \
 	$(PROJ)/dep/zstd/lib/decompress/zstd_decompress_block.obj \
 	$(PROJ)/dep/xxhash/src/xxh_x86dispatch.obj \
-	$(PROJ)/dep/xxhash/src/xxhash.obj \
+	$(PROJ)/dep/xxhash/src/xxhash.obj
 
 COMMON_OBJS = \
 	$(PROJ)/src/common/thirdparty/SmallVector.obj \
-	$(PROJ)/src/common/thirdparty/StackWalker.obj \
 	$(PROJ)/src/common/assert.obj \
 	$(PROJ)/src/common/byte_stream.obj \
-	$(PROJ)/src/common/crash_handler.obj \
 	$(PROJ)/src/common/error.obj \
 	$(PROJ)/src/common/fastjmp_x86.obj \
 	$(PROJ)/src/common/file_system.obj \
@@ -175,14 +134,11 @@ COMMON_OBJS = \
 	$(PROJ)/src/common/log.obj \
 	$(PROJ)/src/common/md5_digest.obj \
 	$(PROJ)/src/common/memmap.obj \
-	$(PROJ)/src/common/minizip_helpers.obj \
-	$(PROJ)/src/common/perf_scope.obj \
 	$(PROJ)/src/common/progress_callback.obj \
-	$(PROJ)/src/common/sha1_digest.obj \
 	$(PROJ)/src/common/small_string.obj \
 	$(PROJ)/src/common/string_util.obj \
 	$(PROJ)/src/common/threading.obj \
-	$(PROJ)/src/common/timer.obj \
+	$(PROJ)/src/common/timer.obj
 
 CORE_OBJS = \
 	$(PROJ)/src/core/analog_controller.obj \
@@ -206,10 +162,7 @@ CORE_OBJS = \
 	$(PROJ)/src/core/cpu_types.obj \
 	$(PROJ)/src/core/digital_controller.obj \
 	$(PROJ)/src/core/dma.obj \
-	$(PROJ)/src/core/fullscreen_ui.obj \
 	$(PROJ)/src/core/game_database.obj \
-	$(PROJ)/src/core/game_list.obj \
-	$(PROJ)/src/core/gdb_protocol.obj \
 	$(PROJ)/src/core/gpu.obj \
 	$(PROJ)/src/core/gpu_backend.obj \
 	$(PROJ)/src/core/gpu_commands.obj \
@@ -220,10 +173,7 @@ CORE_OBJS = \
 	$(PROJ)/src/core/gpu_sw_backend.obj \
 	$(PROJ)/src/core/gte.obj \
 	$(PROJ)/src/core/guncon.obj \
-	$(PROJ)/src/core/host.obj \
 	$(PROJ)/src/core/host_interface_progress_callback.obj \
-	$(PROJ)/src/core/hotkeys.obj \
-	$(PROJ)/src/core/imgui_overlays.obj \
 	$(PROJ)/src/core/interrupt_controller.obj \
 	$(PROJ)/src/core/mdec.obj \
 	$(PROJ)/src/core/memory_card.obj \
@@ -234,25 +184,30 @@ CORE_OBJS = \
 	$(PROJ)/src/core/pcdrv.obj \
 	$(PROJ)/src/core/playstation_mouse.obj \
 	$(PROJ)/src/core/psf_loader.obj \
-	$(PROJ)/src/core/resources.obj \
 	$(PROJ)/src/core/settings.obj \
 	$(PROJ)/src/core/sio.obj \
 	$(PROJ)/src/core/spu.obj \
 	$(PROJ)/src/core/system.obj \
 	$(PROJ)/src/core/texture_replacements.obj \
 	$(PROJ)/src/core/timers.obj \
-	$(PROJ)/src/core/timing_event.obj \
+	$(PROJ)/src/core/timing_event.obj
 
 OBJS = \
+	rename/core_host.obj \
+	rename/effect_preprocessor.obj \
 	rename/format.obj \
 	rename/os.obj \
-	rename/util_host.obj \
 	rename/zstd_threading.obj \
 	rename/zstd_xxhash.obj \
 	shim/achievements.obj \
-	shim/core_host.obj \
-	shim/xinput_source.obj \
-	shim/effect_preprocessor.obj \
+	shim/fullscreen_ui.obj \
+	shim/game_list.obj \
+	shim/gpu_device.obj \
+	shim/imgui.obj \
+	shim/imgui_manager.obj \
+	shim/imgui_overlays.obj \
+	shim/input_manager.obj \
+	shim/nogui_host.obj \
 	$(DEPS_OBJS) \
 	$(UTIL_OBJS) \
 	$(COMMON_OBJS) \
@@ -287,13 +242,10 @@ FLAGS = \
 	/nologo
 
 INCLUDES = \
-	-Ishim \
+	-Irename \
 	-I$(PROJ)/src \
 	-I$(PROJ)/dep \
 	-I$(PROJ)/src/core \
-	-I$(PROJ)/dep/cubeb/include \
-	-I$(PROJ)/dep/cubeb/subprojects \
-	-I$(PROJ)/dep/d3d12ma/include \
 	-I$(PROJ)/dep/fast_float/include \
 	-I$(PROJ)/dep/fmt/include \
 	-I$(PROJ)/dep/imgui/include \
@@ -308,18 +260,14 @@ INCLUDES = \
 	-I$(PROJ)/dep/xbyak/xbyak \
 	-I$(PROJ)/dep/xxhash/include \
 	-I$(PROJ)/dep/zlib/include \
-	-I$(PROJ)/dep/zstd/lib \
+	-I$(PROJ)/dep/zstd/lib
 
 DEFS = \
 	-D_CRT_SECURE_NO_WARNINGS \
 	-DCORE_EXPORT \
 	-DENABLE_RECOMPILER_SUPPORT \
 	-DENABLE_NEWREC \
-	-DENABLE_CUBEB \
 	-D_7ZIP_ST \
-	-DOUTSIDE_SPEEX \
-	-DFLOATING_POINT \
-	-DRANDOM_PREFIX=speex \
 	-DEXPORT=
 
 LINK_FLAGS = \
@@ -332,22 +280,14 @@ LIBS = \
 	libucrt.lib \
 	libcmt.lib \
 	libcpmt.lib \
-	kernel32.lib \
-	dxgi.lib \
-	d3d11.lib \
-	d3d12.lib \
-	winhttp.lib \
-	advapi32.lib \
 	user32.lib \
 	winmm.lib \
+	ole32.lib \
 	version.lib \
-	dwmapi.lib \
-	windowsapp.lib \
-	imm32.lib \
-	onecore.lib \
+	advapi32.lib \
+	kernel32.lib \
 	oldnames.lib \
-	avrt.lib \
-	uuid.lib
+	onecore.lib # This is an umbrella lib, needed for memoryapi.h
 
 !IFDEF DEBUG
 FLAGS = $(FLAGS) /Ob0 /Zi /Oy-
