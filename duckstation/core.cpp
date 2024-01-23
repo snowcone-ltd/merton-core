@@ -4,18 +4,16 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "core/system.h"
-#include "core/settings.h"
-#include "core/host.h"
 #include "common/log.h"
 #include "common/path.h"
+#include "core/analog_controller.h"
+#include "core/host.h"
+#include "core/system.h"
+#include "core/settings.h"
 #include "util/ini_settings_interface.h"
-
-#include "matoya.h"
 
 struct Core {
 	bool loaded;
-	char *path;
 };
 
 static CoreLogFunc CORE_LOG_FUNC;
@@ -95,8 +93,6 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	if (!ctx)
 		return false;
 
-	ctx->path = MTY_Strdup(path);
-
 	System::Internal::ProcessStartup();
 
 	std::string settings_filename = Path::Combine(EmuFolders::DataRoot, "settings.ini");
@@ -109,7 +105,7 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	settings->SetStringValue("CPU", "ExecutionMode", "NewRec");
 
 	SystemBootParameters bp = {};
-	bp.filename = ctx->path;
+	bp.filename = path;
 	bp.force_software_renderer = true;
 	bp.load_image_to_ram = true;
 
@@ -148,10 +144,40 @@ void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
 	if (!ctx || !ctx->loaded)
 		return;
+
+	Controller *c = System::GetController(player);
+	if (!c)
+		return;
+
+	AnalogController::Button b;
+
+	switch (button) {
+		case CORE_BUTTON_SELECT: b = AnalogController::Button::Select; break;
+		case CORE_BUTTON_L3: b = AnalogController::Button::L3; break;
+		case CORE_BUTTON_R3: b = AnalogController::Button::R3; break;
+		case CORE_BUTTON_START: b = AnalogController::Button::Start; break;
+		case CORE_BUTTON_DPAD_U: b = AnalogController::Button::Up; break;
+		case CORE_BUTTON_DPAD_R: b = AnalogController::Button::Right; break;
+		case CORE_BUTTON_DPAD_D: b = AnalogController::Button::Down; break;
+		case CORE_BUTTON_DPAD_L: b = AnalogController::Button::Left; break;
+		case CORE_BUTTON_L2: b = AnalogController::Button::L2; break;
+		case CORE_BUTTON_R2: b = AnalogController::Button::R2; break;
+		case CORE_BUTTON_L: b = AnalogController::Button::L1; break;
+		case CORE_BUTTON_R: b = AnalogController::Button::R1; break;
+		case CORE_BUTTON_Y: b = AnalogController::Button::Triangle; break;
+		case CORE_BUTTON_B: b = AnalogController::Button::Circle; break;
+		case CORE_BUTTON_A: b = AnalogController::Button::Cross; break;
+		case CORE_BUTTON_X: b = AnalogController::Button::Square; break;
+		default:
+			return;
+	}
+
+	c->SetBindState((u32) b, pressed ? 1 : 0);
 }
 
 void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 {
+		//AnalogController::Count
 }
 
 void *CoreGetState(Core *ctx, size_t *size)

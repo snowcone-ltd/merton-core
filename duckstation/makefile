@@ -232,7 +232,6 @@ FLAGS = \
 	/nologo
 
 INCLUDES = \
-	-I../../libmatoya/src \
 	-Irename \
 	-I$(PROJ)/src \
 	-I$(PROJ)/dep \
@@ -266,7 +265,6 @@ LINK_FLAGS = \
 	/dll
 
 LIBS = \
-	..\..\libmatoya\bin\windows\x64\matoya.lib \
 	libvcruntime.lib \
 	libucrt.lib \
 	libcmt.lib \
@@ -292,7 +290,7 @@ CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
 CPPFLAGS = $(CFLAGS) /EHsc /std:c++20
 AFLAGS = /nologo /D _M_X86_64
 
-all: clean clear fmt-interface $(OBJS)
+all: clear $(SHIM_OBJS)
 	link /out:$(NAME).dll $(LINK_FLAGS) *.obj $(LIBS)
 
 fmt-interface:
