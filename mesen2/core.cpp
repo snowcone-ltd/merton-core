@@ -4,14 +4,18 @@
 #include <stdarg.h>
 
 #include "Core/NES/GameDatabase.h"
+#include "Core/NES/NesConsole.h"
+#include "Core/NES/APU/NesApu.h"
 #include "Core/Shared/Emulator.h"
 #include "Core/Shared/EmuSettings.h"
 #include "Core/Shared/KeyManager.h"
 #include "Core/Shared/Video/BaseVideoFilter.h"
 #include "Core/Shared/MessageManager.h"
+#include "Core/Shared/SaveStateManager.h"
 #include "Utilities/VirtualFile.h"
 #include "Utilities/FolderUtilities.h"
 #include "Utilities/miniz.h"
+#include "Utilities/Serializer.h"
 
 #include "core-key-manager.h"
 #include "palette.h"
@@ -140,6 +144,24 @@ static void core_get_logs(CoreLogFunc func, void *opaque)
 	MessageManager::ClearLog();
 }
 
+static void core_nes_init_triangle(Core *ctx)
+{
+	std::stringstream ss;
+
+	Serializer s_in(SaveStateManager::FileFormatVersion, true);
+
+	uint8_t val = 15;
+	s_in.Stream(val, "triangle.sequencePosition");
+	s_in.SaveTo(ss, 0);
+
+	Serializer s_out(SaveStateManager::FileFormatVersion, false);
+	s_out.LoadFrom(ss);
+
+	NesConsole *nes = (NesConsole *) ctx->emu->GetConsoleUnsafe();
+	NesApu *apu = nes->GetApu();
+	apu->Serialize(s_out);
+}
+
 bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	const void *save_data, size_t save_data_size)
 {
@@ -159,6 +181,8 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 		ctx->filter = ctx->emu->GetVideoFilter(true);
 
 		if (system == CORE_SYSTEM_NES) {
+			core_nes_init_triangle(ctx);
+
 			ConsoleMemoryInfo mi = ctx->emu->GetMemory(MemoryType::NesPaletteRam);
 			memcpy(ctx->pr_initial, mi.Memory, 0x20);
 

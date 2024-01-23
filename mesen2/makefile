@@ -278,7 +278,8 @@ INCLUDES = \
 
 DEFS = \
 	-DUNICODE \
-	-DCORE_EXPORT
+	-DCORE_EXPORT \
+	-DMESENRELEASE
 
 LINK_FLAGS = \
 	/nodefaultlib \
