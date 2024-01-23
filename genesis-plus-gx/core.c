@@ -409,24 +409,9 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 	return state_load((unsigned char *) state);
 }
 
-uint8_t CoreGetNumDisks(Core *ctx)
+bool CoreInsertDisc(Core *ctx, const char *path)
 {
-	// TODO
-
-	return 0;
-}
-
-int8_t CoreGetDisk(Core *ctx)
-{
-	// TODO
-
-	return -1;
-}
-
-bool CoreSetDisk(Core *ctx, int8_t disk, const char *path)
-{
-
-	// TODO
+	// TODO Sega CD
 
 	return false;
 }

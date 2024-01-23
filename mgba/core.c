@@ -412,17 +412,7 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 	return success;
 }
 
-uint8_t CoreGetNumDisks(Core *ctx)
-{
-	return 0;
-}
-
-int8_t CoreGetDisk(Core *ctx)
-{
-	return -1;
-}
-
-bool CoreSetDisk(Core *ctx, int8_t disk, const char *path)
+bool CoreInsertDisc(Core *ctx, const char *path)
 {
 	return false;
 }

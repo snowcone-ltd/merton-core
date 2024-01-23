@@ -276,20 +276,11 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 	return ctx->emu->Deserialize(ss, 0, false, std::optional<ConsoleType>());
 }
 
-uint8_t CoreGetNumDisks(Core *ctx)
+bool CoreInsertDisc(Core *ctx, const char *path)
 {
-	// Mesen prefers auto loading FDS disks (better)
+	// Mesen auto loads FDS disks
+	// TODO PCE CD
 
-	return 0;
-}
-
-int8_t CoreGetDisk(Core *ctx)
-{
-	return -1;
-}
-
-bool CoreSetDisk(Core *ctx, int8_t disk, const char *path)
-{
 	return false;
 }
 

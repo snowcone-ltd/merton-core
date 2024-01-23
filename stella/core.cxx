@@ -261,17 +261,7 @@ void *CoreGetSaveData(Core *ctx, size_t *size)
 	return NULL;
 }
 
-uint8_t CoreGetNumDisks(Core *ctx)
-{
-	return 0;
-}
-
-int8_t CoreGetDisk(Core *ctx)
-{
-	return -1;
-}
-
-bool CoreSetDisk(Core *ctx, int8_t disk, const char *path)
+bool CoreInsertDisc(Core *ctx, const char *path)
 {
 	return false;
 }

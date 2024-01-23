@@ -203,25 +203,12 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 	return false;
 }
 
-uint8_t CoreGetNumDisks(Core *ctx)
+bool CoreInsertDisc(Core *ctx, const char *path)
 {
-	// TODO
+	if (!ctx || !ctx->loaded)
+		return false;
 
-	return 0;
-}
-
-int8_t CoreGetDisk(Core *ctx)
-{
-	// TODO
-
-	return -1;
-}
-
-bool CoreSetDisk(Core *ctx, int8_t disk, const char *path)
-{
-	// TODO
-
-	return false;
+	return System::InsertMedia(path);
 }
 
 void *CoreGetSaveData(Core *ctx, size_t *size)
