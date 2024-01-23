@@ -22,6 +22,8 @@ static void *CORE_LOG_OPAQUE;
 void audio_stream_set_func(CoreAudioFunc func, void *opaque);
 void gpu_device_set_func(CoreVideoFunc func, void *opaque);
 
+static std::unique_ptr<INISettingsInterface> settings;
+
 void core_log(const char *fmt, ...)
 {
 	va_list arg;
@@ -84,9 +86,6 @@ void CoreUnload(Core **core)
 	*core = NULL;
 }
 
-static std::unique_ptr<INISettingsInterface> settings;
-static constexpr u32 SETTINGS_VERSION = 3;
-
 bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	const void *save_data, size_t save_data_size)
 {
@@ -123,12 +122,16 @@ void CoreUnloadGame(Core *ctx)
 		System::ShutdownSystem(false);
 
 	System::Internal::ProcessShutdown();
+
+	ctx->loaded = false;
 }
 
 void CoreReset(Core *ctx)
 {
 	if (!ctx || !ctx->loaded)
 		return;
+
+	System::ResetSystem();
 }
 
 void CoreRun(Core *ctx)
@@ -177,11 +180,13 @@ void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 
 void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 {
-		//AnalogController::Count
+	// TODO AnalogController::Count
 }
 
 void *CoreGetState(Core *ctx, size_t *size)
 {
+	// TODO
+
 	if (!ctx || !ctx->loaded)
 		return NULL;
 
@@ -190,6 +195,8 @@ void *CoreGetState(Core *ctx, size_t *size)
 
 bool CoreSetState(Core *ctx, const void *state, size_t size)
 {
+	// TODO
+
 	if (!ctx || !ctx->loaded)
 		return false;
 
@@ -198,21 +205,29 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 
 uint8_t CoreGetNumDisks(Core *ctx)
 {
+	// TODO
+
 	return 0;
 }
 
 int8_t CoreGetDisk(Core *ctx)
 {
+	// TODO
+
 	return -1;
 }
 
 bool CoreSetDisk(Core *ctx, int8_t disk, const char *path)
 {
+	// TODO
+
 	return false;
 }
 
 void *CoreGetSaveData(Core *ctx, size_t *size)
 {
+	// TODO
+
 	if (!ctx || !ctx->loaded)
 		return NULL;
 
@@ -226,11 +241,15 @@ bool CoreGameIsLoaded(Core *ctx)
 
 double CoreGetFrameRate(Core *ctx)
 {
+	// TODO
+
 	return 60;
 }
 
 float CoreGetAspectRatio(Core *ctx)
 {
+	// TODO
+
 	return 4.0f / 3.0f;
 }
 
@@ -252,6 +271,8 @@ void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
 
 const CoreSetting *CoreGetAllSettings(Core *ctx, uint32_t *len)
 {
+	// TODO
+
 	*len = 0;
 
 	return NULL;
@@ -259,12 +280,16 @@ const CoreSetting *CoreGetAllSettings(Core *ctx, uint32_t *len)
 
 void CoreSetSetting(Core *ctx, const char *key, const char *val)
 {
+	// TODO
+
 	if (!ctx)
 		return;
 }
 
 const char *CoreGetSetting(Core *ctx, const char *key)
 {
+	// TODO
+
 	if (!ctx)
 		return NULL;
 
@@ -273,6 +298,8 @@ const char *CoreGetSetting(Core *ctx, const char *key)
 
 void CoreResetSettings(Core *ctx)
 {
+	// TODO
+
 	if (!ctx)
 		return;
 }
