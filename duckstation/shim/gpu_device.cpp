@@ -40,8 +40,22 @@ void NullTexture::SetDebugName(const std::string_view& name)
 
 bool NullTexture::Update(u32 x, u32 y, u32 width, u32 height, const void* data, u32 pitch, u32 layer, u32 level)
 {
+	CoreColorFormat f = CORE_COLOR_FORMAT_UNKNOWN;
+
+	switch (m_format) {
+		case GPUTexture::Format::RGB565:
+			f = CORE_COLOR_FORMAT_B5G6R5;
+			break;
+		case GPUTexture::Format::RGBA8:
+			f = CORE_COLOR_FORMAT_RGBA;
+			break;
+		default:
+			core_log("Unknown texture format %d\n", m_format);
+			return false;
+	}
+
 	if (GPU_DEVICE_FUNC)
-		GPU_DEVICE_FUNC(data, CORE_COLOR_FORMAT_B5G6R5, width, height, pitch, GPU_DEVICE_OPAQUE);
+		GPU_DEVICE_FUNC(data, f, width, height, pitch, GPU_DEVICE_OPAQUE);
 
 	return true;
 }

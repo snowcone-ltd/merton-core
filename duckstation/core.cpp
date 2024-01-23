@@ -8,6 +8,7 @@
 #include "common/path.h"
 #include "core/analog_controller.h"
 #include "core/host.h"
+#include "core/gpu.h"
 #include "core/system.h"
 #include "core/settings.h"
 #include "util/ini_settings_interface.h"
@@ -106,7 +107,6 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	SystemBootParameters bp = {};
 	bp.filename = path;
 	bp.force_software_renderer = true;
-	bp.load_image_to_ram = true;
 
 	ctx->loaded = System::BootSystem(bp);
 
@@ -248,9 +248,10 @@ double CoreGetFrameRate(Core *ctx)
 
 float CoreGetAspectRatio(Core *ctx)
 {
-	// TODO
+	if (!ctx || !ctx->loaded || !g_gpu)
+		return 4.0f / 3.0f;
 
-	return 4.0f / 3.0f;
+	return g_gpu->ComputeDisplayAspectRatio();
 }
 
 void CoreSetLogFunc(Core *ctx, CoreLogFunc func, void *opaque)
