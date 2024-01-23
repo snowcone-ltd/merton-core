@@ -4,11 +4,14 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "common/byte_stream.h"
 #include "common/log.h"
 #include "common/path.h"
 #include "core/analog_controller.h"
 #include "core/host.h"
 #include "core/gpu.h"
+#include "core/memory_card.h"
+#include "core/pad.h"
 #include "core/system.h"
 #include "core/settings.h"
 #include "util/ini_settings_interface.h"
@@ -102,6 +105,7 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 
 	settings->SetBoolValue("GPU", "UseThread", false);
 	settings->SetStringValue("Audio", "Backend", "Null");
+	settings->SetStringValue("Audio", "StretchMode", "None");
 	settings->SetStringValue("CPU", "ExecutionMode", "NewRec");
 
 	SystemBootParameters bp = {};
@@ -109,6 +113,17 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	bp.force_software_renderer = true;
 
 	ctx->loaded = System::BootSystem(bp);
+
+	if (ctx->loaded && save_data) {
+		MemoryCard *mc = Pad::GetMemoryCard(0);
+
+		if (mc) {
+			MemoryCardImage::DataArray& da = mc->GetData();
+
+			if (da.size() >= save_data_size)
+				std::copy_n(da.begin(), save_data_size, (uint8_t *) save_data);
+		}
+	}
 
 	return ctx->loaded;
 }
@@ -185,22 +200,32 @@ void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 
 void *CoreGetState(Core *ctx, size_t *size)
 {
-	// TODO
-
 	if (!ctx || !ctx->loaded)
 		return NULL;
 
-	return NULL;
+	std::unique_ptr<GrowableMemoryByteStream> ms =
+		ByteStream::CreateGrowableMemoryStream();
+
+	if (!System::SaveStateToStream(ms.get(), 0))
+		return NULL;
+
+	*size = ms->GetMemorySize();
+
+	void *state = malloc(*size);
+	memcpy(state, ms->GetMemoryPointer(), *size);
+
+	return state;
 }
 
 bool CoreSetState(Core *ctx, const void *state, size_t size)
 {
-	// TODO
-
 	if (!ctx || !ctx->loaded)
 		return false;
 
-	return false;
+	std::unique_ptr<MemoryByteStream> ms =
+		ByteStream::CreateMemoryStream((void *) state, size);
+
+	return System::LoadStateFromStream(ms.get(), false);
 }
 
 bool CoreInsertDisc(Core *ctx, const char *path)
@@ -213,12 +238,21 @@ bool CoreInsertDisc(Core *ctx, const char *path)
 
 void *CoreGetSaveData(Core *ctx, size_t *size)
 {
-	// TODO
-
 	if (!ctx || !ctx->loaded)
 		return NULL;
 
-	return NULL;
+	MemoryCard *mc = Pad::GetMemoryCard(0);
+	if (!mc)
+		return NULL;
+
+	MemoryCardImage::DataArray& da = mc->GetData();
+
+	*size = da.size();
+
+	uint8_t *sd = (uint8_t *) malloc(*size);
+	std::copy_n(sd, *size, da.begin());
+
+	return sd;
 }
 
 bool CoreGameIsLoaded(Core *ctx)

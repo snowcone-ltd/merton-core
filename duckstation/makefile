@@ -290,7 +290,7 @@ CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
 CPPFLAGS = $(CFLAGS) /EHsc /std:c++20
 AFLAGS = /nologo /D _M_X86_64
 
-all: clear $(SHIM_OBJS)
+all: clean clear fmt-interface $(OBJS)
 	link /out:$(NAME).dll $(LINK_FLAGS) *.obj $(LIBS)
 
 fmt-interface:
