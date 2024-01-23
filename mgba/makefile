@@ -3,14 +3,10 @@ NAME = mgba
 
 CORE_OBJS = \
 	$(PROJ)/src/core/bitmap-cache.obj \
-	$(PROJ)/src/core/cache-set.obj \
-	$(PROJ)/src/core/cheats.obj \
 	$(PROJ)/src/core/config.obj \
-	$(PROJ)/src/core/core.obj \
 	$(PROJ)/src/core/interface.obj \
 	$(PROJ)/src/core/log.obj \
 	$(PROJ)/src/core/map-cache.obj \
-	$(PROJ)/src/core/serialize.obj \
 	$(PROJ)/src/core/sync.obj \
 	$(PROJ)/src/core/tile-cache.obj \
 	$(PROJ)/src/core/timing.obj
@@ -24,7 +20,6 @@ UTIL_OBJS = \
 	$(PROJ)/src/util/formatting.obj \
 	$(PROJ)/src/util/gbk-table.obj \
 	$(PROJ)/src/util/hash.obj \
-	$(PROJ)/src/util/memory.obj \
 	$(PROJ)/src/util/patch.obj \
 	$(PROJ)/src/util/patch-ips.obj \
 	$(PROJ)/src/util/patch-ups.obj \
@@ -36,9 +31,6 @@ UTIL_OBJS = \
 THIRD_PARTY_OBJS = \
 	$(PROJ)/src/third-party/blip_buf/blip_buf.obj \
 	$(PROJ)/src/third-party/inih/ini.obj
-
-GB_OBJS = \
-	$(PROJ)/src/gb/audio.obj
 
 ARM_OBJS = \
 	$(PROJ)/src/arm/arm.obj \
@@ -65,7 +57,6 @@ GBA_OBJS = \
 	$(PROJ)/src/gba/audio.obj \
 	$(PROJ)/src/gba/bios.obj \
 	$(PROJ)/src/gba/cheats.obj \
-	$(PROJ)/src/gba/core.obj \
 	$(PROJ)/src/gba/dma.obj \
 	$(PROJ)/src/gba/gba.obj \
 	$(PROJ)/src/gba/hle-bios.obj \
@@ -78,13 +69,18 @@ GBA_OBJS = \
 	$(PROJ)/src/gba/timer.obj \
 	$(PROJ)/src/gba/video.obj
 
-BASE_OBJS = \
+OBJS = \
+	core.obj \
+	rename/core-cache-set.obj \
+	rename/core-cheats.obj \
+	rename/core-core.obj \
+	rename/core-serialize.obj \
+	rename/gb-audio.obj \
+	rename/gba-core.obj \
+	rename/util-memory.obj \
 	$(CORE_OBJS) \
 	$(THIRD_PARTY_OBJS) \
 	$(UTIL_OBJS) \
-	$(GB_OBJS)
-
-EMU_OBJS = \
 	$(ARM_OBJS) \
 	$(GBA_OBJS)
 
@@ -158,31 +154,13 @@ FLAGS = $(FLAGS) /O2 /GS- /Gw /GL
 LINK_FLAGS = $(LINK_FLAGS) /LTCG
 !ENDIF
 
-!IFDEF EMU
-LIB_NAME = emu.lib
-OBJS = $(EMU_OBJS)
-!ELSE
-LIB_NAME = base.lib
-OBJS = $(BASE_OBJS)
-!ENDIF
-
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
 
-all: clean clear
-	@nmake /nologo objs BASE=1
-	@nmake /nologo objs EMU=1
-	@nmake /nologo main-obj
-	link /out:$(NAME).dll $(LINK_FLAGS) core.obj base.lib emu.lib $(LIBS)
+all: clean clear $(OBJS)
+	link /out:$(NAME).dll $(LINK_FLAGS) *.obj $(LIBS)
 
-main-obj: clean-obj core.obj
-
-objs: clean-obj $(OBJS)
-	lib /nologo /out:$(LIB_NAME) *.obj
-
-clean-obj:
+clean:
 	@-del /q *.obj 2>nul
-
-clean: clean-obj
 	@-del /q *.lib 2>nul
 	@-del /q *.dll 2>nul
 	@-del /q *.ilk 2>nul
