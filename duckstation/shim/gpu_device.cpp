@@ -1,9 +1,59 @@
 #include "util/gpu_device.h"
 
+#include "../../core.h"
+
 std::unique_ptr<GPUDevice> g_gpu_device;
 size_t GPUDevice::s_total_vram_usage;
 
+static CoreVideoFunc GPU_DEVICE_FUNC;
+static void *GPU_DEVICE_OPAQUE;
+
 void core_log(const char *fmt, ...);
+
+void gpu_device_set_func(CoreVideoFunc func, void *opaque)
+{
+	GPU_DEVICE_FUNC = func;
+	GPU_DEVICE_OPAQUE = opaque;
+}
+
+
+// NullTexture
+
+class NullTexture final : public GPUTexture {
+public:
+	NullTexture(u16 width, u16 height, u8 layers, u8 levels, u8 samples, Type type, Format format);
+	void SetDebugName(const std::string_view& name);
+	bool Update(u32 x, u32 y, u32 width, u32 height, const void* data, u32 pitch, u32 layer = 0, u32 level = 0);
+	bool Map(void** map, u32* map_stride, u32 x, u32 y, u32 width, u32 height, u32 layer = 0, u32 level = 0);
+	void Unmap();
+};
+
+NullTexture::NullTexture(u16 width, u16 height, u8 layers, u8 levels, u8 samples, Type type, Format format) :
+	GPUTexture(static_cast<u16>(width), static_cast<u16>(height), static_cast<u8>(layers), static_cast<u8>(levels),
+	static_cast<u8>(samples), type, format)
+{
+}
+
+void NullTexture::SetDebugName(const std::string_view& name)
+{
+}
+
+bool NullTexture::Update(u32 x, u32 y, u32 width, u32 height, const void* data, u32 pitch, u32 layer, u32 level)
+{
+	if (GPU_DEVICE_FUNC)
+		GPU_DEVICE_FUNC(data, CORE_COLOR_FORMAT_B5G6R5, width, height, pitch, GPU_DEVICE_OPAQUE);
+
+	return true;
+}
+
+bool NullTexture::Map(void** map, u32* map_stride, u32 x, u32 y, u32 width, u32 height, u32 layer, u32 level)
+{
+	return false;
+}
+
+void NullTexture::Unmap()
+{
+}
 
 
 // NullShader
@@ -111,6 +161,14 @@ protected:
 		const char* entry_point, DynamicHeapArray<u8>* out_binary);
 };
 
+GPUDevice::~GPUDevice()
+{
+}
+
+NullDevice::NullDevice()
+{
+}
+
 bool GPUDevice::Create(const std::string_view& adapter, const std::string_view& shader_cache_path,
 	u32 shader_cache_version, bool debug_device, bool vsync, bool threaded_presentation,
 	std::optional<bool> exclusive_fullscreen_control, FeatureMask disabled_features)
@@ -151,8 +209,7 @@ bool GPUDevice::Create(const std::string_view& adapter, const std::string_view& 
 
 RenderAPI GPUDevice::GetPreferredAPI()
 {
-	// return RenderAPI::None;
-	return RenderAPI::OpenGL;
+	return RenderAPI::None;
 }
 
 bool GPUDevice::ShouldSkipDisplayingFrame()
@@ -171,9 +228,9 @@ std::unique_ptr<GPUShader> GPUDevice::CreateShader(GPUShaderStage stage, const s
 std::unique_ptr<GPUTexture> GPUDevice::FetchTexture(u32 width, u32 height, u32 layers, u32 levels, u32 samples,
 	GPUTexture::Type type, GPUTexture::Format format, const void* data, u32 data_stride)
 {
-	core_log("FetchTexture\n");
+	std::unique_ptr<NullTexture> tex(new NullTexture(width, height, layers, levels, samples, type, format));
 
-	return {};
+	return tex;
 }
 
 void GPUDevice::RecycleTexture(std::unique_ptr<GPUTexture> texture)
@@ -313,7 +370,6 @@ const char* GPUDevice::RenderAPIToString(RenderAPI api)
 {
 	switch (api) {
 		#define CASE(x) case RenderAPI::x: return #x
-		CASE(None);
 		CASE(D3D11);
 		CASE(D3D12);
 		CASE(Metal);
@@ -323,7 +379,7 @@ const char* GPUDevice::RenderAPIToString(RenderAPI api)
 		#undef CASE
 
 		default:
-			return "Unknown";
+			return "Null";
 	}
 }
 
@@ -363,14 +419,6 @@ void GPUDevice::RenderImGui()
 
 // Virutal
 
-NullDevice::NullDevice()
-{
-}
-
-GPUDevice::~GPUDevice()
-{
-}
-
 bool GPUDevice::SupportsExclusiveFullscreen() const
 {
 	return false;
@@ -378,22 +426,16 @@ bool GPUDevice::SupportsExclusiveFullscreen() const
 
 void GPUDevice::ClearRenderTarget(GPUTexture* t, u32 c)
 {
-	core_log("ClearRenderTarget\n");
-
 	t->SetClearColor(c);
 }
 
 void GPUDevice::ClearDepth(GPUTexture* t, float d)
 {
-	core_log("ClearDepth\n");
-
 	t->SetClearDepth(d);
 }
 
 void GPUDevice::InvalidateRenderTarget(GPUTexture* t)
 {
-	core_log("InvalidateRanderTarget\n");
-
 	t->SetState(GPUTexture::State::Invalidated);
 }
 
@@ -406,15 +448,11 @@ bool GPUDevice::GetHostRefreshRate(float* refresh_rate)
 
 bool GPUDevice::SetGPUTimingEnabled(bool enabled)
 {
-	core_log("SetGPUTimingEnabled\n");
-
 	return false;
 }
 
 float GPUDevice::GetAndResetAccumulatedGPUTime()
 {
-	core_log("GetAndResetAccumulatedGPUTime\n");
-
 	return 0.0f;
 }
 
@@ -423,8 +461,6 @@ float GPUDevice::GetAndResetAccumulatedGPUTime()
 
 bool GPUDevice::ReadPipelineCache(const std::string& filename)
 {
-	core_log("ReadPipelineCache\n");
-
 	return false;
 }
 
@@ -438,7 +474,7 @@ bool GPUDevice::GetPipelineCacheData(DynamicHeapArray<u8>* data)
 
 RenderAPI NullDevice::GetRenderAPI() const
 {
-	return RenderAPI::OpenGL;
+	return RenderAPI::None;
 }
 
 bool NullDevice::HasSurface() const
@@ -457,8 +493,6 @@ bool NullDevice::UpdateWindow()
 
 GPUDevice::AdapterAndModeList NullDevice::GetAdapterAndModeList()
 {
-	core_log("GetAdapterAndModeList\n");
-
 	return {};
 }
 
@@ -562,47 +596,35 @@ bool NullDevice::SupportsTextureFormat(GPUTexture::Format format) const
 bool NullDevice::DownloadTexture(GPUTexture* texture, u32 x, u32 y, u32 width, u32 height,
 	void* out_data, u32 out_data_stride)
 {
-	core_log("DownloadTexture\n");
-
 	return true;
 }
 
 void NullDevice::MapIndexBuffer(u32 index_count, DrawIndex** map_ptr, u32* map_space, u32* map_base_index)
 {
-	core_log("MapIndexBuffer\n");
 }
 
 void NullDevice::MapVertexBuffer(u32 vertex_size, u32 vertex_count, void** map_ptr, u32* map_space, u32* map_base_vertex)
 {
-	core_log("MapVertexBuffer\n");
 }
 
 void* NullDevice::MapUniformBuffer(u32 size)
 {
-	core_log("MapUniformBuffer\n");
-
 	return NULL;
 }
 
 std::unique_ptr<GPUTexture> NullDevice::CreateTexture(u32 width, u32 height, u32 layers, u32 levels, u32 samples,
 	GPUTexture::Type type, GPUTexture::Format format, const void* data, u32 data_stride)
 {
-	core_log("CreateTexture\n");
-
 	return {};
 }
 
 std::unique_ptr<GPUSampler> NullDevice::CreateSampler(const GPUSampler::Config& config)
 {
-	core_log("CreateSampler\n");
-
 	return {};
 }
 
 std::unique_ptr<GPUTextureBuffer> NullDevice::CreateTextureBuffer(GPUTextureBuffer::Format format, u32 size_in_elements)
 {
-	core_log("CreateTextureBuffer\n");
-
 	return {};
 }
 

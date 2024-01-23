@@ -19,27 +19,25 @@ void Host::ReportDebuggerMessage(const std::string_view& message)
 
 std::optional<std::string> Host::ReadResourceFileToString(std::string_view filename, bool allow_override)
 {
-	core_log("READ RESOURCE: %s\n", std::string(filename).c_str());
+	core_log("ReadResourceFileToString: %s\n", std::string(filename).c_str());
 
 	return "";
 }
 
 std::optional<std::time_t> Host::GetResourceFileTimestamp(std::string_view filename, bool allow_override)
 {
-	core_log("TS RESOURCE: %s\n", std::string(filename).c_str());
+	core_log("GetResourceFileTimestamp: %s\n", std::string(filename).c_str());
 
 	return 0;
 }
 
 bool Host::ConfirmMessage(const std::string_view& title, const std::string_view& message)
 {
-	core_log("CONFIRM\n");
 	return false;
 }
 
 void Host::RunOnCPUThread(std::function<void()> function, bool block)
 {
-	core_log("RUN ON CPU THREAD\n");
 }
 
 void Host::RequestSystemShutdown(bool allow_confirm, bool save_state)
@@ -57,14 +55,14 @@ void Host::SetFullscreen(bool enabled)
 
 bool Host::ResourceFileExists(std::string_view filename, bool allow_override)
 {
-	core_log("RESOURCE EXISTS: %s\n", std::string(filename).c_str());
+	core_log("ResourceFileExists: %s\n", std::string(filename).c_str());
 
 	return false;
 }
 
 std::optional<std::vector<u8>> Host::ReadResourceFile(std::string_view filename, bool allow_override)
 {
-	core_log("READF RESOURCE: %s\n", std::string(filename).c_str());
+	core_log("ReadResourceFile: %s\n", std::string(filename).c_str());
 
 	return std::vector<u8>();
 }
@@ -117,7 +115,6 @@ void Host::OnGameChanged(const std::string& disc_path, const std::string& game_s
 
 void Host::PumpMessagesOnCPUThread()
 {
-	core_log("PUMP\n");
 }
 
 void Host::RequestResizeHostDisplay(s32 width, s32 height)

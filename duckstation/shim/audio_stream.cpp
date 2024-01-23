@@ -1,19 +1,30 @@
 #include "util/audio_stream.h"
 
+#include "../../core.h"
+
 #define AUDIO_STREAM_MAX (16 * 1024)
 
 static s16 AUDIO_STREAM_BUF[AUDIO_STREAM_MAX];
+static CoreAudioFunc AUDIO_STREAM_FUNC;
+static void *AUDIO_STREAM_OPAQUE;
 
 class soundtouch::SoundTouch {
 };
 
 void core_log(const char *fmt, ...);
 
+void audio_stream_set_func(CoreAudioFunc func, void *opaque)
+{
+	AUDIO_STREAM_FUNC = func;
+	AUDIO_STREAM_OPAQUE = opaque;
+}
+
 AudioStream::AudioStream(u32 sample_rate, u32 channels, u32 buffer_ms, AudioStretchMode stretch) :
 	m_sample_rate(sample_rate), m_channels(channels), m_buffer_ms(buffer_ms), m_stretch_mode(stretch)
 {
+	//m_buffer_size = m_buffer_ms * m_sample_rate / 1000;
 	m_buffer_size = AUDIO_STREAM_MAX;
-	core_log("BUFFER CREATE: %d\n", buffer_ms);
+	m_target_buffer_size = m_buffer_size;
 }
 
 AudioStream::~AudioStream()
@@ -45,9 +56,8 @@ void AudioStream::BeginWrite(SampleType** buffer_ptr, u32* num_frames)
 
 void AudioStream::EndWrite(u32 num_frames)
 {
-	core_log("FRAMES: %u\n", num_frames);
-
-	// TODO Fire audio callback here
+	if (AUDIO_STREAM_FUNC)
+		AUDIO_STREAM_FUNC(AUDIO_STREAM_BUF, num_frames, m_sample_rate, AUDIO_STREAM_OPAQUE);
 }
 
 void AudioStream::SetNominalRate(float tempo)

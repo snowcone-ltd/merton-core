@@ -255,6 +255,7 @@ INCLUDES = \
 DEFS = \
 	-D_CRT_SECURE_NO_WARNINGS \
 	-DCORE_EXPORT \
+	-DENABLE_MMAP_FASTMEM \
 	-DENABLE_RECOMPILER_SUPPORT \
 	-DENABLE_NEWREC \
 	-D_7ZIP_ST
@@ -291,7 +292,7 @@ CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
 CPPFLAGS = $(CFLAGS) /EHsc /std:c++20
 AFLAGS = /nologo /D _M_X86_64
 
-all: clear $(SHIM_OBJS) $(CORE_OBJS)
+all: clean clear fmt-interface $(OBJS)
 	link /out:$(NAME).dll $(LINK_FLAGS) *.obj $(LIBS)
 
 fmt-interface:

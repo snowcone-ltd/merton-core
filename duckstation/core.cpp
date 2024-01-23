@@ -15,12 +15,14 @@
 
 struct Core {
 	bool loaded;
-	MTY_Thread *thread;
 	char *path;
 };
 
 static CoreLogFunc CORE_LOG_FUNC;
 static void *CORE_LOG_OPAQUE;
+
+void audio_stream_set_func(CoreAudioFunc func, void *opaque);
+void gpu_device_set_func(CoreVideoFunc func, void *opaque);
 
 void core_log(const char *fmt, ...)
 {
@@ -133,27 +135,13 @@ void CoreReset(Core *ctx)
 		return;
 }
 
-static void *core_emulator_thread(void *opaque)
-{
-	Core *ctx = (Core *) opaque;
-
-	return NULL;
-}
-
 void CoreRun(Core *ctx)
 {
 	if (!ctx || !ctx->loaded)
 		return;
 
-	//if (!ctx->thread)
-	//	ctx->thread = MTY_ThreadCreate(core_emulator_thread, ctx);
-
-	core_log("EXECUTE START\n");
-
 	System::DoFrameStep();
 	System::Execute();
-
-	core_log("EXECUTE DONE\n");
 }
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
@@ -212,18 +200,12 @@ bool CoreGameIsLoaded(Core *ctx)
 
 double CoreGetFrameRate(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
-		return 60;
-
 	return 60;
 }
 
 float CoreGetAspectRatio(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
-		return 1;
-
-	return 1;
+	return 4.0f / 3.0f;
 }
 
 void CoreSetLogFunc(Core *ctx, CoreLogFunc func, void *opaque)
@@ -234,10 +216,12 @@ void CoreSetLogFunc(Core *ctx, CoreLogFunc func, void *opaque)
 
 void CoreSetAudioFunc(Core *ctx, CoreAudioFunc func, void *opaque)
 {
+	audio_stream_set_func(func, opaque);
 }
 
 void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
 {
+	gpu_device_set_func(func, opaque);
 }
 
 const CoreSetting *CoreGetAllSettings(Core *ctx, uint32_t *len)
