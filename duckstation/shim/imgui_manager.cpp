@@ -51,7 +51,7 @@ void ImGuiManager::SetSoftwareCursorPosition(u32 index, float pos_x, float pos_y
 {
 }
 
-bool ImGuiManager::Initialize(float global_scale, bool show_osd_messages)
+bool ImGuiManager::Initialize(float global_scale, bool show_osd_messages, Error* error)
 {
 	return true;
 }

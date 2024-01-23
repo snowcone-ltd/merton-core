@@ -4,6 +4,7 @@
 
 std::unique_ptr<GPUDevice> g_gpu_device;
 size_t GPUDevice::s_total_vram_usage;
+GPUDevice::Statistics GPUDevice::s_stats;
 
 static CoreVideoFunc GPU_DEVICE_FUNC;
 static void *GPU_DEVICE_OPAQUE;
@@ -168,24 +169,28 @@ public:
 
 protected:
 	bool CreateDevice(const std::string_view& adapter, bool threaded_presentation,
-		std::optional<bool> exclusive_fullscreen_control, FeatureMask disabled_features);
+		std::optional<bool> exclusive_fullscreen_control, FeatureMask disabled_features, Error* error);
 	void DestroyDevice();
 	std::unique_ptr<GPUShader> CreateShaderFromBinary(GPUShaderStage stage, std::span<const u8> data);
 	std::unique_ptr<GPUShader> CreateShaderFromSource(GPUShaderStage stage, const std::string_view& source,
 		const char* entry_point, DynamicHeapArray<u8>* out_binary);
 };
 
+GPUDevice::GPUDevice()
+{
+}
+
 GPUDevice::~GPUDevice()
 {
 }
 
-NullDevice::NullDevice()
+NullDevice::NullDevice() : GPUDevice()
 {
 }
 
 bool GPUDevice::Create(const std::string_view& adapter, const std::string_view& shader_cache_path,
 	u32 shader_cache_version, bool debug_device, bool vsync, bool threaded_presentation,
-	std::optional<bool> exclusive_fullscreen_control, FeatureMask disabled_features)
+	std::optional<bool> exclusive_fullscreen_control, FeatureMask disabled_features, Error* error)
 {
 	return true;
 }
@@ -331,6 +336,10 @@ bool GPUDevice::IsSameRenderAPI(RenderAPI lhs, RenderAPI rhs)
 }
 
 void GPUDevice::RenderImGui()
+{
+}
+
+void GPUDevice::ResetStatistics()
 {
 }
 
@@ -552,7 +561,7 @@ std::unique_ptr<GPUPipeline> NullDevice::CreatePipeline(const GPUPipeline::Graph
 // Pure virtual protected
 
 bool NullDevice::CreateDevice(const std::string_view& adapter, bool threaded_presentation,
-	std::optional<bool> exclusive_fullscreen_control, FeatureMask disabled_features)
+	std::optional<bool> exclusive_fullscreen_control, FeatureMask disabled_features, Error* error)
 {
 	return true;
 }

@@ -4,8 +4,8 @@
 	branch = master
 [submodule "mesen2/Mesen2"]
 	path = mesen2/Mesen2
-	url = git@github.com:snowcone-ltd/Mesen2
-	branch = triangle
+	url = git@github.com:SourMesen/Mesen2
+	branch = master
 [submodule "mgba/mgba"]
 	path = mgba/mgba
 	url = git@github.com:mgba-emu/mgba
