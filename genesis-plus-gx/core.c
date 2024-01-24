@@ -411,9 +411,18 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 
 bool CoreInsertDisc(Core *ctx, const char *path)
 {
-	// TODO Sega CD
+	if (system_hw != SYSTEM_MCD)
+		return false;
 
-	return false;
+	cdd.status = CD_OPEN;
+	scd.regs[0x36 >> 1].byte.h = 0x01;
+
+	char header[0x210];
+	cdd_load((char *) path, header);
+
+	cdd.status = cdd.loaded ? CD_TOC : NO_DISC;
+
+	return cdd.loaded;
 }
 
 
