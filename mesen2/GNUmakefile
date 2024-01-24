@@ -19,10 +19,13 @@ DEFS := $(DEFS) \
 
 LD_FLAGS = \
 	-shared \
-	-nodefaultlibs
+	-nodefaultlibs \
+	-Wl,--no-undefined
 
 LIBS = \
-	-lc
+	-lc \
+	-lm \
+	-lgcc_s
 
 ifdef DEBUG
 FLAGS := $(FLAGS) -O0 -g3
