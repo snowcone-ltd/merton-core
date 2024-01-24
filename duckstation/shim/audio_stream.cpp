@@ -1,27 +1,33 @@
 #include "util/audio_stream.h"
 
+#include "../../core.h"
+
 #define AUDIO_STREAM_MAX (512 * 1024)
 
 static int16_t AUDIO_STREAM_BUF[AUDIO_STREAM_MAX];
 static uint32_t AUDIO_SAMPLE_RATE;
 static size_t AUDIO_PTR;
 
+static CoreAudioFunc AUDIO_STREAM_FUNC;
+static void *AUDIO_STREAM_OPAQUE;
+
 class soundtouch::SoundTouch {
 };
 
 void core_log(const char *fmt, ...);
 
-uint32_t audio_stream_get_sample_rate(void)
+void audio_stream_set_func(CoreAudioFunc func, void *opaque)
 {
-	return AUDIO_SAMPLE_RATE;
+	AUDIO_STREAM_FUNC = func;
+	AUDIO_STREAM_OPAQUE = opaque;
 }
 
-const int16_t *audio_stream_get_frames(size_t *frames)
+void audio_stream_finish(void)
 {
-	*frames = AUDIO_PTR / 2;
-	AUDIO_PTR = 0;
+	if (AUDIO_STREAM_FUNC && AUDIO_PTR > 0)
+		AUDIO_STREAM_FUNC(AUDIO_STREAM_BUF, AUDIO_PTR / 2, AUDIO_SAMPLE_RATE, AUDIO_STREAM_OPAQUE);
 
-	return AUDIO_STREAM_BUF;
+	AUDIO_PTR = 0;
 }
 
 AudioStream::AudioStream(u32 sample_rate, u32 channels, u32 buffer_ms, AudioStretchMode stretch) :
@@ -62,6 +68,9 @@ void AudioStream::BeginWrite(SampleType** buffer_ptr, u32* num_frames)
 void AudioStream::EndWrite(u32 num_frames)
 {
 	AUDIO_PTR += num_frames * 2;
+
+	if (AUDIO_PTR >= CHUNK_SIZE * 5)
+		audio_stream_finish();
 }
 
 void AudioStream::SetNominalRate(float tempo)

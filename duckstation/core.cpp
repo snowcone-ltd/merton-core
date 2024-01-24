@@ -18,20 +18,16 @@
 #include "util/ini_settings_interface.h"
 
 struct Core {
-	CoreAudioFunc audio_func;
-	CoreVideoFunc video_func;
-	void *audio_opaque;
-	void *video_opaque;
 	bool loaded;
 };
 
 static CoreLogFunc CORE_LOG_FUNC;
 static void *CORE_LOG_OPAQUE;
 
-uint32_t audio_stream_get_sample_rate(void);
-const int16_t *audio_stream_get_frames(size_t *frames);
+void audio_stream_set_func(CoreAudioFunc func, void *opaque);
 void gpu_device_set_func(CoreVideoFunc func, void *opaque);
-bool gpu_device_got_frame(void);
+void gpu_device_finish(void);
+void audio_stream_finish(void);
 
 static std::unique_ptr<INISettingsInterface> settings;
 
@@ -182,18 +178,8 @@ void CoreRun(Core *ctx)
 	System::DoFrameStep();
 	System::Execute();
 
-	if (!gpu_device_got_frame() && ctx->video_func) {
-		uint32_t dummy[16][16] = {0};
-		ctx->video_func(dummy, CORE_COLOR_FORMAT_BGRA, 16, 16, 16 * 4, ctx->video_opaque);
-	}
-
-	if (ctx->audio_func) {
-		size_t frames = 0;
-		const int16_t *buf = audio_stream_get_frames(&frames);
-
-		if (frames > 0)
-			ctx->audio_func(buf, frames, audio_stream_get_sample_rate(), ctx->audio_opaque);
-	}
+	gpu_device_finish();
+	audio_stream_finish();
 }
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
@@ -335,7 +321,7 @@ bool CoreGameIsLoaded(Core *ctx)
 
 double CoreGetFrameRate(Core *ctx)
 {
-	return 59.94;
+	return 59.95;
 }
 
 float CoreGetAspectRatio(Core *ctx)
@@ -354,15 +340,11 @@ void CoreSetLogFunc(Core *ctx, CoreLogFunc func, void *opaque)
 
 void CoreSetAudioFunc(Core *ctx, CoreAudioFunc func, void *opaque)
 {
-	ctx->audio_func = func;
-	ctx->audio_opaque = opaque;
+	audio_stream_set_func(func, opaque);
 }
 
 void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
 {
-	ctx->video_func = func;
-	ctx->video_opaque = opaque;
-
 	gpu_device_set_func(func, opaque);
 }
 

@@ -18,12 +18,14 @@ void gpu_device_set_func(CoreVideoFunc func, void *opaque)
 	GPU_DEVICE_OPAQUE = opaque;
 }
 
-bool gpu_device_got_frame(void)
+void gpu_device_finish(void)
 {
-	bool r = GPU_DEVICE_GOT_FRAME;
-	GPU_DEVICE_GOT_FRAME = false;
+	if (GPU_DEVICE_FUNC && !GPU_DEVICE_GOT_FRAME) {
+		uint32_t dummy[16][16] = {0};
+		GPU_DEVICE_FUNC(dummy, CORE_COLOR_FORMAT_BGRA, 16, 16, 16 * 4, GPU_DEVICE_OPAQUE);
+	}
 
-	return r;
+	GPU_DEVICE_GOT_FRAME = false;
 }
 
 
