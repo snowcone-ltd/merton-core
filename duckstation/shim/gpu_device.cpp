@@ -8,6 +8,7 @@ GPUDevice::Statistics GPUDevice::s_stats;
 
 static CoreVideoFunc GPU_DEVICE_FUNC;
 static void *GPU_DEVICE_OPAQUE;
+static bool GPU_DEVICE_GOT_FRAME;
 
 void core_log(const char *fmt, ...);
 
@@ -15,6 +16,14 @@ void gpu_device_set_func(CoreVideoFunc func, void *opaque)
 {
 	GPU_DEVICE_FUNC = func;
 	GPU_DEVICE_OPAQUE = opaque;
+}
+
+bool gpu_device_got_frame(void)
+{
+	bool r = GPU_DEVICE_GOT_FRAME;
+	GPU_DEVICE_GOT_FRAME = false;
+
+	return r;
 }
 
 
@@ -57,6 +66,8 @@ bool NullTexture::Update(u32 x, u32 y, u32 width, u32 height, const void* data, 
 
 	if (GPU_DEVICE_FUNC)
 		GPU_DEVICE_FUNC(data, f, width, height, pitch, GPU_DEVICE_OPAQUE);
+
+	GPU_DEVICE_GOT_FRAME = true;
 
 	return true;
 }

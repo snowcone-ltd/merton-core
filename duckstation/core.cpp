@@ -17,14 +17,20 @@
 #include "util/ini_settings_interface.h"
 
 struct Core {
+	CoreAudioFunc audio_func;
+	CoreVideoFunc video_func;
+	void *audio_opaque;
+	void *video_opaque;
 	bool loaded;
 };
 
 static CoreLogFunc CORE_LOG_FUNC;
 static void *CORE_LOG_OPAQUE;
 
-void audio_stream_set_func(CoreAudioFunc func, void *opaque);
+uint32_t audio_stream_get_sample_rate(void);
+const int16_t *audio_stream_get_frames(size_t *frames);
 void gpu_device_set_func(CoreVideoFunc func, void *opaque);
+bool gpu_device_got_frame(void);
 
 static std::unique_ptr<INISettingsInterface> settings;
 
@@ -156,6 +162,19 @@ void CoreRun(Core *ctx)
 
 	System::DoFrameStep();
 	System::Execute();
+
+	if (!gpu_device_got_frame() && ctx->video_func) {
+		uint32_t dummy[16][16] = {0};
+		ctx->video_func(dummy, CORE_COLOR_FORMAT_BGRA, 16, 16, 16 * 4, ctx->video_opaque);
+	}
+
+	if (ctx->audio_func) {
+		size_t frames = 0;
+		const int16_t *buf = audio_stream_get_frames(&frames);
+
+		if (frames > 0)
+			ctx->audio_func(buf, frames, audio_stream_get_sample_rate(), ctx->audio_opaque);
+	}
 }
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
@@ -283,11 +302,15 @@ void CoreSetLogFunc(Core *ctx, CoreLogFunc func, void *opaque)
 
 void CoreSetAudioFunc(Core *ctx, CoreAudioFunc func, void *opaque)
 {
-	audio_stream_set_func(func, opaque);
+	ctx->audio_func = func;
+	ctx->audio_opaque = opaque;
 }
 
 void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
 {
+	ctx->video_func = func;
+	ctx->video_opaque = opaque;
+
 	gpu_device_set_func(func, opaque);
 }
 
