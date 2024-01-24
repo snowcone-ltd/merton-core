@@ -4,9 +4,9 @@
 #include "repository/CompositeKeyValueRepositoryNoop.hxx"
 
 #ifdef _WIN32
-	const string SLASH = "\\";
+	const char *BAD_PATH = "BAD_DRIVE:\\";
 #else
-	const string SLASH = "/";
+	const char *BAD_PATH = "/dev/null/";
 #endif
 
 class OSystemCore : public OSystem {
@@ -16,7 +16,7 @@ class OSystemCore : public OSystem {
 
 		void getBaseDirectories(string& basedir, string& homedir, bool useappdir, string_view usedir) override
 		{
-			basedir = homedir = "." + SLASH;
+			basedir = homedir = BAD_PATH;
 		}
 
 		shared_ptr<KeyValueRepository> getSettingsRepository() override

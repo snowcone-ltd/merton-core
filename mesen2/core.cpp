@@ -303,7 +303,6 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 bool CoreInsertDisc(Core *ctx, const char *path)
 {
 	// Mesen auto loads FDS disks
-	// TODO PCE CD
 
 	return false;
 }
