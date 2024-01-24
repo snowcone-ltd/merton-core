@@ -50,7 +50,7 @@ static void *CORE_LOG_OPAQUE;
 const char * const projectName = "";
 const char * const projectVersion = "";
 
-static void core_log(const char *fmt, ...)
+void core_log(const char *fmt, ...)
 {
 	va_list arg;
 	va_start(arg, fmt);

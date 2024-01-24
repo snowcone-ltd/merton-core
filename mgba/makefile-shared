@@ -1,0 +1,98 @@
+PROJ = mgba
+
+INCLUDES = \
+	-I$(PROJ)/include \
+	-I$(PROJ)/src
+
+DEFS = \
+	-DDISABLE_THREADING \
+	-DCOLOR_16_BIT \
+	-DCOLOR_5_6_5 \
+	-DMINIMAL_CORE=2 \
+	-DMGBA_STANDALONE \
+	-DM_CORE_GBA \
+	-DCORE_EXPORT
+
+CORE_OBJS = \
+	$(PROJ)/src/core/bitmap-cache.$(O) \
+	$(PROJ)/src/core/config.$(O) \
+	$(PROJ)/src/core/interface.$(O) \
+	$(PROJ)/src/core/log.$(O) \
+	$(PROJ)/src/core/map-cache.$(O) \
+	$(PROJ)/src/core/sync.$(O) \
+	$(PROJ)/src/core/tile-cache.$(O) \
+	$(PROJ)/src/core/timing.$(O)
+
+UTIL_OBJS = \
+	$(PROJ)/src/util/vfs/vfs-fd.$(O) \
+	$(PROJ)/src/util/vfs/vfs-mem.$(O) \
+	$(PROJ)/src/util/circle-buffer.$(O) \
+	$(PROJ)/src/util/configuration.$(O) \
+	$(PROJ)/src/util/crc32.$(O) \
+	$(PROJ)/src/util/formatting.$(O) \
+	$(PROJ)/src/util/gbk-table.$(O) \
+	$(PROJ)/src/util/hash.$(O) \
+	$(PROJ)/src/util/patch.$(O) \
+	$(PROJ)/src/util/patch-ips.$(O) \
+	$(PROJ)/src/util/patch-ups.$(O) \
+	$(PROJ)/src/util/string.$(O) \
+	$(PROJ)/src/util/table.$(O) \
+	$(PROJ)/src/util/vector.$(O) \
+	$(PROJ)/src/util/vfs.$(O)
+
+THIRD_PARTY_OBJS = \
+	$(PROJ)/src/third-party/blip_buf/blip_buf.$(O) \
+	$(PROJ)/src/third-party/inih/ini.$(O)
+
+ARM_OBJS = \
+	$(PROJ)/src/arm/arm.$(O) \
+	$(PROJ)/src/arm/decoder-arm.$(O) \
+	$(PROJ)/src/arm/decoder-thumb.$(O) \
+	$(PROJ)/src/arm/isa-arm.$(O) \
+	$(PROJ)/src/arm/isa-thumb.$(O)
+
+GBA_OBJS = \
+	$(PROJ)/src/gba/cart/ereader.$(O) \
+	$(PROJ)/src/gba/cart/gpio.$(O) \
+	$(PROJ)/src/gba/cart/matrix.$(O) \
+	$(PROJ)/src/gba/cart/vfame.$(O) \
+	$(PROJ)/src/gba/cheats/codebreaker.$(O) \
+	$(PROJ)/src/gba/cheats/gameshark.$(O) \
+	$(PROJ)/src/gba/cheats/parv3.$(O) \
+	$(PROJ)/src/gba/renderers/cache-set.$(O) \
+	$(PROJ)/src/gba/renderers/common.$(O) \
+	$(PROJ)/src/gba/renderers/software-bg.$(O) \
+	$(PROJ)/src/gba/renderers/software-mode0.$(O) \
+	$(PROJ)/src/gba/renderers/software-obj.$(O) \
+	$(PROJ)/src/gba/renderers/video-software.$(O) \
+	$(PROJ)/src/gba/sio/gbp.$(O) \
+	$(PROJ)/src/gba/audio.$(O) \
+	$(PROJ)/src/gba/bios.$(O) \
+	$(PROJ)/src/gba/cheats.$(O) \
+	$(PROJ)/src/gba/dma.$(O) \
+	$(PROJ)/src/gba/gba.$(O) \
+	$(PROJ)/src/gba/hle-bios.$(O) \
+	$(PROJ)/src/gba/io.$(O) \
+	$(PROJ)/src/gba/memory.$(O) \
+	$(PROJ)/src/gba/overrides.$(O) \
+	$(PROJ)/src/gba/savedata.$(O) \
+	$(PROJ)/src/gba/serialize.$(O) \
+	$(PROJ)/src/gba/sio.$(O) \
+	$(PROJ)/src/gba/timer.$(O) \
+	$(PROJ)/src/gba/video.$(O)
+
+OBJS = \
+	core.$(O) \
+	rename/core-cache-set.$(O) \
+	rename/core-cheats.$(O) \
+	rename/core-core.$(O) \
+	rename/core-serialize.$(O) \
+	rename/gb-audio.$(O) \
+	rename/gba-core.$(O) \
+	rename/util-memory.$(O) \
+	$(CORE_OBJS) \
+	$(THIRD_PARTY_OBJS) \
+	$(UTIL_OBJS) \
+	$(ARM_OBJS) \
+	$(GBA_OBJS)
+

@@ -1,88 +1,7 @@
-PROJ = mgba
 NAME = mgba
 
-CORE_OBJS = \
-	$(PROJ)/src/core/bitmap-cache.obj \
-	$(PROJ)/src/core/config.obj \
-	$(PROJ)/src/core/interface.obj \
-	$(PROJ)/src/core/log.obj \
-	$(PROJ)/src/core/map-cache.obj \
-	$(PROJ)/src/core/sync.obj \
-	$(PROJ)/src/core/tile-cache.obj \
-	$(PROJ)/src/core/timing.obj
-
-UTIL_OBJS = \
-	$(PROJ)/src/util/vfs/vfs-fd.obj \
-	$(PROJ)/src/util/vfs/vfs-mem.obj \
-	$(PROJ)/src/util/circle-buffer.obj \
-	$(PROJ)/src/util/configuration.obj \
-	$(PROJ)/src/util/crc32.obj \
-	$(PROJ)/src/util/formatting.obj \
-	$(PROJ)/src/util/gbk-table.obj \
-	$(PROJ)/src/util/hash.obj \
-	$(PROJ)/src/util/patch.obj \
-	$(PROJ)/src/util/patch-ips.obj \
-	$(PROJ)/src/util/patch-ups.obj \
-	$(PROJ)/src/util/string.obj \
-	$(PROJ)/src/util/table.obj \
-	$(PROJ)/src/util/vector.obj \
-	$(PROJ)/src/util/vfs.obj
-
-THIRD_PARTY_OBJS = \
-	$(PROJ)/src/third-party/blip_buf/blip_buf.obj \
-	$(PROJ)/src/third-party/inih/ini.obj
-
-ARM_OBJS = \
-	$(PROJ)/src/arm/arm.obj \
-	$(PROJ)/src/arm/decoder-arm.obj \
-	$(PROJ)/src/arm/decoder-thumb.obj \
-	$(PROJ)/src/arm/isa-arm.obj \
-	$(PROJ)/src/arm/isa-thumb.obj
-
-GBA_OBJS = \
-	$(PROJ)/src/gba/cart/ereader.obj \
-	$(PROJ)/src/gba/cart/gpio.obj \
-	$(PROJ)/src/gba/cart/matrix.obj \
-	$(PROJ)/src/gba/cart/vfame.obj \
-	$(PROJ)/src/gba/cheats/codebreaker.obj \
-	$(PROJ)/src/gba/cheats/gameshark.obj \
-	$(PROJ)/src/gba/cheats/parv3.obj \
-	$(PROJ)/src/gba/renderers/cache-set.obj \
-	$(PROJ)/src/gba/renderers/common.obj \
-	$(PROJ)/src/gba/renderers/software-bg.obj \
-	$(PROJ)/src/gba/renderers/software-mode0.obj \
-	$(PROJ)/src/gba/renderers/software-obj.obj \
-	$(PROJ)/src/gba/renderers/video-software.obj \
-	$(PROJ)/src/gba/sio/gbp.obj \
-	$(PROJ)/src/gba/audio.obj \
-	$(PROJ)/src/gba/bios.obj \
-	$(PROJ)/src/gba/cheats.obj \
-	$(PROJ)/src/gba/dma.obj \
-	$(PROJ)/src/gba/gba.obj \
-	$(PROJ)/src/gba/hle-bios.obj \
-	$(PROJ)/src/gba/io.obj \
-	$(PROJ)/src/gba/memory.obj \
-	$(PROJ)/src/gba/overrides.obj \
-	$(PROJ)/src/gba/savedata.obj \
-	$(PROJ)/src/gba/serialize.obj \
-	$(PROJ)/src/gba/sio.obj \
-	$(PROJ)/src/gba/timer.obj \
-	$(PROJ)/src/gba/video.obj
-
-OBJS = \
-	core.obj \
-	rename/core-cache-set.obj \
-	rename/core-cheats.obj \
-	rename/core-core.obj \
-	rename/core-serialize.obj \
-	rename/gb-audio.obj \
-	rename/gba-core.obj \
-	rename/util-memory.obj \
-	$(CORE_OBJS) \
-	$(THIRD_PARTY_OBJS) \
-	$(UTIL_OBJS) \
-	$(ARM_OBJS) \
-	$(GBA_OBJS)
+O = obj
+!INCLUDE makefile-shared
 
 FLAGS = \
 	/W4 \
@@ -115,20 +34,9 @@ FLAGS = \
 	/std:c11 \
 	/nologo
 
-INCLUDES = \
-	-I$(PROJ)/include \
-	-I$(PROJ)/src
-
-DEFS = \
+DEFS = $(DEFS) \
 	-DUNICODE \
-	-D_CRT_SECURE_NO_WARNINGS \
-	-DDISABLE_THREADING \
-	-DCOLOR_16_BIT \
-	-DCOLOR_5_6_5 \
-	-DMINIMAL_CORE=2 \
-	-DMGBA_STANDALONE \
-	-DM_CORE_GBA \
-	-DCORE_EXPORT
+	-D_CRT_SECURE_NO_WARNINGS
 
 LINK_FLAGS = \
 	/nodefaultlib \
