@@ -59,6 +59,18 @@ static void core_log_callback(void* pUserParam, const char* channelName, const c
 	if (strstr(cmsg, "does_not_exist"))
 		return;
 
+	// Searching for BIOS
+	if (!strcmp(channelName, "BIOS") && strstr(cmsg, "Skipping"))
+		return;
+
+	// Low level
+	if (!strcmp(channelName, "Bus"))
+		return;
+
+	// Memory card
+	if (!strcmp(channelName, "Pad"))
+		return;
+
 	core_log("[%s] %s\n", channelName, cmsg);
 }
 
@@ -68,10 +80,7 @@ Core *CoreLoad(const char *system_dir, const char *save_dir)
 
 	Log::RegisterCallback(core_log_callback, ctx);
 
-	std::string subdir = Path::Combine(system_dir, "duckstation");
-	std::string null_subdir = Path::Combine(system_dir, "does_not_exist");
-
-	FileSystem::CreateDirectory(subdir.c_str(), false);
+	std::string subdir = Path::Combine(system_dir, "does_not_exist");
 
 	EmuFolders::Bios = system_dir;
 	EmuFolders::AppRoot = subdir;
@@ -83,12 +92,12 @@ Core *CoreLoad(const char *system_dir, const char *save_dir)
 	EmuFolders::InputProfiles = subdir;
 	EmuFolders::Resources = subdir;
 	EmuFolders::UserResources = subdir;
-	EmuFolders::Dumps = null_subdir;
-	EmuFolders::Screenshots = null_subdir;
-	EmuFolders::MemoryCards = null_subdir;
-	EmuFolders::SaveStates = null_subdir;
-	EmuFolders::Shaders = null_subdir;
-	EmuFolders::Textures = null_subdir;
+	EmuFolders::Dumps = subdir;
+	EmuFolders::Screenshots = subdir;
+	EmuFolders::MemoryCards = subdir;
+	EmuFolders::SaveStates = subdir;
+	EmuFolders::Shaders = subdir;
+	EmuFolders::Textures = subdir;
 
 	return ctx;
 }
@@ -137,7 +146,7 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 			MemoryCardImage::DataArray& da = mc->GetData();
 
 			if (da.size() >= save_data_size)
-				std::copy_n(da.begin(), save_data_size, (uint8_t *) save_data);
+				std::copy_n((uint8_t *) save_data, save_data_size, da.begin());
 		}
 	}
 
@@ -314,7 +323,7 @@ void *CoreGetSaveData(Core *ctx, size_t *size)
 	*size = da.size();
 
 	uint8_t *sd = (uint8_t *) malloc(*size);
-	std::copy_n(sd, *size, da.begin());
+	std::copy_n(da.begin(), *size, sd);
 
 	return sd;
 }

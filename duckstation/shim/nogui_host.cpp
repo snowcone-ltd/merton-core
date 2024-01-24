@@ -19,16 +19,30 @@ void Host::ReportDebuggerMessage(const std::string_view& message)
 
 std::optional<std::string> Host::ReadResourceFileToString(std::string_view filename, bool allow_override)
 {
-	core_log("ReadResourceFileToString: %s\n", std::string(filename).c_str());
-
-	return "";
+	return std::nullopt;
 }
 
 std::optional<std::time_t> Host::GetResourceFileTimestamp(std::string_view filename, bool allow_override)
 {
-	core_log("GetResourceFileTimestamp: %s\n", std::string(filename).c_str());
+	return std::nullopt;
+}
 
-	return 0;
+bool Host::ResourceFileExists(std::string_view filename, bool allow_override)
+{
+	return false;
+}
+
+std::optional<std::vector<u8>> Host::ReadResourceFile(std::string_view filename, bool allow_override)
+{
+	return std::nullopt;
+}
+
+s32 Host::Internal::GetTranslatedStringImpl(const std::string_view& context,
+	const std::string_view& msg, char* tbuf, size_t tbuf_space)
+{
+	int32_t n = snprintf(tbuf, tbuf_space, "%s", std::string(msg).c_str());
+
+	return n > 0 ? n : 0;
 }
 
 bool Host::ConfirmMessage(const std::string_view& title, const std::string_view& message)
@@ -51,26 +65,6 @@ bool Host::IsFullscreen()
 
 void Host::SetFullscreen(bool enabled)
 {
-}
-
-bool Host::ResourceFileExists(std::string_view filename, bool allow_override)
-{
-	core_log("ResourceFileExists: %s\n", std::string(filename).c_str());
-
-	return false;
-}
-
-std::optional<std::vector<u8>> Host::ReadResourceFile(std::string_view filename, bool allow_override)
-{
-	core_log("ReadResourceFile: %s\n", std::string(filename).c_str());
-
-	return std::vector<u8>();
-}
-
-s32 Host::Internal::GetTranslatedStringImpl(const std::string_view& context,
-	const std::string_view& msg, char* tbuf, size_t tbuf_space)
-{
-	return 0;
 }
 
 void Host::LoadSettings(SettingsInterface& si, std::unique_lock<std::mutex>& lock)
