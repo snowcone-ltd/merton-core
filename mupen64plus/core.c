@@ -108,7 +108,7 @@ static void core_state_callback(void *Context, m64p_core_param param_type, int n
 {
 }
 
-Core *CoreLoad(const char *systemDir, const char *saveDir)
+Core *CoreLoad(const char *systemDir)
 {
 	Core *ctx = calloc(1, sizeof(Core));
 

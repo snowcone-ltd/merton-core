@@ -70,7 +70,7 @@ static void core_log_callback(void* pUserParam, const char* channelName, const c
 	core_log("[%s] %s\n", channelName, cmsg);
 }
 
-Core *CoreLoad(const char *system_dir, const char *save_dir)
+Core *CoreLoad(const char *system_dir)
 {
 	Core *ctx = (Core *) calloc(1, sizeof(Core));
 

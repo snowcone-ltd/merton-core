@@ -48,7 +48,7 @@ void core_log(const char *fmt, ...)
 	va_end(arg);
 }
 
-Core *CoreLoad(const char *system_dir, const char *save_dir)
+Core *CoreLoad(const char *system_dir)
 {
 	return (Core *) calloc(1, sizeof(Core));
 }

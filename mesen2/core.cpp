@@ -87,7 +87,7 @@ static void core_load_rom_db(void)
 	free(ubuf);
 }
 
-Core *CoreLoad(const char *system_dir, const char *save_dir)
+Core *CoreLoad(const char *system_dir)
 {
 	Core *ctx = (Core *) calloc(1, sizeof(Core));
 
