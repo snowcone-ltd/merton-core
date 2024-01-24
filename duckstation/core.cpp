@@ -201,10 +201,10 @@ void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 		case CORE_BUTTON_R2: b = AnalogController::Button::R2; break;
 		case CORE_BUTTON_L: b = AnalogController::Button::L1; break;
 		case CORE_BUTTON_R: b = AnalogController::Button::R1; break;
-		case CORE_BUTTON_Y: b = AnalogController::Button::Triangle; break;
-		case CORE_BUTTON_B: b = AnalogController::Button::Circle; break;
-		case CORE_BUTTON_A: b = AnalogController::Button::Cross; break;
-		case CORE_BUTTON_X: b = AnalogController::Button::Square; break;
+		case CORE_BUTTON_X: b = AnalogController::Button::Triangle; break;
+		case CORE_BUTTON_A: b = AnalogController::Button::Circle; break;
+		case CORE_BUTTON_B: b = AnalogController::Button::Cross; break;
+		case CORE_BUTTON_Y: b = AnalogController::Button::Square; break;
 		default:
 			return;
 	}
@@ -212,9 +212,44 @@ void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 	c->SetBindState((u32) b, pressed ? 1 : 0);
 }
 
+static void core_set_axis(AnalogController::HalfAxis neg, AnalogController::HalfAxis pos,
+	Controller *c, int16_t value)
+{
+	if (value < 0) {
+		c->SetBindState((u32) AnalogController::Button::Count + (u32) neg, (float) value / INT16_MIN);
+		c->SetBindState((u32) AnalogController::Button::Count + (u32) pos, 0);
+
+	} else {
+		c->SetBindState((u32) AnalogController::Button::Count + (u32) neg, 0);
+		c->SetBindState((u32) AnalogController::Button::Count + (u32) pos, (float) value / INT16_MAX);
+	}
+}
+
 void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 {
-	// TODO AnalogController::Count
+	if (!ctx || !ctx->loaded)
+		return;
+
+	Controller *c = System::GetController(player);
+	if (!c)
+		return;
+
+	switch (axis) {
+		case CORE_AXIS_LX:
+			core_set_axis(AnalogController::HalfAxis::LLeft, AnalogController::HalfAxis::LRight, c, value);
+			break;
+		case CORE_AXIS_LY:
+			core_set_axis(AnalogController::HalfAxis::LUp, AnalogController::HalfAxis::LDown, c, value);
+			break;
+		case CORE_AXIS_RX:
+			core_set_axis(AnalogController::HalfAxis::RLeft, AnalogController::HalfAxis::RRight, c, value);
+			break;
+		case CORE_AXIS_RY:
+			core_set_axis(AnalogController::HalfAxis::RUp, AnalogController::HalfAxis::RDown, c, value);
+			break;
+		default:
+			break;
+	}
 }
 
 void *CoreGetState(Core *ctx, size_t *size)
@@ -281,9 +316,7 @@ bool CoreGameIsLoaded(Core *ctx)
 
 double CoreGetFrameRate(Core *ctx)
 {
-	// TODO
-
-	return 60;
+	return 59.94;
 }
 
 float CoreGetAspectRatio(Core *ctx)
