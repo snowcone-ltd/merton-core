@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "common/byte_stream.h"
+#include "common/file_system.h"
 #include "common/log.h"
 #include "common/path.h"
 #include "core/analog_controller.h"
@@ -52,7 +53,13 @@ void core_log(const char *fmt, ...)
 static void core_log_callback(void* pUserParam, const char* channelName, const char* functionName,
 	LOGLEVEL level, std::string_view message)
 {
-	core_log("%s\n", std::string(message).c_str());
+	const char *cmsg = std::string(message).c_str();
+
+	// Filesystem failures
+	if (strstr(cmsg, "does_not_exist"))
+		return;
+
+	core_log("[%s] %s\n", channelName, cmsg);
 }
 
 Core *CoreLoad(const char *system_dir, const char *save_dir)
@@ -62,23 +69,26 @@ Core *CoreLoad(const char *system_dir, const char *save_dir)
 	Log::RegisterCallback(core_log_callback, ctx);
 
 	std::string subdir = Path::Combine(system_dir, "duckstation");
+	std::string null_subdir = Path::Combine(system_dir, "does_not_exist");
 
-	EmuFolders::AppRoot = subdir;
+	FileSystem::CreateDirectory(subdir.c_str(), false);
+
 	EmuFolders::Bios = system_dir;
+	EmuFolders::AppRoot = subdir;
 	EmuFolders::DataRoot = subdir;
 	EmuFolders::Cache = subdir;
 	EmuFolders::Cheats = subdir;
 	EmuFolders::Covers = subdir;
-	EmuFolders::Dumps = subdir;
 	EmuFolders::GameSettings = subdir;
 	EmuFolders::InputProfiles = subdir;
-	EmuFolders::MemoryCards = subdir;
 	EmuFolders::Resources = subdir;
-	EmuFolders::SaveStates = subdir;
-	EmuFolders::Screenshots = subdir;
-	EmuFolders::Shaders = subdir;
-	EmuFolders::Textures = subdir;
 	EmuFolders::UserResources = subdir;
+	EmuFolders::Dumps = null_subdir;
+	EmuFolders::Screenshots = null_subdir;
+	EmuFolders::MemoryCards = null_subdir;
+	EmuFolders::SaveStates = null_subdir;
+	EmuFolders::Shaders = null_subdir;
+	EmuFolders::Textures = null_subdir;
 
 	return ctx;
 }
@@ -109,14 +119,14 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	settings = std::make_unique<INISettingsInterface>(settings_filename);
 	Host::Internal::SetBaseSettingsLayer(settings.get());
 
+	settings->SetStringValue("CPU", "ExecutionMode", "NewRec");
+	settings->SetStringValue("GPU", "Renderer", "Software");
 	settings->SetBoolValue("GPU", "UseThread", false);
 	settings->SetStringValue("Audio", "Backend", "Null");
 	settings->SetStringValue("Audio", "StretchMode", "None");
-	settings->SetStringValue("CPU", "ExecutionMode", "NewRec");
 
 	SystemBootParameters bp = {};
 	bp.filename = path;
-	bp.force_software_renderer = true;
 
 	ctx->loaded = System::BootSystem(bp);
 
