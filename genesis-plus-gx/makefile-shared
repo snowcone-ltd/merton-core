@@ -1,0 +1,76 @@
+PROJ = Genesis-Plus-GX
+
+INCLUDES = \
+	-I. \
+	-I.. \
+	-I../../libmatoya/src \
+	-I$(PROJ)/core \
+	-I$(PROJ)/core/cart_hw \
+	-I$(PROJ)/core/cart_hw/svp \
+	-I$(PROJ)/core/cd_hw \
+	-I$(PROJ)/core/input_hw \
+	-I$(PROJ)/core/m68k \
+	-I$(PROJ)/core/ntsc \
+	-I$(PROJ)/core/sound \
+	-I$(PROJ)/core/z80
+
+DEFS = \
+	-DLSB_FIRST \
+	-DHAVE_YM3438_CORE \
+	-DINLINE="static inline" \
+	-DUSE_16BPP_RENDERING \
+	-DMAXROMSIZE=33554432 \
+	-DCORE_EXPORT
+
+OBJS = \
+	$(PROJ)/core/cart_hw/svp/ssp16.$(O) \
+	$(PROJ)/core/cart_hw/svp/svp.$(O) \
+	$(PROJ)/core/cart_hw/areplay.$(O) \
+	$(PROJ)/core/cart_hw/eeprom_93c.$(O) \
+	$(PROJ)/core/cart_hw/eeprom_i2c.$(O) \
+	$(PROJ)/core/cart_hw/eeprom_spi.$(O) \
+	$(PROJ)/core/cart_hw/ggenie.$(O) \
+	$(PROJ)/core/cart_hw/md_cart.$(O) \
+	$(PROJ)/core/cart_hw/megasd.$(O) \
+	$(PROJ)/core/cart_hw/sms_cart.$(O) \
+	$(PROJ)/core/cart_hw/sram.$(O) \
+	$(PROJ)/core/cd_hw/cd_cart.$(O) \
+	$(PROJ)/core/cd_hw/cdc.$(O) \
+	$(PROJ)/core/cd_hw/cdd.$(O) \
+	$(PROJ)/core/cd_hw/gfx.$(O) \
+	$(PROJ)/core/cd_hw/pcm.$(O) \
+	$(PROJ)/core/cd_hw/scd.$(O) \
+	$(PROJ)/core/input_hw/activator.$(O) \
+	$(PROJ)/core/input_hw/gamepad.$(O) \
+	$(PROJ)/core/input_hw/graphic_board.$(O) \
+	$(PROJ)/core/input_hw/input.$(O) \
+	$(PROJ)/core/input_hw/lightgun.$(O) \
+	$(PROJ)/core/input_hw/mouse.$(O) \
+	$(PROJ)/core/input_hw/paddle.$(O) \
+	$(PROJ)/core/input_hw/sportspad.$(O) \
+	$(PROJ)/core/input_hw/teamplayer.$(O) \
+	$(PROJ)/core/input_hw/terebi_oekaki.$(O) \
+	$(PROJ)/core/input_hw/xe_1ap.$(O) \
+	$(PROJ)/core/m68k/m68kcpu.$(O) \
+	$(PROJ)/core/m68k/s68kcpu.$(O) \
+	$(PROJ)/core/ntsc/md_ntsc.$(O) \
+	$(PROJ)/core/ntsc/sms_ntsc.$(O) \
+	$(PROJ)/core/sound/blip_buf.$(O) \
+	$(PROJ)/core/sound/eq.$(O) \
+	$(PROJ)/core/sound/psg.$(O) \
+	$(PROJ)/core/sound/sound.$(O) \
+	$(PROJ)/core/sound/ym2413.$(O) \
+	$(PROJ)/core/sound/ym2612.$(O) \
+	$(PROJ)/core/sound/ym3438.$(O) \
+	$(PROJ)/core/z80/z80.$(O) \
+	$(PROJ)/core/genesis.$(O) \
+	$(PROJ)/core/io_ctrl.$(O) \
+	$(PROJ)/core/loadrom.$(O) \
+	$(PROJ)/core/mem68k.$(O) \
+	$(PROJ)/core/membnk.$(O) \
+	$(PROJ)/core/memz80.$(O) \
+	$(PROJ)/core/state.$(O) \
+	$(PROJ)/core/system.$(O) \
+	$(PROJ)/core/vdp_ctrl.$(O) \
+	$(PROJ)/core/vdp_render.$(O) \
+	core.$(O)
