@@ -12,6 +12,7 @@ typedef enum {
 } SDL_WindowEventID;
 
 typedef enum {
+	SDL_SCANCODE_DUMMY,
 } SDL_Scancode;
 
 typedef enum {

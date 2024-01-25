@@ -2,6 +2,8 @@
 #include "m64p_vidext.h"
 #include "vidext.h"
 
+#include <stdlib.h>
+
 m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionStruct)
 {
 	return M64ERR_SUCCESS;

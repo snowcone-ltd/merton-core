@@ -1,5 +1,7 @@
 #include "core/n64video.h"
 
+#include <string.h>
+
 static struct n64video_frame_buffer VDAC_FB;
 static uint32_t VDAC_PIXELS[1024][1024];
 

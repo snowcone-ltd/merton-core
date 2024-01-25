@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
+
+#if !defined(_WIN32)
+	#include <dlfcn.h>
+#endif
 
 #define M64P_CORE_PROTOTYPES
 #include "mupen64plus-core/src/api/m64p_frontend.h"
@@ -115,7 +120,17 @@ Core *CoreLoad(const char *systemDir)
 	Core *ctx = calloc(1, sizeof(Core));
 
 	ctx->system_dir = MTY_Strdup(systemDir);
-	ctx->so = osal_dynlib_get_handle(MTY_SprintfDL("mupen64plus.%s", MTY_GetSOExtension()));
+
+	const char *so_name = "mupen64plus";
+
+	#if !defined(_WIN32)
+		Dl_info info = {0};
+
+		if (dladdr(CoreLoad, &info) && info.dli_fname)
+			so_name = info.dli_fname;
+	#endif
+
+	ctx->so = osal_dynlib_get_handle(so_name);
 
 	osal_set_dir(ctx->system_dir);
 	osal_startup();

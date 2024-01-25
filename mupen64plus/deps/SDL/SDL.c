@@ -1,5 +1,7 @@
 #include "SDL.h"
 
+#include <math.h>
+
 #include "matoya.h"
 
 static MTY_Time TS;
