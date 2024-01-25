@@ -104,7 +104,7 @@ SHIM_OBJS = \
 	shim/$(PROJ)/files.obj \
 	shim/$(PROJ)/screenshot.obj \
 	shim/$(PROJ)/vidext.obj \
-	shim/osal_dynamiclib_win32.obj
+	shim/osal_dynamiclib.obj
 
 DEPS_OBJS = \
 	deps/SDL/SDL_win32.obj \
@@ -195,10 +195,13 @@ LIBS = \
 	libcpmt.lib \
 	kernel32.lib \
 	oldnames.lib \
+	userenv.lib \
+	user32.lib \
 	ws2_32.lib \
 	shlwapi.lib \
 	shell32.lib \
-	winmm.lib
+	winmm.lib \
+	advapi32.lib
 
 !IFDEF DEBUG
 FLAGS = $(FLAGS) /Ob0 /Zi /Oy-

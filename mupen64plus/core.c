@@ -53,6 +53,7 @@ void osal_set_read_data(const void *buf, size_t size);
 
 void osal_dynlib_set_prefix(const char *prefix);
 m64p_dynlib_handle osal_dynlib_get_handle(const char *name);
+void osal_dynlib_close_handle(m64p_dynlib_handle h);
 
 void vdac_set_video_func(void (*func)(void *, uint32_t, uint32_t, void *), void *opaque);
 
@@ -62,6 +63,7 @@ void vdac_set_video_func(void (*func)(void *, uint32_t, uint32_t, void *), void 
 struct Core {
 	bool loaded;
 	char *system_dir;
+	m64p_dynlib_handle so;
 
 	uint32_t frame[1024][1024];
 	uint32_t w;
@@ -113,6 +115,7 @@ Core *CoreLoad(const char *systemDir)
 	Core *ctx = calloc(1, sizeof(Core));
 
 	ctx->system_dir = MTY_Strdup(systemDir);
+	ctx->so = osal_dynlib_get_handle(MTY_SprintfDL("mupen64plus.%s", MTY_GetSOExtension()));
 
 	osal_set_dir(ctx->system_dir);
 	osal_startup();
@@ -140,6 +143,7 @@ void CoreUnload(Core **core)
 	osal_shutdown();
 	osal_set_dir("");
 
+	osal_dynlib_close_handle(ctx->so);
 	MTY_Free(ctx->system_dir);
 
 	free(ctx);
@@ -181,24 +185,22 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 	if (r != M64ERR_SUCCESS)
 		return false;
 
-	m64p_dynlib_handle h = osal_dynlib_get_handle("mupen64plus.dll");
-
-	RDP_PluginStartup(h, NULL, core_debug_callback);
-	AUDIO_PluginStartup(h, NULL, core_debug_callback);
-	INPUT_PluginStartup(h, NULL, core_debug_callback);
-	RSP_PluginStartup(h, NULL, core_debug_callback);
+	RDP_PluginStartup(ctx->so, NULL, core_debug_callback);
+	AUDIO_PluginStartup(ctx->so, NULL, core_debug_callback);
+	INPUT_PluginStartup(ctx->so, NULL, core_debug_callback);
+	RSP_PluginStartup(ctx->so, NULL, core_debug_callback);
 
 	osal_dynlib_set_prefix("RDP_");
-	CoreAttachPlugin(M64PLUGIN_GFX, h);
+	CoreAttachPlugin(M64PLUGIN_GFX, ctx->so);
 
 	osal_dynlib_set_prefix("AUDIO_");
-	CoreAttachPlugin(M64PLUGIN_AUDIO, h);
+	CoreAttachPlugin(M64PLUGIN_AUDIO, ctx->so);
 
 	osal_dynlib_set_prefix("INPUT_");
-	CoreAttachPlugin(M64PLUGIN_INPUT, h);
+	CoreAttachPlugin(M64PLUGIN_INPUT, ctx->so);
 
 	osal_dynlib_set_prefix("RSP_");
-	CoreAttachPlugin(M64PLUGIN_RSP, h);
+	CoreAttachPlugin(M64PLUGIN_RSP, ctx->so);
 
 	if (saveData)
 		osal_set_read_data(saveData, saveDataSize);
