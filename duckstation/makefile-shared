@@ -25,6 +25,7 @@ DEFS = \
 	-DENABLE_MMAP_FASTMEM \
 	-DENABLE_RECOMPILER_SUPPORT \
 	-DENABLE_NEWREC \
+	-DZSTD_DISABLE_ASM \
 	-D_7ZIP_ST
 
 UTIL_OBJS = \
@@ -119,7 +120,6 @@ COMMON_OBJS = \
 	$(PROJ)/src/common/assert.$(O) \
 	$(PROJ)/src/common/byte_stream.$(O) \
 	$(PROJ)/src/common/error.$(O) \
-	$(PROJ)/src/common/fastjmp_x86.$(O) \
 	$(PROJ)/src/common/file_system.$(O) \
 	$(PROJ)/src/common/image.$(O) \
 	$(PROJ)/src/common/layered_settings_interface.$(O) \

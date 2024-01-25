@@ -3,6 +3,9 @@ NAME = duckstation
 O = obj
 !INCLUDE makefile-shared
 
+OBJS = $(OBJS) \
+	$(PROJ)/src/common/fastjmp_x86.$(O)
+
 FLAGS = \
 	/W4 \
 	/MT \

@@ -139,7 +139,7 @@ void NullPipeline::SetDebugName(const std::string_view& name)
 class NullDevice final : public GPUDevice {
 public:
 	NullDevice();
-	RenderAPI NullDevice::GetRenderAPI() const;
+	RenderAPI GetRenderAPI() const;
 	bool HasSurface() const;
 	void DestroySurface();
 	bool UpdateWindow();

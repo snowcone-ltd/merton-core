@@ -49,7 +49,8 @@ void core_log(const char *fmt, ...)
 static void core_log_callback(void* pUserParam, const char* channelName, const char* functionName,
 	LOGLEVEL level, std::string_view message)
 {
-	const char *cmsg = std::string(message).c_str();
+	std::string str = std::string(message);
+	const char *cmsg = str.c_str();
 
 	// Filesystem failures
 	if (strstr(cmsg, "does_not_exist"))
@@ -117,8 +118,6 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	if (!ctx)
 		return false;
 
-	System::Internal::ProcessStartup();
-
 	std::string settings_filename = Path::Combine(EmuFolders::DataRoot, "settings.ini");
 
 	settings = std::make_unique<INISettingsInterface>(settings_filename);
@@ -129,6 +128,9 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	settings->SetBoolValue("GPU", "UseThread", false);
 	settings->SetStringValue("Audio", "Backend", "Null");
 	settings->SetStringValue("Audio", "StretchMode", "None");
+	settings->SetBoolValue("Logging", "LogToConsole", false);
+
+	System::Internal::ProcessStartup();
 
 	SystemBootParameters bp = {};
 	bp.filename = path;

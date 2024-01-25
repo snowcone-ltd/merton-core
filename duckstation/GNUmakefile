@@ -1,25 +1,34 @@
 UNAME_S = $(shell uname -s)
 ARCH = $(shell uname -m)
-NAME = mesen2
+NAME = duckstation
 
 O = o
 include makefile-shared
 
+OBJS := $(OBJS) \
+	$(PROJ)/src/common/fastjmp.$(O)
+
 FLAGS = \
 	-Wall \
-	-Wno-ignored-qualifiers \
-	-Wno-missing-field-initializers \
-	-Wno-unused-variable \
 	-Wno-unused-parameter \
+	-Wno-missing-field-initializers \
 	-Wno-sign-compare \
+	-Wno-unused-variable \
+	-Wno-unused-result \
+	-Wno-unused-function \
+	-Wno-implicit-fallthrough \
+	-Wno-unused-but-set-variable \
+	-Wno-enum-conversion \
+	-Wno-maybe-uninitialized \
+	-Wno-switch \
 	-fPIC
 
 DEFS := $(DEFS) \
+	-D_GNU_SOURCE
 
 LD_FLAGS = \
 	-shared \
 	-nodefaultlibs \
-	-Wno-odr \
 	-Wl,--no-undefined
 
 LIBS = \
@@ -43,11 +52,6 @@ TARGET = linux
 SUFFIX = so
 
 FLAGS := $(FLAGS) \
-	-Wno-misleading-indentation \
-	-Wno-parentheses \
-	-Wno-implicit-fallthrough \
-	-Wno-type-limits \
-	-Wno-switch
 
 LIBS := $(LIBS) \
 	-lstdc++
@@ -77,11 +81,6 @@ FLAGS := $(FLAGS) -fembed-bitcode
 endif
 
 FLAGS := $(FLAGS) \
-	-Wno-deprecated-declarations \
-	-Wno-undefined-inline \
-	-Wno-unused-private-field \
-	-Wno-inconsistent-missing-override \
-	-Wno-bitwise-instead-of-logical \
 	-m$(TARGET)-version-min=$(MIN_VER) \
 	-isysroot $(shell xcrun --sdk $(TARGET) --show-sdk-path) \
 	-arch $(ARCH)
@@ -95,7 +94,7 @@ LIBS := $(LIBS) \
 endif
 
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c99
-CXXFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c++17 -Wno-deprecated-copy
+CXXFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c++20 -Wno-class-memaccess
 
 all: clean clear
 	make objs -j8
