@@ -13,3 +13,12 @@
 core.h
 
 .DS_Store
+
+duckstation/duckstation
+genesis-plus-gx/Genesis-Plus-GX
+mesen2/Mesen2
+mgba/mgba
+mupen64plus/mupen64plus-core
+mupen64plus/mupen64plus-rsp-cxd4
+mupen64plus/angrylion-rdp-plus
+stella/stella
