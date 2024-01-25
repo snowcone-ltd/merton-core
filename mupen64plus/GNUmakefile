@@ -123,6 +123,7 @@ asm-obj: $(ASMD_OBJ)
 
 asm-defines:
 	make asm-obj NO_LTO=1
+	dos2unix $(PROJ)/tools/gen_asm_script.sh
 	bash $(PROJ)/tools/gen_asm_script.sh $(PROJ)/src/asm_defines $(ASMD_OBJ)
 
 clean:
