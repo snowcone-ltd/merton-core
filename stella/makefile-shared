@@ -166,6 +166,5 @@ OBJS = \
 	$(PROJ)/src/emucore/System.$(O) \
 	$(PROJ)/src/emucore/Thumbulator.$(O) \
 	$(PROJ)/src/emucore/TIASurface.$(O) \
-	$(PROJ)/src/lib/sqlite/sqlite3.$(O) \
-	$(PROJ)/src/os/unix/FSNodePOSIX.$(O)
+	$(PROJ)/src/lib/sqlite/sqlite3.$(O)
 

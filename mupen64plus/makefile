@@ -6,6 +6,9 @@ O = obj
 .asm.obj:
 	deps\nasm -f win64 -d WIN64 -i $(PROJ)\src\asm_defines\ $< -o linkage_x64.obj
 
+OBJS = $(OBJS) \
+	$(ASM_OBJ_X64)
+
 FLAGS = \
 	/W4 \
 	/MT \
@@ -37,8 +40,9 @@ FLAGS = \
 	/nologo
 
 DEFS = $(DEFS) \
-	-DWIN32 \
-	-D_CRT_SECURE_NO_WARNINGS
+	-D_CRT_SECURE_NO_WARNINGS \
+	-DNEW_DYNAREC=NEW_DYNAREC_X64 \
+	-DWIN32
 
 LINK_FLAGS = \
 	/nodefaultlib \

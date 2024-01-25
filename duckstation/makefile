@@ -4,6 +4,7 @@ O = obj
 !INCLUDE makefile-shared
 
 OBJS = $(OBJS) \
+	$(X64_OBJS) \
 	$(PROJ)/src/common/fastjmp_x86.$(O)
 
 FLAGS = \

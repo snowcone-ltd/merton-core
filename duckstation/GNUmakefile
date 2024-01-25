@@ -53,7 +53,7 @@ OBJS := $(OBJS) \
 FLAGS := $(FLAGS) \
 	-Wno-maybe-uninitialized
 
-LD_FLAGS = $(LD_FLAGS) \
+LD_FLAGS := $(LD_FLAGS) \
 	-Wl,--no-undefined
 
 EXTRA_CXX_FLAGS = \

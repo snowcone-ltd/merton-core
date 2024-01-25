@@ -10,6 +10,9 @@ NAME = stella
 O = o
 include makefile-shared
 
+OBJS := $(OBJS) \
+	$(PROJ)/src/os/unix/FSNodePOSIX.$(O)
+
 FLAGS = \
 	-Wall \
 	-Wextra \
