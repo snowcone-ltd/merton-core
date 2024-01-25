@@ -19,13 +19,10 @@ FLAGS = \
 
 LD_FLAGS = \
 	-shared \
-	-nodefaultlibs \
-	-Wl,--no-undefined
+	-nodefaultlibs
 
 LIBS = \
-	-lc \
-	-lm \
-	-lgcc_s
+	-lc
 
 ifdef DEBUG
 FLAGS := $(FLAGS) -O0 -g3
@@ -44,18 +41,19 @@ SUFFIX = so
 
 FLAGS := $(FLAGS) \
 
-INCLUDES := $(INCLUDES) \
-	-I$(PROJ)/src/os/unix
-
 DEFS := $(DEFS) \
 	-DBSPF_UNIX
 
 OBJS := $(OBJS) \
-	$(PROJ)/src/os/unix/FSNodePOSIX.$(O) \
 	$(PROJ)/src/os/unix/OSystemUNIX.$(O) \
 	$(PROJ)/src/os/unix/SerialPortUNIX.$(O)
 
+LD_FLAGS := $(LD_FLAGS) \
+	-Wl,--no-undefined
+
 LIBS := $(LIBS) \
+	-lm \
+	-lgcc_s \
 	-lstdc++
 
 endif
@@ -83,6 +81,9 @@ FLAGS := $(FLAGS) -fembed-bitcode
 endif
 
 FLAGS := $(FLAGS) \
+	-Wno-unused-private-field \
+	-Wno-unused-const-variable \
+	-Wno-reorder-ctor \
 	-m$(TARGET)-version-min=$(MIN_VER) \
 	-isysroot $(shell xcrun --sdk $(TARGET) --show-sdk-path) \
 	-arch $(ARCH)
@@ -94,7 +95,6 @@ DEFS := $(DEFS) \
 	-DBSPF_MACOS
 
 OBJS := $(OBJS) \
-	$(PROJ)/src/os/macos/FSNodeMACOS.$(O) \
 	$(PROJ)/src/os/macos/OSystemMACOS.$(O) \
 	$(PROJ)/src/os/macos/SerialPortMACOS.$(O)
 

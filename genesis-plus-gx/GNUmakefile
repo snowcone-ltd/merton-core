@@ -12,14 +12,14 @@ FLAGS = \
 	-Wno-sign-compare \
 	-Wno-unused-result \
 	-Wno-implicit-fallthrough \
+	-Wno-unused-function \
 	-fPIC
 
 DEFS := $(DEFS) \
 
 LD_FLAGS = \
 	-shared \
-	-nodefaultlibs \
-	-Wl,--no-undefined
+	-nodefaultlibs
 
 LIBS = \
 	-lc \
@@ -41,6 +41,9 @@ TARGET = linux
 SUFFIX = so
 
 FLAGS := $(FLAGS) \
+
+LD_FLAGS := $(LD_FLAGS) \
+	-Wl,--no-undefined
 
 endif
 

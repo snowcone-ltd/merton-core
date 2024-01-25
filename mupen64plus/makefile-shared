@@ -17,13 +17,15 @@ INCLUDES = \
 
 DEFS = \
 	-DDYNAREC \
-	-DNEW_DYNAREC=NEW_DYNAREC_X64 \
 	-DNO_KEYBINDINGS \
 	-DM64P_PLUGIN_API \
 	-DCORE_EXPORT
 
-ASM_OBJ = \
+ASM_OBJ_X64 = \
 	$(PROJ)/src/device/r4300/new_dynarec/x64/linkage_x64.$(O)
+
+ASM_OBJ_ARM64 = \
+	$(PROJ)/src/device/r4300/new_dynarec/arm64/linkage_arm64.$(O)
 
 ASMD_OBJ = \
 	$(PROJ)/src/asm_defines/asm_defines.$(O)

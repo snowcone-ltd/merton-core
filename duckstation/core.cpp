@@ -6,6 +6,7 @@
 
 #include "common/byte_stream.h"
 #include "common/file_system.h"
+#include "common/layered_settings_interface.h"
 #include "common/log.h"
 #include "common/path.h"
 #include "core/analog_controller.h"
@@ -19,6 +20,7 @@
 
 struct Core {
 	bool loaded;
+	std::unique_ptr<INISettingsInterface> settings;
 };
 
 static CoreLogFunc CORE_LOG_FUNC;
@@ -28,8 +30,6 @@ void audio_stream_set_func(CoreAudioFunc func, void *opaque);
 void gpu_device_set_func(CoreVideoFunc func, void *opaque);
 void gpu_device_finish(void);
 void audio_stream_finish(void);
-
-static std::unique_ptr<INISettingsInterface> settings;
 
 void core_log(const char *fmt, ...)
 {
@@ -108,6 +108,8 @@ void CoreUnload(Core **core)
 
 	CoreUnloadGame(ctx);
 
+	Log::UnregisterCallback(core_log_callback, ctx);
+
 	free(ctx);
 	*core = NULL;
 }
@@ -120,15 +122,17 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 
 	std::string settings_filename = Path::Combine(EmuFolders::DataRoot, "settings.ini");
 
-	settings = std::make_unique<INISettingsInterface>(settings_filename);
-	Host::Internal::SetBaseSettingsLayer(settings.get());
+	ctx->settings = std::make_unique<INISettingsInterface>(settings_filename);
 
-	settings->SetStringValue("CPU", "ExecutionMode", "NewRec");
-	settings->SetStringValue("GPU", "Renderer", "Software");
-	settings->SetBoolValue("GPU", "UseThread", false);
-	settings->SetStringValue("Audio", "Backend", "Null");
-	settings->SetStringValue("Audio", "StretchMode", "None");
-	settings->SetBoolValue("Logging", "LogToConsole", false);
+	LayeredSettingsInterface *si = (LayeredSettingsInterface *) Host::GetSettingsInterface();
+	si->SetLayer(LayeredSettingsInterface::LAYER_BASE, ctx->settings.get());
+
+	ctx->settings->SetStringValue("CPU", "ExecutionMode", "NewRec");
+	ctx->settings->SetStringValue("GPU", "Renderer", "Software");
+	ctx->settings->SetBoolValue("GPU", "UseThread", false);
+	ctx->settings->SetStringValue("Audio", "Backend", "Null");
+	ctx->settings->SetStringValue("Audio", "StretchMode", "None");
+	ctx->settings->SetBoolValue("Logging", "LogToConsole", false);
 
 	System::Internal::ProcessStartup();
 
@@ -160,6 +164,8 @@ void CoreUnloadGame(Core *ctx)
 		System::ShutdownSystem(false);
 
 	System::Internal::ProcessShutdown();
+
+	ctx->settings.reset();
 
 	ctx->loaded = false;
 }

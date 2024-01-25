@@ -20,6 +20,11 @@ INCLUDES = \
 	-I$(PROJ)/dep/zlib/include \
 	-I$(PROJ)/dep/zstd/lib
 
+ARM64_INCLUDES = \
+	-I$(PROJ)/dep/vixl/include \
+	-I$(PROJ)/dep/vixl/include/vixl \
+	-I$(PROJ)/dep/vixl/include/vixl/aarch64
+
 DEFS = \
 	-DCORE_EXPORT \
 	-DENABLE_MMAP_FASTMEM \
@@ -27,6 +32,9 @@ DEFS = \
 	-DENABLE_NEWREC \
 	-DZSTD_DISABLE_ASM \
 	-D_7ZIP_ST
+
+ARM64_DEFS = \
+	-DVIXL_CODE_BUFFER_MALLOC
 
 UTIL_OBJS = \
 	$(PROJ)/src/util/cd_image.$(O) \
@@ -132,6 +140,30 @@ COMMON_OBJS = \
 	$(PROJ)/src/common/threading.$(O) \
 	$(PROJ)/src/common/timer.$(O)
 
+X64_OBJS = \
+	$(PROJ)/src/core/cpu_newrec_compiler_x64.$(O) \
+	$(PROJ)/src/core/cpu_recompiler_code_generator_x64.$(O)
+
+ARM64_OBJS = \
+	$(PROJ)/dep/vixl/src/aarch64/assembler-aarch64.$(O) \
+	$(PROJ)/dep/vixl/src/aarch64/cpu-aarch64.$(O) \
+	$(PROJ)/dep/vixl/src/aarch64/cpu-features-auditor-aarch64.$(O) \
+	$(PROJ)/dep/vixl/src/aarch64/decoder-aarch64.$(O) \
+	$(PROJ)/dep/vixl/src/aarch64/disasm-aarch64.$(O) \
+	$(PROJ)/dep/vixl/src/aarch64/instructions-aarch64.$(O) \
+	$(PROJ)/dep/vixl/src/aarch64/instrument-aarch64.$(O) \
+	$(PROJ)/dep/vixl/src/aarch64/logic-aarch64.$(O) \
+	$(PROJ)/dep/vixl/src/aarch64/macro-assembler-aarch64.$(O) \
+	$(PROJ)/dep/vixl/src/aarch64/operands-aarch64.$(O) \
+	$(PROJ)/dep/vixl/src/aarch64/pointer-auth-aarch64.$(O) \
+	$(PROJ)/dep/vixl/src/aarch64/simulator-aarch64.$(O) \
+	$(PROJ)/dep/vixl/src/code-buffer-vixl.$(O) \
+	$(PROJ)/dep/vixl/src/compiler-intrinsics-vixl.$(O) \
+	$(PROJ)/dep/vixl/src/cpu-features.$(O) \
+	$(PROJ)/dep/vixl/src/utils-vixl.$(O) \
+	$(PROJ)/src/core/cpu_newrec_compiler_aarch64.$(O) \
+	$(PROJ)/src/core/cpu_recompiler_code_generator_aarch64.$(O)
+
 CORE_OBJS = \
 	$(PROJ)/src/core/analog_controller.$(O) \
 	$(PROJ)/src/core/analog_joystick.$(O) \
@@ -145,11 +177,9 @@ CORE_OBJS = \
 	$(PROJ)/src/core/cpu_core.$(O) \
 	$(PROJ)/src/core/cpu_disasm.$(O) \
 	$(PROJ)/src/core/cpu_newrec_compiler.$(O) \
-	$(PROJ)/src/core/cpu_newrec_compiler_x64.$(O) \
 	$(PROJ)/src/core/cpu_pgxp.$(O) \
 	$(PROJ)/src/core/cpu_recompiler_code_generator.$(O) \
 	$(PROJ)/src/core/cpu_recompiler_code_generator_generic.$(O) \
-	$(PROJ)/src/core/cpu_recompiler_code_generator_x64.$(O) \
 	$(PROJ)/src/core/cpu_recompiler_register_cache.$(O) \
 	$(PROJ)/src/core/cpu_types.$(O) \
 	$(PROJ)/src/core/digital_controller.$(O) \

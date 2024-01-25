@@ -168,8 +168,6 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	if (!ctx || !ctx->emu)
 		return false;
 
-	CoreUnloadGame(ctx);
-
 	battery_manager_set_save_data(save_data, save_data_size);
 	emulator_set_system(system);
 
@@ -203,7 +201,9 @@ void CoreUnloadGame(Core *ctx)
 
 	ctx->loaded = false;
 	ctx->pr_written = false;
-	ctx->emu->Stop(false);
+
+	if (ctx->emu)
+		ctx->emu->Stop(false);
 
 	battery_manager_set_save_data(NULL, 0);
 }

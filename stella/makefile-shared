@@ -9,7 +9,8 @@ INCLUDES = \
 	-I$(PROJ)/src/emucore/tia \
 	-I$(PROJ)/src/emucore/tia/frame-manager \
 	-I$(PROJ)/src/lib/json \
-	-I$(PROJ)/src/lib/sqlite
+	-I$(PROJ)/src/lib/sqlite \
+	-I$(PROJ)/src/os/unix
 
 DEFS = \
 	-DCORE_EXPORT \
@@ -165,5 +166,6 @@ OBJS = \
 	$(PROJ)/src/emucore/System.$(O) \
 	$(PROJ)/src/emucore/Thumbulator.$(O) \
 	$(PROJ)/src/emucore/TIASurface.$(O) \
-	$(PROJ)/src/lib/sqlite/sqlite3.$(O)
+	$(PROJ)/src/lib/sqlite/sqlite3.$(O) \
+	$(PROJ)/src/os/unix/FSNodePOSIX.$(O)
 

@@ -19,13 +19,10 @@ DEFS := $(DEFS) \
 LD_FLAGS = \
 	-shared \
 	-nodefaultlibs \
-	-Wno-odr \
-	-Wl,--no-undefined
+	-Wno-odr
 
 LIBS = \
-	-lc \
-	-lm \
-	-lgcc_s
+	-lc
 
 ifdef DEBUG
 FLAGS := $(FLAGS) -O0 -g3
@@ -49,7 +46,12 @@ FLAGS := $(FLAGS) \
 	-Wno-type-limits \
 	-Wno-switch
 
+LD_FLAGS := $(LD_FLAGS) \
+	-Wl,--no-undefined
+
 LIBS := $(LIBS) \
+	-lm \
+	-lgcc_s \
 	-lstdc++
 
 endif
@@ -82,6 +84,7 @@ FLAGS := $(FLAGS) \
 	-Wno-unused-private-field \
 	-Wno-inconsistent-missing-override \
 	-Wno-bitwise-instead-of-logical \
+	-Wno-missing-braces \
 	-m$(TARGET)-version-min=$(MIN_VER) \
 	-isysroot $(shell xcrun --sdk $(TARGET) --show-sdk-path) \
 	-arch $(ARCH)

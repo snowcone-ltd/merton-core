@@ -6,6 +6,7 @@ static size_t BATTERY_MANAGER_SAVE_DATA_SIZE;
 void battery_manager_set_save_data(const void *save_data, size_t save_data_size)
 {
 	free(BATTERY_MANAGER_SAVE_DATA);
+	BATTERY_MANAGER_SAVE_DATA = NULL;
 	BATTERY_MANAGER_SAVE_DATA_SIZE = 0;
 
 	if (save_data) {

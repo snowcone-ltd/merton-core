@@ -16,14 +16,12 @@ FLAGS = \
 	-fPIC
 
 DEFS := $(DEFS) \
-	-DHAVE_LOCALE \
 	-DHAVE_LOCALTIME_R \
 	-D_POSIX_C_SOURCE=200809L
 
 LD_FLAGS = \
 	-shared \
-	-nodefaultlibs \
-	-Wl,--no-undefined
+	-nodefaultlibs
 
 LIBS = \
 	-lc \
@@ -44,7 +42,11 @@ ifeq ($(UNAME_S), Linux)
 TARGET = linux
 SUFFIX = so
 
-FLAGS := $(FLAGS) \
+DEFS := $(DEFS) \
+	-DHAVE_LOCALE
+
+LD_FLAGS := $(LD_FLAGS) \
+	-Wl,--no-undefined
 
 endif
 
