@@ -107,7 +107,7 @@ SHIM_OBJS = \
 	shim/osal_dynamiclib.obj
 
 DEPS_OBJS = \
-	deps/SDL/SDL_win32.obj \
+	deps/SDL/SDL.obj \
 	deps/zlib/adler32.obj \
 	deps/zlib/crc32.obj \
 	deps/zlib/deflate.obj \
