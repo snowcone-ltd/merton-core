@@ -1,12 +1,7 @@
-NAME = genesis-plus-gx
-
-O = obj
+!INCLUDE ..\windows-shared
 !INCLUDE makefile-shared
 
-FLAGS = \
-	/W4 \
-	/MT \
-	/MP \
+FLAGS = $(FLAGS) \
 	/wd4018 \
 	/wd4100 \
 	/wd4127 \
@@ -20,18 +15,11 @@ FLAGS = \
 	/wd4456 \
 	/wd4457 \
 	/wd4701 \
-	/wd4706 \
-	/volatile:iso \
-	/nologo
+	/wd4706
 
 DEFS = $(DEFS) \
 	-DUNICODE \
 	-D_CRT_SECURE_NO_WARNINGS
-
-LINK_FLAGS = \
-	/nodefaultlib \
-	/nologo \
-	/dll
 
 LIBS = \
 	../../libmatoya/bin/windows/x64/matoya.lib \
@@ -43,14 +31,6 @@ LIBS = \
 	shlwapi.lib \
 	bcrypt.lib \
 	crypt32.lib
-
-!IFDEF DEBUG
-FLAGS = $(FLAGS) /Ob0 /Zi /Oy-
-LINK_FLAGS = $(LINK_FLAGS) /debug
-!ELSE
-FLAGS = $(FLAGS) /O2 /GS- /Gw /GL
-LINK_FLAGS = $(LINK_FLAGS) /LTCG
-!ENDIF
 
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
 

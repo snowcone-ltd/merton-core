@@ -1,0 +1,21 @@
+O = obj
+
+FLAGS = \
+	/W4 \
+	/MT \
+	/MP \
+	/volatile:iso \
+	/nologo
+
+LINK_FLAGS = \
+	/nodefaultlib \
+	/nologo \
+	/dll
+
+!IFDEF DEBUG
+FLAGS = $(FLAGS) /Ob0 /Zi /Oy-
+LINK_FLAGS = $(LINK_FLAGS) /debug
+!ELSE
+FLAGS = $(FLAGS) /O2 /GS- /Gw /GL
+LINK_FLAGS = $(LINK_FLAGS) /LTCG
+!ENDIF

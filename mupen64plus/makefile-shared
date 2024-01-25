@@ -1,6 +1,7 @@
 PROJ = mupen64plus-core
 PROJ_RSP = mupen64plus-rsp-cxd4
 PROJ_RDP = angrylion-rdp-plus
+NAME = mupen64plus
 
 INCLUDES = \
 	-I../../libmatoya/src \

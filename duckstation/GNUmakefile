@@ -1,15 +1,10 @@
-UNAME_S = $(shell uname -s)
-ARCH = $(shell uname -m)
-NAME = duckstation
-
-O = o
+include ../unix-shared
 include makefile-shared
 
 OBJS := $(OBJS) \
 	$(PROJ)/src/common/fastjmp.$(O)
 
-FLAGS = \
-	-Wall \
+FLAGS := $(FLAGS) \
 	-Wno-unused-parameter \
 	-Wno-missing-field-initializers \
 	-Wno-sign-compare \
@@ -19,42 +14,22 @@ FLAGS = \
 	-Wno-implicit-fallthrough \
 	-Wno-unused-but-set-variable \
 	-Wno-enum-conversion \
-	-Wno-switch \
-	-fPIC
+	-Wno-switch
 
 DEFS := $(DEFS) \
 	-D_GNU_SOURCE
 
-LD_FLAGS = \
-	-shared \
-	-nodefaultlibs
-
 LIBS = \
 	-lc
 
-ifdef DEBUG
-FLAGS := $(FLAGS) -O0 -g3
-else
-FLAGS := $(FLAGS) -O3 -g0 -flto -fvisibility=hidden
-LD_FLAGS := $(LD_FLAGS) -flto=auto
-endif
-
-#############
-### LINUX ###
-#############
+### Linux
 ifeq ($(UNAME_S), Linux)
-
-TARGET = linux
-SUFFIX = so
 
 OBJS := $(OBJS) \
 	$(X64_OBJS)
 
 FLAGS := $(FLAGS) \
 	-Wno-maybe-uninitialized
-
-LD_FLAGS := $(LD_FLAGS) \
-	-Wl,--no-undefined
 
 EXTRA_CXX_FLAGS = \
 	-Wno-class-memaccess
@@ -64,29 +39,10 @@ LIBS := $(LIBS) \
 	-lgcc_s \
 	-lstdc++
 
-endif
+endif ### Linux
 
-#############
-### APPLE ###
-#############
+### Apple
 ifeq ($(UNAME_S), Darwin)
-
-ifndef TARGET
-TARGET = macosx
-endif
-
-ifndef ARCH
-ARCH = x86_64
-endif
-
-SUFFIX = dylib
-
-ifeq ($(TARGET), macosx)
-MIN_VER = 11.0
-else
-MIN_VER = 13.0
-FLAGS := $(FLAGS) -fembed-bitcode
-endif
 
 ifeq ($(ARCH), x86_64)
 OBJS := $(OBJS) $(X64_OBJS)
@@ -98,18 +54,12 @@ endif
 
 FLAGS := $(FLAGS) \
 	-Wno-typedef-redefinition \
-	-Wno-missing-braces \
-	-m$(TARGET)-version-min=$(MIN_VER) \
-	-isysroot $(shell xcrun --sdk $(TARGET) --show-sdk-path) \
-	-arch $(ARCH)
-
-LD_FLAGS := $(LD_FLAGS) \
-	-arch $(ARCH)
+	-Wno-missing-braces
 
 LIBS := $(LIBS) \
 	-lc++
 
-endif
+endif ### Apple
 
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c99
 CXXFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) $(EXTRA_CXX_FLAGS) -std=c++20

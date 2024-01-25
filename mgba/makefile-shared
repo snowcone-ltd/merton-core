@@ -1,4 +1,5 @@
 PROJ = mgba
+NAME = mgba
 
 INCLUDES = \
 	-I$(PROJ)/include \

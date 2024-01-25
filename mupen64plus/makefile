@@ -1,6 +1,4 @@
-NAME = mupen64plus
-
-O = obj
+!INCLUDE ..\windows-shared
 !INCLUDE makefile-shared
 
 .asm.obj:
@@ -9,10 +7,7 @@ O = obj
 OBJS = $(OBJS) \
 	$(ASM_OBJ_X64)
 
-FLAGS = \
-	/W4 \
-	/MT \
-	/MP \
+FLAGS = $(FLAGS) \
 	/wd4057 \
 	/wd4100 \
 	/wd4101 \
@@ -34,20 +29,12 @@ FLAGS = \
 	/wd4702 \
 	/wd4703 \
 	/wd4706 \
-	/wd4996 \
-	/volatile:iso \
-	/std:c11 \
-	/nologo
+	/wd4996
 
 DEFS = $(DEFS) \
 	-D_CRT_SECURE_NO_WARNINGS \
 	-DNEW_DYNAREC=NEW_DYNAREC_X64 \
 	-DWIN32
-
-LINK_FLAGS = \
-	/nodefaultlib \
-	/nologo \
-	/dll
 
 LIBS = \
 	../../libmatoya/bin/windows/x64/matoya.lib \
@@ -65,16 +52,8 @@ LIBS = \
 	winmm.lib \
 	advapi32.lib
 
-!IFDEF DEBUG
-FLAGS = $(FLAGS) /Ob0 /Zi /Oy-
-LINK_FLAGS = $(LINK_FLAGS) /debug
-!ELSE
-FLAGS = $(FLAGS) /O2 /GS- /Gw /GL
-LINK_FLAGS = $(LINK_FLAGS) /LTCG
-!ENDIF
-
-CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
-CPPFLAGS = $(CFLAGS) /EHsc
+CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) /std:c11
+CPPFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) /EHsc
 
 all: clean clear asm-defines $(OBJS)
 	link /out:$(NAME).dll $(LINK_FLAGS) *.obj $(LIBS)

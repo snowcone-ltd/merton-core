@@ -1,6 +1,4 @@
-NAME = stella
-
-O = obj
+!INCLUDE ..\windows-shared
 !INCLUDE makefile-shared
 
 INCLUDES = $(INCLUDES) \
@@ -11,22 +9,12 @@ OBJS = $(OBJS) \
 	$(PROJ)/src/os/windows/OSystemWINDOWS.$(O) \
 	$(PROJ)/src/os/windows/SerialPortWINDOWS.$(O)
 
-FLAGS = \
-	/W4 \
-	/MT \
-	/MP \
+FLAGS = $(FLAGS) \
 	/wd4100 \
-	/wd4244 \
-	/volatile:iso \
-	/nologo
+	/wd4244
 
 DEFS = $(DEFS) \
 	-DBSPF_WINDOWS
-
-LINK_FLAGS = \
-	/nodefaultlib \
-	/nologo \
-	/dll
 
 LIBS = \
 	libvcruntime.lib \
@@ -37,16 +25,8 @@ LIBS = \
 	advapi32.lib \
 	shell32.lib
 
-!IFDEF DEBUG
-FLAGS = $(FLAGS) /Ob0 /Zi /Oy-
-LINK_FLAGS = $(LINK_FLAGS) /debug
-!ELSE
-FLAGS = $(FLAGS) /O2 /GS- /Gw /GL
-LINK_FLAGS = $(LINK_FLAGS) /LTCG
-!ENDIF
-
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
-CXXFLAGS = $(CFLAGS) /EHsc /std:c++17
+CXXFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) /EHsc /std:c++17
 
 all: clean clear $(OBJS)
 	link /out:$(NAME).dll $(LINK_FLAGS) *.obj $(LIBS)

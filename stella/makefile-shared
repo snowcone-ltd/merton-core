@@ -1,4 +1,5 @@
 PROJ = stella
+NAME = stella
 
 INCLUDES = \
 	-Ishim \

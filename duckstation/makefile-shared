@@ -1,4 +1,5 @@
 PROJ = duckstation
+NAME = duckstation
 
 INCLUDES = \
 	-Irename \

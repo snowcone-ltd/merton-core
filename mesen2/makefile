@@ -1,12 +1,7 @@
-NAME = mesen2
-
-O = obj
+!INCLUDE ..\windows-shared
 !INCLUDE makefile-shared
 
-FLAGS = \
-	/W4 \
-	/MT \
-	/MP \
+FLAGS = $(FLAGS) \
 	/wd4100 \
 	/wd4127 \
 	/wd4189 \
@@ -17,17 +12,10 @@ FLAGS = \
 	/wd4457 \
 	/wd4701 \
 	/wd4706 \
-	/wd4723 \
-	/volatile:iso \
-	/nologo
+	/wd4723
 
 DEFS = $(DEFS) \
 	-DUNICODE
-
-LINK_FLAGS = \
-	/nodefaultlib \
-	/nologo \
-	/dll
 
 LIBS = \
 	libvcruntime.lib \
@@ -38,14 +26,6 @@ LIBS = \
 	ole32.lib \
 	oleaut32.lib \
 	ws2_32.lib
-
-!IFDEF DEBUG
-FLAGS = $(FLAGS) /Ob0 /Zi /Oy-
-LINK_FLAGS = $(LINK_FLAGS) /debug
-!ELSE
-FLAGS = $(FLAGS) /O2 /GS- /Gw /GL
-LINK_FLAGS = $(LINK_FLAGS) /LTCG
-!ENDIF
 
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
 CPPFLAGS = $(CFLAGS) -D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING /EHsc /std:c++17

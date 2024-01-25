@@ -1,12 +1,7 @@
-NAME = mgba
-
-O = obj
+!INCLUDE ..\windows-shared
 !INCLUDE makefile-shared
 
-FLAGS = \
-	/W4 \
-	/MT \
-	/MP \
+FLAGS = $(FLAGS) \
 	/wd4005 \
 	/wd4018 \
 	/wd4057 \
@@ -29,19 +24,11 @@ FLAGS = \
 	/wd4701 \
 	/wd4702 \
 	/wd4706 \
-	/wd4996 \
-	/volatile:iso \
-	/std:c11 \
-	/nologo
+	/wd4996
 
 DEFS = $(DEFS) \
 	-DUNICODE \
 	-D_CRT_SECURE_NO_WARNINGS
-
-LINK_FLAGS = \
-	/nodefaultlib \
-	/nologo \
-	/dll
 
 LIBS = \
 	libvcruntime.lib \
@@ -54,15 +41,7 @@ LIBS = \
 	ws2_32.lib \
 	oldnames.lib
 
-!IFDEF DEBUG
-FLAGS = $(FLAGS) /Ob0 /Zi /Oy-
-LINK_FLAGS = $(LINK_FLAGS) /debug
-!ELSE
-FLAGS = $(FLAGS) /O2 /GS- /Gw /GL
-LINK_FLAGS = $(LINK_FLAGS) /LTCG
-!ENDIF
-
-CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
+CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) /std:c11
 
 all: clean clear $(OBJS)
 	link /out:$(NAME).dll $(LINK_FLAGS) *.obj $(LIBS)

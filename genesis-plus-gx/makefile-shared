@@ -1,4 +1,5 @@
 PROJ = Genesis-Plus-GX
+NAME = genesis-plus-gx
 
 INCLUDES = \
 	-I. \

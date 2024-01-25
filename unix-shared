@@ -1,0 +1,63 @@
+UNAME_S = $(shell uname -s)
+ARCH = $(shell uname -m)
+
+O = o
+
+FLAGS = \
+	-Wall \
+	-fPIC
+
+LD_FLAGS = \
+	-shared \
+	-nodefaultlibs
+
+ifdef DEBUG
+FLAGS := $(FLAGS) -O0 -g3
+else
+FLAGS := $(FLAGS) -O3 -g0 -fvisibility=hidden
+ifndef NO_LTO
+FLAGS := $(FLAGS) -flto
+LD_FLAGS := $(LD_FLAGS) -flto=auto
+endif
+endif
+
+### Linux
+ifeq ($(UNAME_S), Linux)
+
+TARGET = linux
+SUFFIX = so
+
+LD_FLAGS := $(LD_FLAGS) \
+	-Wl,--no-undefined
+
+endif ### Linux
+
+### Apple
+ifeq ($(UNAME_S), Darwin)
+
+ifndef TARGET
+TARGET = macosx
+endif
+
+ifndef ARCH
+ARCH = x86_64
+endif
+
+SUFFIX = dylib
+
+ifeq ($(TARGET), macosx)
+MIN_VER = 11.0
+else
+MIN_VER = 13.0
+FLAGS := $(FLAGS) -fembed-bitcode
+endif
+
+FLAGS := $(FLAGS) \
+	-m$(TARGET)-version-min=$(MIN_VER) \
+	-isysroot $(shell xcrun --sdk $(TARGET) --show-sdk-path) \
+	-arch $(ARCH)
+
+LD_FLAGS := $(LD_FLAGS) \
+	-arch $(ARCH)
+
+endif ### Apple

@@ -1,4 +1,5 @@
 PROJ = Mesen2
+NAME = mesen2
 
 INCLUDES = \
 	-I.. \

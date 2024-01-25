@@ -1,8 +1,4 @@
-UNAME_S = $(shell uname -s)
-ARCH = $(shell uname -m)
-NAME = mupen64plus
-
-O = o
+include ../unix-shared
 include makefile-shared
 
 .SUFFIXES: .asm
@@ -10,8 +6,7 @@ include makefile-shared
 .asm.o:
 	nasm -f elf64 -i $(PROJ)/src/asm_defines/ $< -o $@
 
-FLAGS = \
-	-Wall \
+FLAGS := $(FLAGS) \
 	-Wextra \
 	-Wno-unused-parameter \
 	-Wno-unused-but-set-parameter \
@@ -23,41 +18,17 @@ FLAGS = \
 	-Wno-parentheses \
 	-Wno-missing-field-initializers \
 	-Wno-empty-body \
-	-Wno-switch \
-	-fPIC
+	-Wno-switch
 
 DEFS := $(DEFS) \
 	-D_GNU_SOURCE
-
-LD_FLAGS = \
-	-shared \
-	-nodefaultlibs
 
 LIBS = \
 	-lc \
 	-lm
 
-ifdef DEBUG
-FLAGS := $(FLAGS) -O0 -g3
-else
-
-FLAGS := $(FLAGS) -O3 -g0 -fvisibility=hidden
-LD_FLAGS := $(LD_FLAGS)
-
-ifndef NO_LTO
-FLAGS := $(FLAGS) -flto
-LD_FLAGS := $(LD_FLAGS) -flto=auto
-endif
-
-endif
-
-#############
-### LINUX ###
-#############
+### Linux
 ifeq ($(UNAME_S), Linux)
-
-TARGET = linux
-SUFFIX = so
 
 OBJS := $(OBJS) \
 	$(ASM_OBJ_X64)
@@ -65,27 +36,14 @@ OBJS := $(OBJS) \
 DEFS := $(DEFS) \
 	-DNEW_DYNAREC=NEW_DYNAREC_X64
 
-LD_FLAGS := $(LD_FLAGS) \
-	-Wl,--no-undefined
-
 LIBS := $(LIBS) \
 	-lgcc_s \
 	-lstdc++
 
-endif
+endif ### Linux
 
-#############
-### APPLE ###
-#############
+### Apple
 ifeq ($(UNAME_S), Darwin)
-
-ifndef TARGET
-TARGET = macosx
-endif
-
-ifndef ARCH
-ARCH = x86_64
-endif
 
 ifeq ($(ARCH), x86_64)
 OBJS := $(OBJS) $(ASM_OBJ_X64)
@@ -95,30 +53,15 @@ OBJS := $(OBJS) $(ASM_OBJ_ARM64) # FIXME This does not compile! Need fix from M6
 DEFS := $(DEFS) -DNEW_DYNAREC=NEW_DYNAREC_ARM64
 endif
 
-SUFFIX = dylib
-
-ifeq ($(TARGET), macosx)
-MIN_VER = 10.15
-else
-MIN_VER = 13.0
-FLAGS := $(FLAGS) -fembed-bitcode
-endif
-
 FLAGS := $(FLAGS) \
 	-Wno-xor-used-as-pow \
 	-Wno-tautological-overlap-compare \
-	-Wno-null-pointer-subtraction \
-	-m$(TARGET)-version-min=$(MIN_VER) \
-	-isysroot $(shell xcrun --sdk $(TARGET) --show-sdk-path) \
-	-arch $(ARCH)
-
-LD_FLAGS := $(LD_FLAGS) \
-	-arch $(ARCH)
+	-Wno-null-pointer-subtraction
 
 LIBS := $(LIBS) \
 	-lc++
 
-endif
+endif ### Apple
 
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) \
 	-Wno-incompatible-pointer-types \

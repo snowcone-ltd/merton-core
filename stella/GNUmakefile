@@ -1,48 +1,25 @@
-UNAME_S = $(shell uname -s)
-ARCH = $(shell uname -m)
-NAME = stella
+include ../unix-shared
+include makefile-shared
 
 .SUFFIXES: .cxx
 
 .cxx.o:
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-O = o
-include makefile-shared
-
 OBJS := $(OBJS) \
 	$(PROJ)/src/os/unix/FSNodePOSIX.$(O)
 
-FLAGS = \
-	-Wall \
+FLAGS := $(FLAGS) \
 	-Wextra \
 	-Wno-unused-parameter \
 	-Wno-implicit-fallthrough \
-	-fPIC
-
-LD_FLAGS = \
-	-shared \
-	-nodefaultlibs
+	-Wno-reorder
 
 LIBS = \
 	-lc
 
-ifdef DEBUG
-FLAGS := $(FLAGS) -O0 -g3
-else
-FLAGS := $(FLAGS) -O3 -g0 -flto -fvisibility=hidden
-LD_FLAGS := $(LD_FLAGS) -flto=auto
-endif
-
-#############
-### LINUX ###
-#############
+### Linux
 ifeq ($(UNAME_S), Linux)
-
-TARGET = linux
-SUFFIX = so
-
-FLAGS := $(FLAGS) \
 
 DEFS := $(DEFS) \
 	-DBSPF_UNIX
@@ -51,45 +28,20 @@ OBJS := $(OBJS) \
 	$(PROJ)/src/os/unix/OSystemUNIX.$(O) \
 	$(PROJ)/src/os/unix/SerialPortUNIX.$(O)
 
-LD_FLAGS := $(LD_FLAGS) \
-	-Wl,--no-undefined
-
 LIBS := $(LIBS) \
 	-lm \
 	-lgcc_s \
 	-lstdc++
 
-endif
+endif ### Linux
 
-#############
-### APPLE ###
-#############
+### Apple
 ifeq ($(UNAME_S), Darwin)
-
-ifndef TARGET
-TARGET = macosx
-endif
-
-ifndef ARCH
-ARCH = x86_64
-endif
-
-SUFFIX = dylib
-
-ifeq ($(TARGET), macosx)
-MIN_VER = 10.15
-else
-MIN_VER = 13.0
-FLAGS := $(FLAGS) -fembed-bitcode
-endif
 
 FLAGS := $(FLAGS) \
 	-Wno-unused-private-field \
 	-Wno-unused-const-variable \
-	-Wno-reorder-ctor \
-	-m$(TARGET)-version-min=$(MIN_VER) \
-	-isysroot $(shell xcrun --sdk $(TARGET) --show-sdk-path) \
-	-arch $(ARCH)
+	-Wno-reorder-ctor
 
 INCLUDES := $(INCLUDES) \
 	-I$(PROJ)/src/os/macos
@@ -101,13 +53,10 @@ OBJS := $(OBJS) \
 	$(PROJ)/src/os/macos/OSystemMACOS.$(O) \
 	$(PROJ)/src/os/macos/SerialPortMACOS.$(O)
 
-LD_FLAGS := $(LD_FLAGS) \
-	-arch $(ARCH)
-
 LIBS := $(LIBS) \
 	-lc++
 
-endif
+endif ### Apple
 
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c99
 CXXFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c++17
