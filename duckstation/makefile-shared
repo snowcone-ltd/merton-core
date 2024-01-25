@@ -67,20 +67,10 @@ DEPS_OBJS = \
 	$(PROJ)/dep/libchdr/src/libchdr_huffman.$(O) \
 	$(PROJ)/dep/lzma/src/Alloc.$(O) \
 	$(PROJ)/dep/lzma/src/Bra86.$(O) \
-	$(PROJ)/dep/lzma/src/BraIA64.$(O) \
-	$(PROJ)/dep/lzma/src/CpuArch.$(O) \
-	$(PROJ)/dep/lzma/src/Delta.$(O) \
 	$(PROJ)/dep/lzma/src/LzFind.$(O) \
-	$(PROJ)/dep/lzma/src/Lzma86Dec.$(O) \
-	$(PROJ)/dep/lzma/src/Lzma86Enc.$(O) \
 	$(PROJ)/dep/lzma/src/LzmaDec.$(O) \
 	$(PROJ)/dep/lzma/src/LzmaEnc.$(O) \
-	$(PROJ)/dep/lzma/src/LzmaLib.$(O) \
-	$(PROJ)/dep/lzma/src/Sort.$(O) \
 	$(PROJ)/dep/minizip/src/ioapi.$(O) \
-	$(PROJ)/dep/minizip/src/mztools.$(O) \
-	$(PROJ)/dep/minizip/src/unzip.$(O) \
-	$(PROJ)/dep/minizip/src/zip.$(O) \
 	$(PROJ)/dep/reshadefx/src/effect_codegen_glsl.$(O) \
 	$(PROJ)/dep/reshadefx/src/effect_codegen_hlsl.$(O) \
 	$(PROJ)/dep/reshadefx/src/effect_expression.$(O) \
@@ -95,18 +85,11 @@ DEPS_OBJS = \
 	$(PROJ)/dep/zlib/src/compress.$(O) \
 	$(PROJ)/dep/zlib/src/crc32.$(O) \
 	$(PROJ)/dep/zlib/src/deflate.$(O) \
-	$(PROJ)/dep/zlib/src/gzclose.$(O) \
-	$(PROJ)/dep/zlib/src/gzlib.$(O) \
-	$(PROJ)/dep/zlib/src/gzread.$(O) \
-	$(PROJ)/dep/zlib/src/gzwrite.$(O) \
-	$(PROJ)/dep/zlib/src/infback.$(O) \
 	$(PROJ)/dep/zlib/src/inffast.$(O) \
 	$(PROJ)/dep/zlib/src/inflate.$(O) \
 	$(PROJ)/dep/zlib/src/inftrees.$(O) \
 	$(PROJ)/dep/zlib/src/trees.$(O) \
-	$(PROJ)/dep/zlib/src/uncompr.$(O) \
 	$(PROJ)/dep/zlib/src/zutil.$(O) \
-	$(PROJ)/dep/zstd/lib/common/debug.$(O) \
 	$(PROJ)/dep/zstd/lib/common/entropy_common.$(O) \
 	$(PROJ)/dep/zstd/lib/common/error_private.$(O) \
 	$(PROJ)/dep/zstd/lib/common/fse_decompress.$(O) \
@@ -220,7 +203,6 @@ OBJS = \
 	rename/effect_preprocessor.$(O) \
 	rename/format.$(O) \
 	rename/os.$(O) \
-	rename/zstd_threading.$(O) \
 	rename/zstd_xxhash.$(O) \
 	$(SHIM_OBJS) \
 	$(DEPS_OBJS) \
