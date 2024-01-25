@@ -44,13 +44,10 @@ LIBS = \
 	libucrt.lib \
 	libcmt.lib \
 	libcpmt.lib \
-	user32.lib \
-	winmm.lib \
-	ole32.lib \
-	version.lib \
-	advapi32.lib \
 	kernel32.lib \
-	oldnames.lib \
+	user32.lib \
+	advapi32.lib \
+	winmm.lib \
 	onecore.lib # This is an umbrella lib, needed for memoryapi.h
 
 !IFDEF DEBUG

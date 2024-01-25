@@ -49,7 +49,6 @@ UTIL_OBJS = \
 	$(PROJ)/src/util/iso_reader.$(O) \
 	$(PROJ)/src/util/jit_code_buffer.$(O) \
 	$(PROJ)/src/util/page_fault_handler.$(O) \
-	$(PROJ)/src/util/platform_misc_win32.$(O) \
 	$(PROJ)/src/util/postprocessing.$(O) \
 	$(PROJ)/src/util/postprocessing_shader.$(O) \
 	$(PROJ)/src/util/postprocessing_shader_fx.$(O) \
@@ -197,6 +196,7 @@ SHIM_OBJS = \
 	shim/imgui_overlays.$(O) \
 	shim/input_manager.$(O) \
 	shim/nogui_host.$(O) \
+	shim/platform_misc.$(O)
 
 OBJS = \
 	rename/core_host.$(O) \
