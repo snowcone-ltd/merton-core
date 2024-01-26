@@ -10,18 +10,20 @@ FLAGS := $(FLAGS) \
 	-Wno-switch
 
 DEFS := $(DEFS) \
-	-DHAVE_LOCALTIME_R \
-	-D_DEFAULT_SOURCE
+	-D_POSIX_C_SOURCE=200809L \
+	-DHAVE_LOCALTIME_R
 
 LIBS = \
-	-lc \
-	-lm
+	-lc
 
 ### Linux
 ifeq ($(UNAME_S), Linux)
 
 DEFS := $(DEFS) \
 	-DHAVE_LOCALE
+
+LIBS := $(LIBS) \
+	-lm
 
 endif ### Linux
 

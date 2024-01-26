@@ -4,7 +4,7 @@ include makefile-shared
 .SUFFIXES: .asm
 
 .asm.o:
-	nasm -f $(NASM_FORMAT) -i $(PROJ)/src/asm_defines/ $< -o $@
+	nasm -f $(NASM_FORMAT) $(NASM_DEFS) -i $(PROJ)/src/asm_defines/ $< -o $@
 
 FLAGS := $(FLAGS) \
 	-Wextra \
@@ -49,19 +49,24 @@ endif ### Linux
 ifeq ($(UNAME_S), Darwin)
 
 NASM_FORMAT = macho64
+NASM_DEFS = -d LEADING_UNDERSCORE
 
 ifeq ($(ARCH), x86_64)
 OBJS := $(OBJS) $(ASM_OBJ_X64)
 DEFS := $(DEFS) -DNEW_DYNAREC=NEW_DYNAREC_X64
 else
-OBJS := $(OBJS) $(ASM_OBJ_ARM64) # FIXME This does not compile! Need fix from M64P team
-DEFS := $(DEFS) -DNEW_DYNAREC=NEW_DYNAREC_ARM64
+OBJS := $(OBJS) $(ASM_OBJ_ARM64)
+DEFS := $(DEFS) -DNEW_DYNAREC=NEW_DYNAREC_ARM64 -DUSE_SSE2NEON -DSSE2NEON
 endif
 
 FLAGS := $(FLAGS) \
 	-Wno-xor-used-as-pow \
 	-Wno-tautological-overlap-compare \
-	-Wno-null-pointer-subtraction
+	-Wno-null-pointer-subtraction \
+	-Wno-pointer-sign
+
+LD_FLAGS := $(LD_FLAGS) \
+	-Wl,-segprot,__ASM,rx,rx
 
 LIBS := $(LIBS) \
 	-lc++
@@ -90,6 +95,8 @@ asm-defines:
 	bash $(PROJ)/tools/gen_asm_script.sh $(PROJ)/src/asm_defines $(ASMD_OBJ)
 
 clean:
+	@rm -rf $(PROJ_RSP)/sse2neon # Use updates SSE2NEON.h
+	@rm -rf $(PROJ)/src/asm_defines/*.h
 	@rm -rf $(NAME).*
 	@rm -rf $(OBJS) $(ASMD_OBJ)
 

@@ -1,5 +1,8 @@
 UNAME_S = $(shell uname -s)
+
+ifndef ARCH
 ARCH = $(shell uname -m)
+endif
 
 O = o
 
@@ -37,10 +40,6 @@ ifeq ($(UNAME_S), Darwin)
 
 ifndef TARGET
 TARGET = macosx
-endif
-
-ifndef ARCH
-ARCH = x86_64
 endif
 
 SUFFIX = dylib

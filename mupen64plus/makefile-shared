@@ -5,16 +5,17 @@ NAME = mupen64plus
 
 INCLUDES = \
 	-I../../libmatoya/src \
+	-Ideps \
+	-Ideps/SDL \
+	-Ideps/zlib \
+	-Ishim/$(PROJ_RDP) \
 	-I$(PROJ_RDP)/src \
 	-I$(PROJ)/src \
 	-I$(PROJ)/src/api \
 	-I$(PROJ)/subprojects \
 	-I$(PROJ)/subprojects/md5 \
 	-I$(PROJ)/subprojects/xxhash \
-	-I$(PROJ)/subprojects/minizip \
-	-Ishim/$(PROJ_RDP) \
-	-Ideps/SDL \
-	-Ideps/zlib
+	-I$(PROJ)/subprojects/minizip
 
 DEFS = \
 	-DDYNAREC \
@@ -26,7 +27,7 @@ ASM_OBJ_X64 = \
 	$(PROJ)/src/device/r4300/new_dynarec/x64/linkage_x64.$(O)
 
 ASM_OBJ_ARM64 = \
-	$(PROJ)/src/device/r4300/new_dynarec/arm64/linkage_arm64.$(O)
+	shim/linkage_arm64.$(O)
 
 ASMD_OBJ = \
 	$(PROJ)/src/asm_defines/asm_defines.$(O)
