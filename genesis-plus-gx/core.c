@@ -2,8 +2,6 @@
 
 #include <stdarg.h>
 
-#include "matoya.h"
-
 #include "shared.h"
 #include "md_ntsc.h"
 #include "sms_ntsc.h"
@@ -60,23 +58,38 @@ void osd_input_update(void)
 
 int load_archive(char *filename, unsigned char *buffer, int maxsize, char *extension)
 {
-	size_t size = 0;
-	void *file = MTY_ReadFile(filename, &size);
+	FILE *f = fopen(filename, "rb");
+	if (!f)
+		return 0;
 
-	if (file && size <= maxsize) {
+	void *file = malloc(maxsize);
+	int size = fread(file, 1, maxsize, f);
+
+	if (size > 0) {
 		memcpy(buffer, file, size);
-		MTY_Free(file);
 
 	} else {
 		size = 0;
 	}
+
+	free(file);
+	fclose(f);
 
 	return (int) size;
 }
 
 long crc32(unsigned long crc, const unsigned char *buf, unsigned int len)
 {
-	return MTY_CRC32(crc, buf, len);
+	crc = ~crc;
+
+	for (uint32_t x = 0; x < len; x++) {
+		crc = crc ^ buf[x];
+
+		for (uint8_t y = 0; y < 8; y++)
+			crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
+	}
+
+	return ~crc;
 }
 
 
@@ -147,8 +160,16 @@ Core *CoreLoad(const char *systemDir)
 {
 	Core *ctx = calloc(1, sizeof(Core));
 
+	#if defined(_WIN32)
+		const char *delim = "\\";
+	#else
+		const char *delim = "/";
+	#endif
+
+	bool has_delim = systemDir[strlen(systemDir) - 1] == delim[0];
+
 	#define FILL_BIOS(var, name) \
-		snprintf(var, sizeof(var), "%s", MTY_JoinPath(systemDir, name))
+		snprintf(var, sizeof(var), "%s%s%s", systemDir, has_delim ? "" : delim, name)
 
 	FILL_BIOS(GG_ROM, "ggenie.bin");
 	FILL_BIOS(GG_BIOS, "bios.gg");
@@ -211,10 +232,12 @@ static void core_mcd_format_bram(uint8_t *bram, uint32_t size)
 		memcpy(ptr, CORE_BRM_FORMAT, 0x40);
 		memset(bram, 0x00, size - 0x40);
 
-		uint16_t page_size = MTY_Swap16((uint16_t) (size / 64 - 3));
+		uint16_t page_size = size / 64 - 3;
 
-		for (uint8_t x = 0x10; x < 0x18; x += 2)
-			memcpy(ptr + x, &page_size, 2);
+		for (uint8_t x = 0x10; x < 0x18; x += 2) {
+			ptr[x] = ((uint8_t *) &page_size)[1];
+			ptr[x + 1] = ((uint8_t *) &page_size)[0];
+		}
 	}
 }
 

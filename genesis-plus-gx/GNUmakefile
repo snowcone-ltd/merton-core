@@ -10,7 +10,6 @@ FLAGS := $(FLAGS) \
 	-Wno-unused-function
 
 LIBS = \
-	../../libmatoya/bin/$(TARGET)/$(ARCH)/libmatoya.a \
 	-lc \
 	-lm
 

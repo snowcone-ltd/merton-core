@@ -12,15 +12,10 @@ DEFS = $(DEFS) \
 	-D_CRT_SECURE_NO_WARNINGS
 
 LIBS = \
-	../../libmatoya/bin/windows/x64/matoya.lib \
 	libvcruntime.lib \
 	libucrt.lib \
 	libcmt.lib \
-	kernel32.lib \
-	ws2_32.lib \
-	shlwapi.lib \
-	bcrypt.lib \
-	crypt32.lib
+	kernel32.lib
 
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
 
