@@ -51,14 +51,12 @@ CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c99
 CXXFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c++17 -Wno-deprecated-copy
 
 all: clean clear
-	make objs -j8
+	make objs -j16
 
 objs: $(OBJS)
 	$(CC) -o $(NAME).$(SUFFIX) $(LD_FLAGS) $(OBJS) $(LIBS)
 
 clean:
-	@rm -rf obj
-	@rm -rf libs
 	@rm -rf $(NAME).*
 	@rm -rf $(OBJS)
 

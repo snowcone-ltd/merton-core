@@ -47,9 +47,9 @@ ifeq ($(UNAME_S), Darwin)
 ifeq ($(ARCH), x86_64)
 OBJS := $(OBJS) $(X64_OBJS)
 else
+INCLUDES := $(INCLUDES) $(ARM64_INCLUDES)
 OBJS := $(OBJS) $(ARM64_OBJS)
 DEFS := $(DEFS) $(ARM64_DEFS)
-INCLUDES := $(INCLUDES) $(ARM64_INCLUDES)
 endif
 
 FLAGS := $(FLAGS) \
@@ -65,14 +65,12 @@ CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c99
 CXXFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) $(EXTRA_CXX_FLAGS) -std=c++20
 
 all: clean clear
-	make objs -j8
+	make objs -j16
 
 objs: $(OBJS)
 	$(CC) -o $(NAME).$(SUFFIX) $(LD_FLAGS) $(OBJS) $(LIBS)
 
 clean:
-	@rm -rf obj
-	@rm -rf libs
 	@rm -rf $(NAME).*
 	@rm -rf $(OBJS)
 

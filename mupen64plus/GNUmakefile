@@ -4,7 +4,7 @@ include makefile-shared
 .SUFFIXES: .asm
 
 .asm.o:
-	nasm -f elf64 -i $(PROJ)/src/asm_defines/ $< -o $@
+	nasm -f $(NASM_FORMAT) -i $(PROJ)/src/asm_defines/ $< -o $@
 
 FLAGS := $(FLAGS) \
 	-Wextra \
@@ -24,11 +24,13 @@ DEFS := $(DEFS) \
 	-D_GNU_SOURCE
 
 LIBS = \
-	-lc \
-	-lm
+	../../libmatoya/bin/$(TARGET)/$(ARCH)/libmatoya.a \
+	-lc
 
 ### Linux
 ifeq ($(UNAME_S), Linux)
+
+NASM_FORMAT = elf64
 
 OBJS := $(OBJS) \
 	$(ASM_OBJ_X64)
@@ -37,6 +39,7 @@ DEFS := $(DEFS) \
 	-DNEW_DYNAREC=NEW_DYNAREC_X64
 
 LIBS := $(LIBS) \
+	-lm \
 	-lgcc_s \
 	-lstdc++
 
@@ -44,6 +47,8 @@ endif ### Linux
 
 ### Apple
 ifeq ($(UNAME_S), Darwin)
+
+NASM_FORMAT = macho64
 
 ifeq ($(ARCH), x86_64)
 OBJS := $(OBJS) $(ASM_OBJ_X64)
@@ -71,14 +76,11 @@ CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) \
 CXXFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c++17
 ASFLAGS = -I$(PROJ)/src/asm_defines
 
-LINK_OBJS = $(OBJS) \
-	../../libmatoya/bin/$(TARGET)/$(ARCH)/libmatoya.a
-
 all: clean clear asm-defines
-	make objs -j8
+	make objs -j16
 
 objs: $(OBJS)
-	$(CC) -o $(NAME).$(SUFFIX) $(LD_FLAGS) $(LINK_OBJS) $(LIBS)
+	$(CC) -o $(NAME).$(SUFFIX) $(LD_FLAGS) $(OBJS) $(LIBS)
 
 asm-obj: $(ASMD_OBJ)
 
@@ -88,10 +90,8 @@ asm-defines:
 	bash $(PROJ)/tools/gen_asm_script.sh $(PROJ)/src/asm_defines $(ASMD_OBJ)
 
 clean:
-	@rm -rf obj $(ASMD_OBJ)
-	@rm -rf libs
 	@rm -rf $(NAME).*
-	@rm -rf $(OBJS)
+	@rm -rf $(OBJS) $(ASMD_OBJ)
 
 clear:
 	@clear

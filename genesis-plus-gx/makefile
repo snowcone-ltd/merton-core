@@ -2,23 +2,13 @@
 !INCLUDE makefile-shared
 
 FLAGS = $(FLAGS) \
-	/wd4018 \
-	/wd4100 \
-	/wd4127 \
-	/wd4146 \
-	/wd4201 \
-	/wd4244 \
-	/wd4245 \
-	/wd4267 \
-	/wd4389 \
-	/wd4459 \
-	/wd4456 \
-	/wd4457 \
-	/wd4701 \
-	/wd4706
+	/wd4018 /wd4100 /wd4127 \
+	/wd4146 /wd4201 /wd4244 \
+	/wd4245 /wd4267 /wd4389 \
+	/wd4459 /wd4456 /wd4457 \
+	/wd4701 /wd4706
 
 DEFS = $(DEFS) \
-	-DUNICODE \
 	-D_CRT_SECURE_NO_WARNINGS
 
 LIBS = \

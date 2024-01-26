@@ -10,6 +10,7 @@ FLAGS := $(FLAGS) \
 	-Wno-unused-function
 
 LIBS = \
+	../../libmatoya/bin/$(TARGET)/$(ARCH)/libmatoya.a \
 	-lc \
 	-lm
 
@@ -21,21 +22,15 @@ endif ### Linux
 ifeq ($(UNAME_S), Darwin)
 endif ### Apple
 
-LINK_OBJS = \
-	$(OBJS) \
-	../../libmatoya/bin/$(TARGET)/$(ARCH)/libmatoya.a
-
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c99
 
 all: clean clear
-	make objs -j8
+	make objs -j16
 
 objs: $(OBJS)
-	$(CC) -o $(NAME).$(SUFFIX) $(LD_FLAGS) $(LINK_OBJS) $(LIBS)
+	$(CC) -o $(NAME).$(SUFFIX) $(LD_FLAGS) $(OBJS) $(LIBS)
 
 clean:
-	@rm -rf obj
-	@rm -rf libs
 	@rm -rf $(NAME).*
 	@rm -rf $(OBJS)
 

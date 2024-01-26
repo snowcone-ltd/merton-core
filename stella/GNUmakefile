@@ -21,12 +21,12 @@ LIBS = \
 ### Linux
 ifeq ($(UNAME_S), Linux)
 
-DEFS := $(DEFS) \
-	-DBSPF_UNIX
-
 OBJS := $(OBJS) \
 	$(PROJ)/src/os/unix/OSystemUNIX.$(O) \
 	$(PROJ)/src/os/unix/SerialPortUNIX.$(O)
+
+DEFS := $(DEFS) \
+	-DBSPF_UNIX
 
 LIBS := $(LIBS) \
 	-lm \
@@ -38,20 +38,20 @@ endif ### Linux
 ### Apple
 ifeq ($(UNAME_S), Darwin)
 
+INCLUDES := $(INCLUDES) \
+	-I$(PROJ)/src/os/macos
+
+OBJS := $(OBJS) \
+	$(PROJ)/src/os/macos/OSystemMACOS.$(O) \
+	$(PROJ)/src/os/macos/SerialPortMACOS.$(O)
+
 FLAGS := $(FLAGS) \
 	-Wno-unused-private-field \
 	-Wno-unused-const-variable \
 	-Wno-reorder-ctor
 
-INCLUDES := $(INCLUDES) \
-	-I$(PROJ)/src/os/macos
-
 DEFS := $(DEFS) \
 	-DBSPF_MACOS
-
-OBJS := $(OBJS) \
-	$(PROJ)/src/os/macos/OSystemMACOS.$(O) \
-	$(PROJ)/src/os/macos/SerialPortMACOS.$(O)
 
 LIBS := $(LIBS) \
 	-lc++
@@ -62,14 +62,12 @@ CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c99
 CXXFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c++17
 
 all: clean clear
-	make objs -j8
+	make objs -j16
 
 objs: $(OBJS)
 	$(CC) -o $(NAME).$(SUFFIX) $(LD_FLAGS) $(OBJS) $(LIBS)
 
 clean:
-	@rm -rf obj
-	@rm -rf libs
 	@rm -rf $(NAME).*
 	@rm -rf $(OBJS)
 

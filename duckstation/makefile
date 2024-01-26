@@ -6,27 +6,13 @@ OBJS = $(OBJS) \
 	$(PROJ)/src/common/fastjmp_x86.$(O)
 
 FLAGS = $(FLAGS) \
-	/wd4018 \
-	/wd4057 \
-	/wd4100 \
-	/wd4127 \
-	/wd4131 \
-	/wd4189 \
-	/wd4244 \
-	/wd4245 \
-	/wd4267 \
-	/wd4305 \
-	/wd4324 \
-	/wd4334 \
-	/wd4389 \
-	/wd4456 \
-	/wd4458 \
-	/wd4505 \
-	/wd4702 \
-	/wd4706 \
-	/wd4714 \
-	/wd4996 \
-	/wd5244
+	/wd4018 /wd4057 /wd4100 \
+	/wd4127 /wd4131 /wd4189 \
+	/wd4244 /wd4245 /wd4267 \
+	/wd4305 /wd4324 /wd4334 \
+	/wd4389 /wd4456 /wd4458 \
+	/wd4505 /wd4702 /wd4706 \
+	/wd4714 /wd4996 /wd5244
 
 DEFS = $(DEFS) \
 	-D_CRT_SECURE_NO_WARNINGS
@@ -43,7 +29,7 @@ LIBS = \
 	onecore.lib # This is an umbrella lib, needed for memoryapi.h
 
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
-CPPFLAGS = $(CFLAGS) /EHsc /std:c++20
+CPPFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) /EHsc /std:c++20
 AFLAGS = /nologo /D _M_X86_64
 
 all: clean clear fmt-interface $(OBJS)

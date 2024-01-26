@@ -11,7 +11,7 @@ FLAGS := $(FLAGS) \
 
 DEFS := $(DEFS) \
 	-DHAVE_LOCALTIME_R \
-	-D_POSIX_C_SOURCE=200809L
+	-D_DEFAULT_SOURCE
 
 LIBS = \
 	-lc \
@@ -32,14 +32,12 @@ endif ### Apple
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) -std=c99
 
 all: clean clear
-	make objs -j8
+	make objs -j16
 
 objs: $(OBJS)
 	$(CC) -o $(NAME).$(SUFFIX) $(LD_FLAGS) $(OBJS) $(LIBS)
 
 clean:
-	@rm -rf obj
-	@rm -rf libs
 	@rm -rf $(NAME).*
 	@rm -rf $(OBJS)
 

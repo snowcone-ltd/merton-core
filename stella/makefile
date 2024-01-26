@@ -10,8 +10,7 @@ OBJS = $(OBJS) \
 	$(PROJ)/src/os/windows/SerialPortWINDOWS.$(O)
 
 FLAGS = $(FLAGS) \
-	/wd4100 \
-	/wd4244
+	/wd4100 /wd4244
 
 DEFS = $(DEFS) \
 	-DBSPF_WINDOWS
