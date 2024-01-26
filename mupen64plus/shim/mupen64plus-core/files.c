@@ -9,7 +9,6 @@
 
 #include "matoya.h"
 
-static char OSAL_DIR[2048];
 static MTY_Mutex *OSAL_MUTEX;
 static MTY_Cond *OSAL_COND;
 static uint8_t *OSAL_WRITE_BUF;
@@ -26,12 +25,12 @@ int osal_mkdirp(const char *dirpath, int mode)
 
 const char *osal_get_shared_filepath(const char *filename, const char *firstsearch, const char *secondsearch)
 {
-	return MTY_JoinPath(OSAL_DIR, filename);
+	return filename;
 }
 
 const char *osal_get_user_configpath(void)
 {
-	return MTY_JoinPath(OSAL_DIR, "");
+	return "";
 }
 
 const char *osal_get_user_datapath(void)
@@ -65,12 +64,12 @@ FILE *osal_file_open(const char *filename, const char *mode)
 		free(ubuf);
 
 	} else {
-		const char *ext = MTY_GetFileExtension(filename);
+		const char *ext = strrchr(filename, '.');
 
-		if ((!strcmp(ext, "eep") && ROM_SETTINGS.savetype == SAVETYPE_EEPROM_4K) ||
+		if (ext && ((!strcmp(ext, "eep") && ROM_SETTINGS.savetype == SAVETYPE_EEPROM_4K) ||
 			(!strcmp(ext, "eep") && ROM_SETTINGS.savetype == SAVETYPE_EEPROM_16K) ||
 			(!strcmp(ext, "sra") && ROM_SETTINGS.savetype == SAVETYPE_SRAM) ||
-			(!strcmp(ext, "fla") && ROM_SETTINGS.savetype == SAVETYPE_FLASH_RAM))
+			(!strcmp(ext, "fla") && ROM_SETTINGS.savetype == SAVETYPE_FLASH_RAM)))
 		{
 			fwrite(OSAL_READ_BUF, 1, OSAL_READ_SIZE, tmp);
 			rewind(tmp);
@@ -87,7 +86,7 @@ gzFile osal_gzopen(const char *filename, const char *mode)
 {
 	struct gzFile_s *f = calloc(1, sizeof(struct gzFile_s));
 
-	MTY_Free(OSAL_WRITE_BUF);
+	free(OSAL_WRITE_BUF);
 	OSAL_WRITE_BUF = NULL;
 	OSAL_WRITE_SIZE = 0;
 
@@ -125,7 +124,7 @@ int gzwrite(gzFile file, voidpc buf, unsigned len)
 {
 	if ((size_t) file->pos + len > OSAL_WRITE_SIZE) {
 		OSAL_WRITE_SIZE = file->pos + len;
-		OSAL_WRITE_BUF = MTY_Realloc(OSAL_WRITE_BUF, 1, OSAL_WRITE_SIZE);
+		OSAL_WRITE_BUF = realloc(OSAL_WRITE_BUF, OSAL_WRITE_SIZE);
 	}
 
 	memcpy(OSAL_WRITE_BUF + file->pos, buf, len);
@@ -136,11 +135,6 @@ int gzwrite(gzFile file, voidpc buf, unsigned len)
 
 
 // Shim
-
-void osal_set_dir(const char *dir)
-{
-	snprintf(OSAL_DIR, 2048, "%s", dir);
-}
 
 void osal_startup(void)
 {
@@ -153,10 +147,10 @@ void osal_shutdown(void)
 	MTY_MutexDestroy(&OSAL_MUTEX);
 	MTY_CondDestroy(&OSAL_COND);
 
-	MTY_Free(OSAL_READ_BUF);
+	free(OSAL_READ_BUF);
 	OSAL_READ_BUF = NULL;
 
-	MTY_Free(OSAL_WRITE_BUF);
+	free(OSAL_WRITE_BUF);
 	OSAL_WRITE_BUF = NULL;
 }
 
@@ -184,8 +178,10 @@ const void *osal_get_write_buf(size_t *size)
 
 void osal_set_read_data(const void *buf, size_t size)
 {
-	MTY_Free(OSAL_READ_BUF);
+	free(OSAL_READ_BUF);
 
-	OSAL_READ_BUF = MTY_Dup(buf, size);
+	OSAL_READ_BUF = malloc(size);
+	memcpy(OSAL_READ_BUF, buf, size);
+
 	OSAL_READ_SIZE = size;
 }

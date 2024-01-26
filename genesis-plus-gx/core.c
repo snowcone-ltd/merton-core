@@ -63,14 +63,9 @@ int load_archive(char *filename, unsigned char *buffer, int maxsize, char *exten
 		return 0;
 
 	void *file = malloc(maxsize);
-	int size = fread(file, 1, maxsize, f);
 
-	if (size > 0) {
-		memcpy(buffer, file, size);
-
-	} else {
-		size = 0;
-	}
+	size_t size = fread(file, 1, maxsize, f);
+	memcpy(buffer, file, size);
 
 	free(file);
 	fclose(f);

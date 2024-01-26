@@ -7,7 +7,10 @@
 #include <stdarg.h>
 #include <string.h>
 
-#if !defined(_WIN32)
+#if defined(_WIN32)
+	#include <windows.h>
+#else
+	#define _strdup strdup
 	#include <dlfcn.h>
 #endif
 
@@ -43,8 +46,6 @@ m64p_error RSP_PluginShutdown(void);
 
 
 // Shim
-
-void osal_set_dir(const char *dir);
 
 void osal_startup(void);
 void osal_shutdown(void);
@@ -119,7 +120,7 @@ Core *CoreLoad(const char *systemDir)
 {
 	Core *ctx = calloc(1, sizeof(Core));
 
-	ctx->system_dir = MTY_Strdup(systemDir);
+	ctx->system_dir = _strdup(systemDir);
 
 	const char *so_name = "mupen64plus";
 
@@ -132,7 +133,6 @@ Core *CoreLoad(const char *systemDir)
 
 	ctx->so = osal_dynlib_get_handle(so_name);
 
-	osal_set_dir(ctx->system_dir);
 	osal_startup();
 
 	ctx->mutex = MTY_MutexCreate();
@@ -156,10 +156,9 @@ void CoreUnload(Core **core)
 	audio_set_callback(NULL, NULL);
 
 	osal_shutdown();
-	osal_set_dir("");
 
 	osal_dynlib_close_handle(ctx->so);
-	MTY_Free(ctx->system_dir);
+	free(ctx->system_dir);
 
 	free(ctx);
 	*core = NULL;
@@ -182,6 +181,33 @@ void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
 	ctx->video_opaque = opaque;
 }
 
+static void *core_load_file(const char *path, size_t *size)
+{
+	FILE *f = fopen(path, "rb");
+	if (!f)
+		return NULL;
+
+	long fsize = 0;
+	void *data = NULL;
+
+	if (fseek(f, 0, SEEK_END) == 0) {
+		fsize = ftell(f);
+
+		if (fsize != -1) {
+			rewind(f);
+
+			*size = fsize;
+			data = malloc(fsize);
+
+			fread(data, fsize, 1, f);
+		}
+	}
+
+	fclose(f);
+
+	return data;
+}
+
 bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *saveData,
 	size_t saveDataSize)
 {
@@ -192,10 +218,10 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 		return false;
 
 	size_t size = 0;
-	void *game = MTY_ReadFile(path, &size);
+	void *game = core_load_file(path, &size);
 
 	r = CoreDoCommand(M64CMD_ROM_OPEN, size, game);
-	MTY_Free(game);
+	free(game);
 
 	if (r != M64ERR_SUCCESS)
 		return false;
@@ -394,7 +420,9 @@ void *CoreGetState(Core *ctx, size_t *size)
 	if (r == M64ERR_SUCCESS) {
 		if (osal_wait(1000)) {
 			const void *buf = osal_get_write_buf(size);
-			state = MTY_Dup(buf, *size);
+
+			state = malloc(*size);
+			memcpy(state, buf, *size);
 		}
 	}
 
