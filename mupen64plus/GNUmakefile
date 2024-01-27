@@ -7,7 +7,6 @@ include makefile-shared
 	nasm -f $(NASM_FORMAT) $(NASM_DEFS) -i $(PROJ)/src/asm_defines/ $< -o $@
 
 FLAGS := $(FLAGS) \
-	-Wextra \
 	-Wno-unused-result \
 	-Wno-unused-parameter \
 	-Wno-unused-but-set-parameter \
@@ -19,6 +18,10 @@ FLAGS := $(FLAGS) \
 	-Wno-parentheses \
 	-Wno-missing-field-initializers \
 	-Wno-empty-body \
+	-Wno-xor-used-as-pow \
+	-Wno-tautological-overlap-compare \
+	-Wno-null-pointer-subtraction \
+	-Wno-pointer-sign \
 	-Wno-switch
 
 DEFS := $(DEFS) \
@@ -58,15 +61,6 @@ else
 OBJS := $(OBJS) $(ASM_OBJ_ARM64)
 DEFS := $(DEFS) $(ARM64_DEFS)
 endif
-
-FLAGS := $(FLAGS) \
-	-Wno-xor-used-as-pow \
-	-Wno-tautological-overlap-compare \
-	-Wno-null-pointer-subtraction \
-	-Wno-pointer-sign
-
-LD_FLAGS := $(LD_FLAGS) \
-	-Wl,-segprot,__ASM,rx,rx
 
 LIBS := $(LIBS) \
 	-lc++

@@ -5,6 +5,8 @@ OBJS := $(OBJS) \
 	$(PROJ)/src/common/fastjmp.$(O)
 
 FLAGS := $(FLAGS) \
+	-Wno-typedef-redefinition \
+	-Wno-missing-braces \
 	-Wno-unused-parameter \
 	-Wno-missing-field-initializers \
 	-Wno-sign-compare \
@@ -28,12 +30,6 @@ ifeq ($(UNAME_S), Linux)
 OBJS := $(OBJS) \
 	$(X64_OBJS)
 
-FLAGS := $(FLAGS) \
-	-Wno-maybe-uninitialized
-
-EXTRA_CXX_FLAGS = \
-	-Wno-class-memaccess
-
 LIBS := $(LIBS) \
 	-lm \
 	-lgcc_s \
@@ -51,10 +47,6 @@ INCLUDES := $(INCLUDES) $(ARM64_INCLUDES)
 OBJS := $(OBJS) $(ARM64_OBJS)
 DEFS := $(DEFS) $(ARM64_DEFS)
 endif
-
-FLAGS := $(FLAGS) \
-	-Wno-typedef-redefinition \
-	-Wno-missing-braces
 
 LIBS := $(LIBS) \
 	-lc++

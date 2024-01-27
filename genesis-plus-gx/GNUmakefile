@@ -2,7 +2,6 @@ include ../unix-shared
 include makefile-shared
 
 FLAGS := $(FLAGS) \
-	-Wextra \
 	-Wno-unused-parameter \
 	-Wno-sign-compare \
 	-Wno-unused-result \

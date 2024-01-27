@@ -8,6 +8,7 @@ O = o
 
 FLAGS = \
 	-Wall \
+	-Wextra \
 	-fPIC
 
 LD_FLAGS = \
@@ -29,6 +30,9 @@ ifeq ($(UNAME_S), Linux)
 
 TARGET = linux
 SUFFIX = so
+
+CC = clang
+CXX = clang
 
 LD_FLAGS := $(LD_FLAGS) \
 	-Wl,--no-undefined

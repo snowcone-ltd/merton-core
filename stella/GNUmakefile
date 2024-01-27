@@ -10,9 +10,11 @@ OBJS := $(OBJS) \
 	$(PROJ)/src/os/unix/FSNodePOSIX.$(O)
 
 FLAGS := $(FLAGS) \
-	-Wextra \
 	-Wno-unused-parameter \
 	-Wno-implicit-fallthrough \
+	-Wno-unused-private-field \
+	-Wno-unused-const-variable \
+	-Wno-reorder-ctor \
 	-Wno-reorder
 
 LIBS = \
@@ -44,11 +46,6 @@ INCLUDES := $(INCLUDES) \
 OBJS := $(OBJS) \
 	$(PROJ)/src/os/macos/OSystemMACOS.$(O) \
 	$(PROJ)/src/os/macos/SerialPortMACOS.$(O)
-
-FLAGS := $(FLAGS) \
-	-Wno-unused-private-field \
-	-Wno-unused-const-variable \
-	-Wno-reorder-ctor
 
 DEFS := $(DEFS) \
 	-DBSPF_MACOS

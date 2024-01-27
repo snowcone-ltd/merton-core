@@ -6,23 +6,19 @@ FLAGS := $(FLAGS) \
 	-Wno-missing-field-initializers \
 	-Wno-unused-variable \
 	-Wno-unused-parameter \
-	-Wno-sign-compare
-
-LD_FLAGS := $(LD_FLAGS) \
-	-Wno-odr
+	-Wno-sign-compare \
+	-Wno-deprecated-declarations \
+	-Wno-undefined-inline \
+	-Wno-unused-private-field \
+	-Wno-inconsistent-missing-override \
+	-Wno-bitwise-instead-of-logical \
+	-Wno-missing-braces
 
 LIBS = \
 	-lc
 
 ### Linux
 ifeq ($(UNAME_S), Linux)
-
-FLAGS := $(FLAGS) \
-	-Wno-misleading-indentation \
-	-Wno-parentheses \
-	-Wno-implicit-fallthrough \
-	-Wno-type-limits \
-	-Wno-switch
 
 LIBS := $(LIBS) \
 	-lm \
@@ -33,14 +29,6 @@ endif ### Linux
 
 ### Apple
 ifeq ($(UNAME_S), Darwin)
-
-FLAGS := $(FLAGS) \
-	-Wno-deprecated-declarations \
-	-Wno-undefined-inline \
-	-Wno-unused-private-field \
-	-Wno-inconsistent-missing-override \
-	-Wno-bitwise-instead-of-logical \
-	-Wno-missing-braces
 
 LIBS := $(LIBS) \
 	-lc++
