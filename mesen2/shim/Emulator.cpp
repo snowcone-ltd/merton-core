@@ -269,7 +269,7 @@ void Emulator::Serialize(ostream& out, bool includeSettings, int compressionLeve
 	s.SaveTo(out, 0);
 }
 
-bool Emulator::Deserialize(istream& in, uint32_t fileFormatVersion, bool includeSettings, optional<ConsoleType> srcConsoleType)
+bool Emulator::Deserialize(istream& in, uint32_t fileFormatVersion, bool includeSettings, optional<ConsoleType> consoleType, bool sendNotification)
 {
 	Serializer s(SaveStateManager::FileFormatVersion, false);
 

@@ -12,6 +12,7 @@
 void osd_input_update(void);
 int load_archive(char *filename, unsigned char *buffer, int maxsize, char *extension);
 long crc32(unsigned long crc, const unsigned char *buf, unsigned int len);
+void error(char *fmt, ...);
 
 struct config {
 	uint8 hq_fm;

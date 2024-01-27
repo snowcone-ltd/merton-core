@@ -66,6 +66,14 @@ void CoreUnload(Core **core)
 	*core = NULL;
 }
 
+static void core_show_logs(void)
+{
+	string messages = Logger::instance().logMessages();
+
+	if (messages.length() > 0)
+		core_log("%s", messages.c_str());
+}
+
 bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	const void *save_data, size_t save_data_size)
 {
@@ -79,7 +87,7 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 
 	Settings& settings = ctx->sys->settings();
 	settings.setValue("loglevel", 999);
-	settings.setValue("logtoconsole", true);
+	settings.setValue("logtoconsole", false);
 	settings.setValue("speed", 1.0);
 	settings.setValue("uimessages", false);
 	settings.setValue("format", "AUTO");
@@ -102,10 +110,9 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 
 	FSNode rom(path);
 
-	if (ctx->sys->createConsole(rom) != EmptyString)
-		return false;
+	ctx->loaded = ctx->sys->createConsole(rom) == EmptyString;
 
-	ctx->loaded = true;
+	core_show_logs();
 
 	return ctx->loaded;
 }
