@@ -6,8 +6,8 @@ NAME = mupen64plus
 INCLUDES = \
 	-I../../libmatoya/src \
 	-Ideps \
-	-Ideps/SDL \
 	-Ideps/zlib \
+	-Ishim/SDL \
 	-Ishim/$(PROJ_RDP) \
 	-I$(PROJ_RDP)/src \
 	-I$(PROJ)/src \
@@ -136,10 +136,10 @@ SHIM_OBJS = \
 	shim/$(PROJ)/files.$(O) \
 	shim/$(PROJ)/screenshot.$(O) \
 	shim/$(PROJ)/vidext.$(O) \
+	shim/SDL/SDL.$(O) \
 	shim/osal_dynamiclib.$(O)
 
 DEPS_OBJS = \
-	deps/SDL/SDL.$(O) \
 	deps/zlib/adler32.$(O) \
 	deps/zlib/crc32.$(O) \
 	deps/zlib/deflate.$(O) \
