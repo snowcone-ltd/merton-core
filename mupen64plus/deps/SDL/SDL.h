@@ -40,9 +40,14 @@ typedef union {
 	} window;
 } SDL_Event;
 
+typedef int (*SDL_ThreadFunction)(void *data);
 typedef int (*SDL_EventFilter)(void *userdata, SDL_Event *event);
 typedef int32_t SDL_JoystickID;
-typedef struct SDL_mutex SDL_mutex;
+typedef struct SDL_Thread SDL_Thread;
+typedef struct SDL_Mutex SDL_Mutex;
+typedef struct SDL_Condition SDL_Condition;
+
+#define SDL_mutex SDL_Mutex
 
 void SDL_Quit(void);
 uint32_t SDL_WasInit(uint32_t flags);
@@ -53,7 +58,15 @@ void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata);
 void SDL_Delay(uint32_t ms);
 uint32_t SDL_GetTicks(void);
 
-SDL_mutex *SDL_CreateMutex(void);
-void SDL_DestroyMutex(SDL_mutex *mutex);
-int SDL_LockMutex(SDL_mutex *mutex);
-int SDL_UnlockMutex(SDL_mutex *mutex);
+SDL_Thread *SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data);
+void SDL_WaitThread(SDL_Thread *thread, int *status);
+
+SDL_Mutex *SDL_CreateMutex(void);
+void SDL_DestroyMutex(SDL_Mutex *mutex);
+int SDL_LockMutex(SDL_Mutex *mutex);
+int SDL_UnlockMutex(SDL_Mutex *mutex);
+
+SDL_Condition *SDL_CreateCondition(void);
+void SDL_DestroyCondition(SDL_Condition *cond);
+int SDL_SignalCondition(SDL_Condition *cond);
+int SDL_WaitCondition(SDL_Condition *cond, SDL_Mutex *mutex);

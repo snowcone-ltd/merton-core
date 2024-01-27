@@ -1,7 +1,5 @@
 #include "../core.h"
 
-#include "matoya.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -21,6 +19,8 @@
 #include "mupen64plus-core/src/main/rom.h"
 #include "mupen64plus-core/src/main/savestates.h"
 #include "mupen64plus-core/src/main/version.h"
+
+#include "SDL.h" // Not the real SDL
 
 
 // Plugins
@@ -77,9 +77,9 @@ struct Core {
 
 	uint64_t frame_ctr;
 	uint64_t prev_frame_ctr;
-	MTY_Thread *game_thread;
-	MTY_Mutex *mutex;
-	MTY_Cond *cond;
+	SDL_Thread *game_thread;
+	SDL_Mutex *mutex;
+	SDL_Condition *cond;
 
 	CoreVideoFunc video_func;
 	void *video_opaque;
@@ -135,8 +135,8 @@ Core *CoreLoad(const char *systemDir)
 
 	osal_startup();
 
-	ctx->mutex = MTY_MutexCreate();
-	ctx->cond = MTY_CondCreate();
+	ctx->mutex = SDL_CreateMutex();
+	ctx->cond = SDL_CreateCondition();
 
 	return ctx;
 }
@@ -150,8 +150,8 @@ void CoreUnload(Core **core)
 
 	CoreUnloadGame(ctx);
 
-	MTY_CondDestroy(&ctx->cond);
-	MTY_MutexDestroy(&ctx->mutex);
+	SDL_DestroyCondition(ctx->cond);
+	SDL_DestroyMutex(ctx->mutex);
 
 	audio_set_callback(NULL, NULL);
 
@@ -261,7 +261,7 @@ void CoreUnloadGame(Core *ctx)
 	CoreDoCommand(M64CMD_STOP, 0, NULL);
 
 	if (ctx->game_thread)
-		MTY_ThreadDestroy(&ctx->game_thread);
+		SDL_WaitThread(ctx->game_thread, NULL);
 
 	vdac_set_video_func(NULL, NULL);
 
@@ -292,25 +292,25 @@ static void core_vdac_sync(void *pixels, uint32_t width, uint32_t height, void *
 {
 	Core *ctx = opaque;
 
-	MTY_MutexLock(ctx->mutex);
+	SDL_LockMutex(ctx->mutex);
 
 	ctx->w = width;
 	ctx->h = height;
 	memcpy(ctx->frame, pixels, width * height * 4);
 
 	ctx->frame_ctr++;
-	MTY_CondSignal(ctx->cond);
+	SDL_SignalCondition(ctx->cond);
 
-	MTY_MutexUnlock(ctx->mutex);
+	SDL_UnlockMutex(ctx->mutex);
 }
 
-static void *core_game_thread(void *opaque)
+static int core_game_thread(void *opaque)
 {
 	vdac_set_video_func(core_vdac_sync, opaque);
 
 	CoreDoCommand(M64CMD_EXECUTE, 0, NULL);
 
-	return NULL;
+	return 0;
 }
 
 void CoreRun(Core *ctx)
@@ -319,12 +319,12 @@ void CoreRun(Core *ctx)
 		return;
 
 	if (!ctx->game_thread)
-		ctx->game_thread = MTY_ThreadCreate(core_game_thread, ctx);
+		ctx->game_thread = SDL_CreateThread(core_game_thread, NULL, ctx);
 
-	MTY_MutexLock(ctx->mutex);
+	SDL_LockMutex(ctx->mutex);
 
 	if (ctx->prev_frame_ctr == ctx->frame_ctr)
-		MTY_CondWait(ctx->cond, ctx->mutex, -1);
+		SDL_WaitCondition(ctx->cond, ctx->mutex);
 
 	ctx->prev_frame_ctr = ctx->frame_ctr;
 
@@ -332,7 +332,7 @@ void CoreRun(Core *ctx)
 		ctx->video_func(ctx->frame, CORE_COLOR_FORMAT_RGBA, ctx->w, ctx->h,
 			ctx->w * 4, ctx->video_opaque);
 
-	MTY_MutexUnlock(ctx->mutex);
+	SDL_UnlockMutex(ctx->mutex);
 }
 
 void CoreReset(Core *ctx)

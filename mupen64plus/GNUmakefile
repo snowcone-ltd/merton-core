@@ -8,6 +8,7 @@ include makefile-shared
 
 FLAGS := $(FLAGS) \
 	-Wextra \
+	-Wno-unused-result \
 	-Wno-unused-parameter \
 	-Wno-unused-but-set-parameter \
 	-Wno-unused-but-set-variable \
@@ -24,7 +25,6 @@ DEFS := $(DEFS) \
 	-D_GNU_SOURCE
 
 LIBS = \
-	../../libmatoya/bin/$(TARGET)/$(ARCH)/libmatoya.a \
 	-lc
 
 ### Linux
@@ -36,7 +36,7 @@ OBJS := $(OBJS) \
 	$(ASM_OBJ_X64)
 
 DEFS := $(DEFS) \
-	-DNEW_DYNAREC=NEW_DYNAREC_X64
+	$(X64_DEFS)
 
 LIBS := $(LIBS) \
 	-lm \
@@ -53,10 +53,10 @@ NASM_DEFS = -d LEADING_UNDERSCORE
 
 ifeq ($(ARCH), x86_64)
 OBJS := $(OBJS) $(ASM_OBJ_X64)
-DEFS := $(DEFS) -DNEW_DYNAREC=NEW_DYNAREC_X64
+DEFS := $(DEFS) $(X64_DEFS)
 else
 OBJS := $(OBJS) $(ASM_OBJ_ARM64)
-DEFS := $(DEFS) -DNEW_DYNAREC=NEW_DYNAREC_ARM64 -DUSE_SSE2NEON -DSSE2NEON
+DEFS := $(DEFS) $(ARM64_DEFS)
 endif
 
 FLAGS := $(FLAGS) \

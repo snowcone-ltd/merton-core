@@ -1,16 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "main/rom.h"
 #include "osal/files.h"
 
 #include "../../rom-db.h"
 
-#include "matoya.h"
+#include "SDL.h"
 
-static MTY_Mutex *OSAL_MUTEX;
-static MTY_Cond *OSAL_COND;
+static SDL_Mutex *OSAL_MUTEX;
+static SDL_Condition *OSAL_COND;
 static uint8_t *OSAL_WRITE_BUF;
 static uint8_t *OSAL_READ_BUF;
 static size_t OSAL_WRITE_SIZE;
@@ -113,9 +114,9 @@ int gzclose(gzFile file)
 {
 	free(file);
 
-	MTY_MutexLock(OSAL_MUTEX);
-	MTY_CondSignal(OSAL_COND);
-	MTY_MutexUnlock(OSAL_MUTEX);
+	SDL_LockMutex(OSAL_MUTEX);
+	SDL_SignalCondition(OSAL_COND);
+	SDL_UnlockMutex(OSAL_MUTEX);
 
 	return 0;
 }
@@ -138,14 +139,17 @@ int gzwrite(gzFile file, voidpc buf, unsigned len)
 
 void osal_startup(void)
 {
-	OSAL_MUTEX = MTY_MutexCreate();
-	OSAL_COND = MTY_CondCreate();
+	OSAL_MUTEX = SDL_CreateMutex();
+	OSAL_COND = SDL_CreateCondition();
 }
 
 void osal_shutdown(void)
 {
-	MTY_MutexDestroy(&OSAL_MUTEX);
-	MTY_CondDestroy(&OSAL_COND);
+	SDL_DestroyMutex(OSAL_MUTEX);
+	OSAL_MUTEX = NULL;
+
+	SDL_DestroyCondition(OSAL_COND);
+	OSAL_COND = NULL;
 
 	free(OSAL_READ_BUF);
 	OSAL_READ_BUF = NULL;
@@ -156,17 +160,19 @@ void osal_shutdown(void)
 
 void osal_lock(void)
 {
-	MTY_MutexLock(OSAL_MUTEX);
+	SDL_LockMutex(OSAL_MUTEX);
 }
 
 void osal_unlock(void)
 {
-	MTY_MutexUnlock(OSAL_MUTEX);
+	SDL_UnlockMutex(OSAL_MUTEX);
 }
 
 bool osal_wait(int32_t timeout)
 {
-	return MTY_CondWait(OSAL_COND, OSAL_MUTEX, timeout);
+	SDL_WaitCondition(OSAL_COND, OSAL_MUTEX);
+
+	return true;
 }
 
 const void *osal_get_write_buf(size_t *size)

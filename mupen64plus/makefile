@@ -18,25 +18,16 @@ FLAGS = $(FLAGS) \
 	/wd4996
 
 DEFS = $(DEFS) \
+	$(X64_DEFS) \
 	-D_CRT_SECURE_NO_WARNINGS \
-	-DNEW_DYNAREC=NEW_DYNAREC_X64 \
 	-DWIN32
 
 LIBS = \
-	../../libmatoya/bin/windows/x64/matoya.lib \
 	libvcruntime.lib \
 	libucrt.lib \
 	libcmt.lib \
 	libcpmt.lib \
-	kernel32.lib \
-	oldnames.lib \
-	userenv.lib \
-	user32.lib \
-	ws2_32.lib \
-	shlwapi.lib \
-	shell32.lib \
-	winmm.lib \
-	advapi32.lib
+	kernel32.lib
 
 CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) /std:c11
 CPPFLAGS = $(INCLUDES) $(DEFS) $(FLAGS) /EHsc

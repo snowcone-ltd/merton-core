@@ -23,6 +23,15 @@ DEFS = \
 	-DM64P_PLUGIN_API \
 	-DCORE_EXPORT
 
+X64_DEFS = \
+	-DNEW_DYNAREC=NEW_DYNAREC_X64 \
+	-DARCH_MIN_SSE2
+
+ARM64_DEFS = \
+	-DNEW_DYNAREC=NEW_DYNAREC_ARM64 \
+	-DUSE_SSE2NEON \
+	-DSSE2NEON
+
 ASM_OBJ_X64 = \
 	$(PROJ)/src/device/r4300/new_dynarec/x64/linkage_x64.$(O)
 
@@ -146,9 +155,9 @@ OBJS = \
 	core-audio.$(O) \
 	core-input.$(O) \
 	$(SHIM_OBJS) \
+	$(DEPS_OBJS) \
 	$(ASM_OBJ) \
 	$(RSP_OBJS) \
 	$(RDP_OBJS) \
 	$(SUB_OBJS) \
-	$(CORE_OBJS) \
-	$(DEPS_OBJS)
+	$(CORE_OBJS)
