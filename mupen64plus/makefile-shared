@@ -18,22 +18,27 @@ INCLUDES = \
 	-I$(PROJ)/subprojects/minizip
 
 DEFS = \
-	-DDYNAREC \
 	-DNO_KEYBINDINGS \
 	-DM64P_PLUGIN_API \
 	-DCORE_EXPORT
 
 X64_DEFS = \
+	-DDYNAREC \
 	-DNEW_DYNAREC=NEW_DYNAREC_X64 \
 	-DARCH_MIN_SSE2
 
+# FIXME No dynarec support on arm64
+# -DNEW_DYNAREC=NEW_DYNAREC_ARM64
+# -DDYNAREC
+
 ARM64_DEFS = \
-	-DNEW_DYNAREC=NEW_DYNAREC_ARM64 \
+	-DNO_ASM \
 	-DUSE_SSE2NEON \
 	-DSSE2NEON
 
 ASM_OBJ_X64 = \
-	$(PROJ)/src/device/r4300/new_dynarec/x64/linkage_x64.$(O)
+	$(PROJ)/src/device/r4300/new_dynarec/x64/linkage_x64.$(O) \
+	$(PROJ)/src/device/r4300/new_dynarec/new_dynarec.$(O)
 
 ASM_OBJ_ARM64 = \
 	shim/linkage_arm64.$(O)
@@ -96,7 +101,6 @@ CORE_OBJS = \
 	$(PROJ)/src/device/pif/cic.$(O) \
 	$(PROJ)/src/device/pif/n64_cic_nus_6105.$(O) \
 	$(PROJ)/src/device/pif/pif.$(O) \
-	$(PROJ)/src/device/r4300/new_dynarec/new_dynarec.$(O) \
 	$(PROJ)/src/device/r4300/cached_interp.$(O) \
 	$(PROJ)/src/device/r4300/cp0.$(O) \
 	$(PROJ)/src/device/r4300/cp1.$(O) \

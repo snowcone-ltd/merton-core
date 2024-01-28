@@ -58,7 +58,8 @@ ifeq ($(ARCH), x86_64)
 OBJS := $(OBJS) $(ASM_OBJ_X64)
 DEFS := $(DEFS) $(X64_DEFS)
 else
-OBJS := $(OBJS) $(ASM_OBJ_ARM64)
+# FIXME No dynarec support on arm64
+# OBJS := $(OBJS) $(ASM_OBJ_ARM64)
 DEFS := $(DEFS) $(ARM64_DEFS)
 endif
 
@@ -89,6 +90,7 @@ asm-defines:
 	bash $(PROJ)/tools/gen_asm_script.sh $(PROJ)/src/asm_defines $(ASMD_OBJ)
 
 clean:
+	@sed -i'' -e 's/__arm__/__aarch64__/g' $(PROJ_RSP)/my_types.h # ARM fix
 	@rm -rf $(PROJ_RSP)/sse2neon # Use updates SSE2NEON.h
 	@rm -rf $(PROJ)/src/asm_defines/*.h
 	@rm -rf $(NAME).*
