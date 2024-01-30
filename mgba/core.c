@@ -354,8 +354,8 @@ void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 	uint32_t k = 0;
 
 	switch (button) {
-		case CORE_BUTTON_A:      k = 0x001; break;
-		case CORE_BUTTON_B:      k = 0x002; break;
+		case CORE_BUTTON_B:      k = 0x001; break;
+		case CORE_BUTTON_A:      k = 0x002; break;
 		case CORE_BUTTON_SELECT: k = 0x004; break;
 		case CORE_BUTTON_START:  k = 0x008; break;
 		case CORE_BUTTON_DPAD_R: k = 0x010; break;

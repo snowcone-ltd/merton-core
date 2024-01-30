@@ -385,8 +385,10 @@ static void core_set_buttons(ControllerConfig *controller, ControllerType type, 
 
 	controller->Type = type;
 
-	controller->Keys.Mapping1.A = index | CORE_BUTTON_A;
-	controller->Keys.Mapping1.B = index | CORE_BUTTON_B;
+	// All Mesen mappings use the Nintendo layout
+
+	controller->Keys.Mapping1.A = index | CORE_BUTTON_B;
+	controller->Keys.Mapping1.B = index | CORE_BUTTON_A;
 	controller->Keys.Mapping1.Start = index | CORE_BUTTON_START;
 	controller->Keys.Mapping1.Select = index | CORE_BUTTON_SELECT;
 	controller->Keys.Mapping1.Up = index | CORE_BUTTON_DPAD_U;
@@ -395,8 +397,8 @@ static void core_set_buttons(ControllerConfig *controller, ControllerType type, 
 	controller->Keys.Mapping1.Right = index | CORE_BUTTON_DPAD_R;
 
 	if (type == ControllerType::SnesController) {
-		controller->Keys.Mapping1.X = index | CORE_BUTTON_X;
-		controller->Keys.Mapping1.Y = index | CORE_BUTTON_Y;
+		controller->Keys.Mapping1.X = index | CORE_BUTTON_Y;
+		controller->Keys.Mapping1.Y = index | CORE_BUTTON_X;
 		controller->Keys.Mapping1.L = index | CORE_BUTTON_L;
 		controller->Keys.Mapping1.R = index | CORE_BUTTON_R;
 	}

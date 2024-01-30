@@ -214,10 +214,10 @@ void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 		case CORE_BUTTON_R2: b = AnalogController::Button::R2; break;
 		case CORE_BUTTON_L: b = AnalogController::Button::L1; break;
 		case CORE_BUTTON_R: b = AnalogController::Button::R1; break;
-		case CORE_BUTTON_X: b = AnalogController::Button::Triangle; break;
-		case CORE_BUTTON_A: b = AnalogController::Button::Circle; break;
-		case CORE_BUTTON_B: b = AnalogController::Button::Cross; break;
-		case CORE_BUTTON_Y: b = AnalogController::Button::Square; break;
+		case CORE_BUTTON_X: b = AnalogController::Button::Square; break;
+		case CORE_BUTTON_A: b = AnalogController::Button::Cross; break;
+		case CORE_BUTTON_B: b = AnalogController::Button::Circle; break;
+		case CORE_BUTTON_Y: b = AnalogController::Button::Triangle; break;
 		default:
 			return;
 	}
@@ -252,13 +252,13 @@ void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 			core_set_axis(AnalogController::HalfAxis::LLeft, AnalogController::HalfAxis::LRight, c, value);
 			break;
 		case CORE_AXIS_LY:
-			core_set_axis(AnalogController::HalfAxis::LUp, AnalogController::HalfAxis::LDown, c, value);
+			core_set_axis(AnalogController::HalfAxis::LDown, AnalogController::HalfAxis::LUp, c, value);
 			break;
 		case CORE_AXIS_RX:
 			core_set_axis(AnalogController::HalfAxis::RLeft, AnalogController::HalfAxis::RRight, c, value);
 			break;
 		case CORE_AXIS_RY:
-			core_set_axis(AnalogController::HalfAxis::RUp, AnalogController::HalfAxis::RDown, c, value);
+			core_set_axis(AnalogController::HalfAxis::RDown, AnalogController::HalfAxis::RUp, c, value);
 			break;
 		default:
 			break;

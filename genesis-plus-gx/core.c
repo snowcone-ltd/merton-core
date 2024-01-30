@@ -383,9 +383,9 @@ void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 	uint16 b = 0;
 
 	switch (button) {
-		case CORE_BUTTON_A: b = INPUT_B; break;
 		case CORE_BUTTON_B: b = INPUT_C; break;
-		case CORE_BUTTON_Y: b = INPUT_A; break;
+		case CORE_BUTTON_A: b = INPUT_B; break;
+		case CORE_BUTTON_X: b = INPUT_A; break;
 		case CORE_BUTTON_START: b = INPUT_START; break;
 		case CORE_BUTTON_DPAD_U: b = INPUT_UP; break;
 		case CORE_BUTTON_DPAD_D: b = INPUT_DOWN; break;

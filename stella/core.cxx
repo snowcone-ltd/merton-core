@@ -203,7 +203,7 @@ void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 
 	switch (button) {
 		// Controller::Type::Joystick
-		case CORE_BUTTON_B:      e = Event::LeftJoystickFire;  break;
+		case CORE_BUTTON_A:      e = Event::LeftJoystickFire;  break;
 		case CORE_BUTTON_DPAD_D: e = Event::LeftJoystickDown;  break;
 		case CORE_BUTTON_DPAD_U: e = Event::LeftJoystickUp;    break;
 		case CORE_BUTTON_DPAD_L: e = Event::LeftJoystickLeft;  break;
