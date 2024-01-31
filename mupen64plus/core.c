@@ -246,6 +246,9 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 	if (saveData)
 		osal_set_read_data(saveData, saveDataSize);
 
+	// int param = 0;
+	// CoreDoCommand(M64CMD_CORE_STATE_SET, M64CORE_SPEED_LIMITER, &param);
+
 	ctx->loaded = true;
 
 	return true;
@@ -323,6 +326,8 @@ void CoreRun(Core *ctx)
 
 	SDL_LockMutex(ctx->mutex);
 
+	// g_rom_pause = 0;
+
 	if (ctx->prev_frame_ctr == ctx->frame_ctr)
 		SDL_WaitCondition(ctx->cond, ctx->mutex);
 
@@ -331,6 +336,8 @@ void CoreRun(Core *ctx)
 	if (ctx->video_func && ctx->w > 0 && ctx->h > 0)
 		ctx->video_func(ctx->frame, CORE_COLOR_FORMAT_RGBA, ctx->w, ctx->h,
 			ctx->w * 4, ctx->video_opaque);
+
+	// g_rom_pause = 1;
 
 	SDL_UnlockMutex(ctx->mutex);
 }

@@ -31,6 +31,8 @@ void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata)
 
 void SDL_Delay(uint32_t ms)
 {
+	ms = 1; // XXX Increase precision
+
 	#if defined(_WIN32)
 		Sleep(ms);
 
