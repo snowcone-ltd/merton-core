@@ -45,10 +45,10 @@ void input_set_axis(uint8_t player, CoreAxis axis, int16_t value)
 			break;
 		case CORE_AXIS_RX:
 			if (value < -cthresh) {
-				CORE_BUTTONS |= 0x0100;
+				CORE_BUTTONS |= 0x0200;
 
 			} else if (value > cthresh) {
-				CORE_BUTTONS |= 0x0200;
+				CORE_BUTTONS |= 0x0100;
 
 			} else {
 				CORE_BUTTONS &= ~0x0100;
