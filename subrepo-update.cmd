@@ -26,9 +26,9 @@ git clone git@github.com:mupen64plus/mupen64plus-rsp-cxd4 mupen64plus/mupen64plu
 git -C mupen64plus/mupen64plus-rsp-cxd4 reset --hard HEAD
 git -C mupen64plus/mupen64plus-rsp-cxd4 pull
 
-git clone git@github.com:Themaister/parallel-rdp-standalone mupen64plus/experimental/parallel-rdp
-git -C mupen64plus/experimental/parallel-rdp reset --hard HEAD
-git -C mupen64plus/experimental/parallel-rdp pull
+git clone git@github.com:Themaister/parallel-rdp-standalone mupen64plus/parallel-rdp
+git -C mupen64plus/parallel-rdp reset --hard HEAD
+git -C mupen64plus/parallel-rdp pull
 
 git clone git@github.com:stella-emu/stella stella/stella
 git -C stella/stella reset --hard HEAD
