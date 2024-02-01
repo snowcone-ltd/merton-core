@@ -15,11 +15,13 @@ FLAGS = $(FLAGS) \
 	/wd4324 /wd4389 /wd4456 \
 	/wd4457 /wd4459 /wd4701 \
 	/wd4702 /wd4703 /wd4706 \
-	/wd4996
+	/wd4996 /wd4018 /wd4458 \
+	/wd4201
 
 DEFS = $(DEFS) \
 	$(X64_DEFS) \
 	-D_CRT_SECURE_NO_WARNINGS \
+	-DVK_USE_PLATFORM_WIN32_KHR \
 	-DWIN32
 
 LIBS = \

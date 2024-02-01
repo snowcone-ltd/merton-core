@@ -1,4 +1,4 @@
-#include "parallel-rdp.h"
+#include "prdp.h"
 
 #include "device/rcp/rdp/rdp_core.h"
 #include "device/rcp/mi/mi_controller.h"
@@ -7,6 +7,8 @@
 #include "context.hpp"
 #include "device.hpp"
 
+extern "C" void core_log(const char *fmt, ...);
+
 static GFX_INFO GFX;
 static std::vector<RDP::RGBA> PIXELS;
 static uint32_t CMD_DATA[0x10000];
@@ -14,8 +16,8 @@ static int CMD_PTR;
 static int CMD_CUR;
 static bool SYNCH = true;
 static std::unique_ptr<RDP::CommandProcessor> CMDP;
-static std::unique_ptr<Vulkan::Device> DEVICE;
-static std::unique_ptr<Vulkan::Context> CONTEXT;
+static std::unique_ptr<Vulkan::Device> VDEVICE;
+static std::unique_ptr<Vulkan::Context> VCONTEXT;
 
 static const unsigned CMD_LEN_LUT[64] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 4, 6, 12, 14, 12, 14, 20, 22,
@@ -23,6 +25,15 @@ static const unsigned CMD_LEN_LUT[64] = {
 	1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1,  1,  1,  1,  1,  1,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1,  1,
 };
+
+static void (*VIDEO_FUNC)(void *, uint32_t, uint32_t, void *);
+static void *VIDEO_OPAQUE;
+
+void prdp_set_video_func(void (*func)(void *, uint32_t, uint32_t, void *), void *opaque)
+{
+	VIDEO_FUNC = func;
+	VIDEO_OPAQUE = opaque;
+}
 
 m64p_error PRDP_PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Context,
 	void (*DebugCallback)(void *, int, const char *))
@@ -73,18 +84,17 @@ void PRDP_ProcessDList(void)
 
 void PRDP_ProcessRDPList(void)
 {
-	const uint32_t DP_CURRENT = *GFX.DPC_CURRENT_REG & 0xFFFFF8;
-	const uint32_t DP_END = *GFX.DPC_END_REG & 0xFFFFF8;
+	uint32_t DP_CURRENT = *GFX.DPC_CURRENT_REG & 0xFFFFF8;
+	uint32_t DP_END = *GFX.DPC_END_REG & 0xFFFFF8;
 
-	// This works in parallel-n64, but not this repo for some reason.
 	// Angrylion does not clear this bit here.
-	//*GFX.DPC_STATUS_REG &= ~DPC_STATUS_FREEZE;
+	// *GFX.DPC_STATUS_REG &= ~DPC_STATUS_FREEZE;
 
 	int length = DP_END - DP_CURRENT;
 	if (length <= 0)
 		return;
 
-	length = unsigned(length) >> 3;
+	length = (unsigned) length >> 3;
 	if ((CMD_PTR + length) & ~(0x3FFFF >> 3))
 		return;
 
@@ -94,7 +104,7 @@ void PRDP_ProcessRDPList(void)
 			offset &= 0xFF8;
 			CMD_DATA[2 * CMD_PTR + 0] = *((uint32_t *) (GFX.DMEM + offset));
 			CMD_DATA[2 * CMD_PTR + 1] = *((uint32_t *) (GFX.DMEM + offset + 4));
-			offset += sizeof(uint64_t);
+			offset += 8;
 			CMD_PTR++;
 		} while (--length > 0);
 
@@ -107,7 +117,7 @@ void PRDP_ProcessRDPList(void)
 				offset &= 0xFFFFF8;
 				CMD_DATA[2 * CMD_PTR + 0] = *((uint32_t *) (GFX.RDRAM + offset));
 				CMD_DATA[2 * CMD_PTR + 1] = *((uint32_t *) (GFX.RDRAM + offset + 4));
-				offset += sizeof(uint64_t);
+				offset += 8;
 				CMD_PTR++;
 			} while (--length > 0);
 		}
@@ -158,27 +168,27 @@ int PRDP_RomOpen(void)
 	std::vector<const char *> instance_ext = {};
 	std::vector<const char *> device_ext = {};
 
-	CONTEXT = std::make_unique<Vulkan::Context>();
-	CONTEXT->set_application_info(&info);
-	CONTEXT->set_num_thread_indices(1);
+	VCONTEXT = std::make_unique<Vulkan::Context>();
+	VCONTEXT->set_application_info(&info);
+	VCONTEXT->set_num_thread_indices(1);
 
-	if (!CONTEXT->init_instance(instance_ext.data(), instance_ext.size(),
+	if (!VCONTEXT->init_instance(instance_ext.data(), instance_ext.size(),
 		Vulkan::ContextCreationFlagBits::CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT))
 	{
 		return 0;
 	}
 
-	if (!CONTEXT->init_device(VK_NULL_HANDLE, VK_NULL_HANDLE, device_ext.data(), device_ext.size(),
+	if (!VCONTEXT->init_device(VK_NULL_HANDLE, VK_NULL_HANDLE, device_ext.data(), device_ext.size(),
 		Vulkan::ContextCreationFlagBits::CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT))
 	{
 		return 0;
 	}
 
-	DEVICE = std::make_unique<Vulkan::Device>();
-	DEVICE->set_context(*CONTEXT);
+	VDEVICE = std::make_unique<Vulkan::Device>();
+	VDEVICE->set_context(*VCONTEXT);
 
 	CMDP = std::make_unique<RDP::CommandProcessor>(
-		*DEVICE, GFX.RDRAM, 0, *GFX.RDRAM_SIZE, *GFX.RDRAM_SIZE / 2, RDP::CommandProcessorFlags{});
+		*VDEVICE, GFX.RDRAM, 0, *GFX.RDRAM_SIZE, *GFX.RDRAM_SIZE / 2, RDP::CommandProcessorFlags{});
 
 	if (!CMDP->device_is_supported())
 		return 0;
@@ -199,8 +209,8 @@ void PRDP_RomClosed(void)
 	CMD_CUR = 0;
 
 	CMDP.reset();
-	DEVICE.reset();
-	CONTEXT.reset();
+	VDEVICE.reset();
+	VCONTEXT.reset();
 }
 
 void PRDP_ShowCFB(void)
@@ -242,7 +252,10 @@ void PRDP_UpdateScreen(void)
 	uint32_t h = 0;
 	CMDP->scanout_sync(PIXELS, w, h, opts);
 
-	// TODO fire frame callback
+	CMDP->begin_frame_context();
+
+	if (VIDEO_FUNC)
+		VIDEO_FUNC(PIXELS.data(), w, h, VIDEO_OPAQUE);
 }
 
 void PRDP_ViStatusChanged(void)

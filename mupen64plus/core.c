@@ -20,6 +20,8 @@
 #include "mupen64plus-core/src/main/savestates.h"
 #include "mupen64plus-core/src/main/version.h"
 
+#include "shim/parallel-rdp/prdp.h"
+
 #include "SDL.h" // Not the real SDL
 
 
@@ -68,6 +70,7 @@ void vdac_set_video_func(void (*func)(void *, uint32_t, uint32_t, void *), void 
 
 struct Core {
 	bool loaded;
+	bool use_prdp;
 	char *system_dir;
 	m64p_dynlib_handle so;
 
@@ -211,6 +214,8 @@ static void *core_load_file(const char *path, size_t *size)
 bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *saveData,
 	size_t saveDataSize)
 {
+	ctx->use_prdp = true; // TODO This needs to be a setting
+
 	m64p_error r = CoreStartup(FRONTEND_API_VERSION, ctx->system_dir, ctx->system_dir,
 		NULL, core_debug_callback, NULL, core_state_callback);
 
@@ -226,12 +231,18 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 	if (r != M64ERR_SUCCESS)
 		return false;
 
-	RDP_PluginStartup(ctx->so, NULL, core_debug_callback);
+	if (ctx->use_prdp) {
+		PRDP_PluginStartup(ctx->so, NULL, core_debug_callback);
+
+	} else {
+		RDP_PluginStartup(ctx->so, NULL, core_debug_callback);
+	}
+
 	AUDIO_PluginStartup(ctx->so, NULL, core_debug_callback);
 	INPUT_PluginStartup(ctx->so, NULL, core_debug_callback);
 	RSP_PluginStartup(ctx->so, NULL, core_debug_callback);
 
-	osal_dynlib_set_prefix("RDP_");
+	osal_dynlib_set_prefix(ctx->use_prdp ? "PRDP_" : "RDP_");
 	CoreAttachPlugin(M64PLUGIN_GFX, ctx->so);
 
 	osal_dynlib_set_prefix("AUDIO_");
@@ -267,6 +278,7 @@ void CoreUnloadGame(Core *ctx)
 		SDL_WaitThread(ctx->game_thread, NULL);
 
 	vdac_set_video_func(NULL, NULL);
+	prdp_set_video_func(NULL, NULL);
 
 	CoreDetachPlugin(M64PLUGIN_RSP);
 	CoreDetachPlugin(M64PLUGIN_INPUT);
@@ -276,7 +288,13 @@ void CoreUnloadGame(Core *ctx)
 	RSP_PluginShutdown();
 	INPUT_PluginShutdown();
 	AUDIO_PluginShutdown();
-	RDP_PluginShutdown();
+
+	if (ctx->use_prdp) {
+		PRDP_PluginShutdown();
+
+	} else {
+		RDP_PluginShutdown();
+	}
 
 	CoreDoCommand(M64CMD_ROM_CLOSE, 0, NULL);
 	CoreShutdown();
@@ -291,7 +309,7 @@ static void core_frame_callback(unsigned int index)
 {
 }
 
-static void core_vdac_sync(void *pixels, uint32_t width, uint32_t height, void *opaque)
+static void core_new_frame(void *pixels, uint32_t width, uint32_t height, void *opaque)
 {
 	Core *ctx = opaque;
 
@@ -309,7 +327,8 @@ static void core_vdac_sync(void *pixels, uint32_t width, uint32_t height, void *
 
 static int core_game_thread(void *opaque)
 {
-	vdac_set_video_func(core_vdac_sync, opaque);
+	vdac_set_video_func(core_new_frame, opaque);
+	prdp_set_video_func(core_new_frame, opaque);
 
 	CoreDoCommand(M64CMD_EXECUTE, 0, NULL);
 
@@ -333,9 +352,14 @@ void CoreRun(Core *ctx)
 
 	ctx->prev_frame_ctr = ctx->frame_ctr;
 
-	if (ctx->video_func && ctx->w > 0 && ctx->h > 0)
+	if (ctx->video_func && ctx->w > 0 && ctx->h > 0) {
 		ctx->video_func(ctx->frame, CORE_COLOR_FORMAT_RGBA, ctx->w, ctx->h,
 			ctx->w * 4, ctx->video_opaque);
+
+	} else if (ctx->video_func) {
+		uint32_t dummy[16][16] = {0};
+		ctx->video_func(dummy, CORE_COLOR_FORMAT_RGBA, 16, 16, 16 * 4, ctx->video_opaque);
+	}
 
 	// g_rom_pause = 1;
 

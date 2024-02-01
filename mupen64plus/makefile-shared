@@ -1,21 +1,32 @@
 PROJ = mupen64plus-core
 PROJ_RSP = mupen64plus-rsp-cxd4
 PROJ_RDP = angrylion-rdp-plus
+PROJ_PRDP = parallel-rdp
 NAME = mupen64plus
 
+RDP_INCLUDES = \
+	-Ishim/$(PROJ_RDP) \
+	-I$(PROJ_RDP)/src
+
+PRDP_INCLUDES = \
+	-I$(PROJ_PRDP)/parallel-rdp \
+	-I$(PROJ_PRDP)/util \
+	-I$(PROJ_PRDP)/volk \
+	-I$(PROJ_PRDP)/vulkan \
+	-I$(PROJ_PRDP)/vulkan-headers/include
+
 INCLUDES = \
-	-I../../libmatoya/src \
 	-Ideps \
 	-Ideps/zlib \
 	-Ishim/SDL \
-	-Ishim/$(PROJ_RDP) \
-	-I$(PROJ_RDP)/src \
 	-I$(PROJ)/src \
 	-I$(PROJ)/src/api \
 	-I$(PROJ)/subprojects \
 	-I$(PROJ)/subprojects/md5 \
 	-I$(PROJ)/subprojects/xxhash \
-	-I$(PROJ)/subprojects/minizip
+	-I$(PROJ)/subprojects/minizip \
+	$(RDP_INCLUDES) \
+	$(PRDP_INCLUDES)
 
 DEFS = \
 	-DNO_KEYBINDINGS \
@@ -56,10 +67,50 @@ RSP_OBJS = \
 	$(PROJ_RSP)/su.$(O)
 
 RDP_OBJS = \
+	shim/$(PROJ_RDP)/gfx_m64p.$(O) \
+	shim/$(PROJ_RDP)/vdac.$(O) \
 	$(PROJ_RDP)/src/core/n64video.$(O) \
 	$(PROJ_RDP)/src/core/parallel.$(O) \
 	$(PROJ_RDP)/src/plugin/mupen64plus/msg.$(O) \
 	$(PROJ_RDP)/src/plugin/mupen64plus/screen.$(O)
+
+PRDP_OBJS = \
+	shim/$(PROJ_PRDP)/prdp.$(O) \
+	shim/$(PROJ_PRDP)/vdevice.$(O) \
+	$(PROJ_PRDP)/parallel-rdp/command_ring.$(O) \
+	$(PROJ_PRDP)/parallel-rdp/rdp_device.$(O) \
+	$(PROJ_PRDP)/parallel-rdp/rdp_dump_write.$(O) \
+	$(PROJ_PRDP)/parallel-rdp/rdp_renderer.$(O) \
+	$(PROJ_PRDP)/parallel-rdp/video_interface.$(O) \
+	$(PROJ_PRDP)/util/aligned_alloc.$(O) \
+	$(PROJ_PRDP)/util/arena_allocator.$(O) \
+	$(PROJ_PRDP)/util/logging.$(O) \
+	$(PROJ_PRDP)/util/thread_id.$(O) \
+	$(PROJ_PRDP)/util/thread_name.$(O) \
+	$(PROJ_PRDP)/util/timeline_trace_file.$(O) \
+	$(PROJ_PRDP)/util/timer.$(O) \
+	$(PROJ_PRDP)/volk/volk.$(O) \
+	$(PROJ_PRDP)/vulkan/texture/texture_format.$(O) \
+	$(PROJ_PRDP)/vulkan/buffer.$(O) \
+	$(PROJ_PRDP)/vulkan/buffer_pool.$(O) \
+	$(PROJ_PRDP)/vulkan/command_buffer.$(O) \
+	$(PROJ_PRDP)/vulkan/command_pool.$(O) \
+	$(PROJ_PRDP)/vulkan/context.$(O) \
+	$(PROJ_PRDP)/vulkan/cookie.$(O) \
+	$(PROJ_PRDP)/vulkan/descriptor_set.$(O) \
+	$(PROJ_PRDP)/vulkan/event_manager.$(O) \
+	$(PROJ_PRDP)/vulkan/fence.$(O) \
+	$(PROJ_PRDP)/vulkan/fence_manager.$(O) \
+	$(PROJ_PRDP)/vulkan/image.$(O) \
+	$(PROJ_PRDP)/vulkan/indirect_layout.$(O) \
+	$(PROJ_PRDP)/vulkan/memory_allocator.$(O) \
+	$(PROJ_PRDP)/vulkan/pipeline_event.$(O) \
+	$(PROJ_PRDP)/vulkan/query_pool.$(O) \
+	$(PROJ_PRDP)/vulkan/render_pass.$(O) \
+	$(PROJ_PRDP)/vulkan/sampler.$(O) \
+	$(PROJ_PRDP)/vulkan/semaphore.$(O) \
+	$(PROJ_PRDP)/vulkan/semaphore_manager.$(O) \
+	$(PROJ_PRDP)/vulkan/shader.$(O)
 
 SUB_OBJS = \
 	$(PROJ)/subprojects/md5/md5.$(O) \
@@ -135,8 +186,6 @@ CORE_OBJS = \
 
 SHIM_OBJS = \
 	shim/$(PROJ_RSP)/module.$(O) \
-	shim/$(PROJ_RDP)/gfx_m64p.$(O) \
-	shim/$(PROJ_RDP)/vdac.$(O) \
 	shim/$(PROJ)/files.$(O) \
 	shim/$(PROJ)/screenshot.$(O) \
 	shim/$(PROJ)/vidext.$(O) \
@@ -163,5 +212,6 @@ OBJS = \
 	$(ASM_OBJ) \
 	$(RSP_OBJS) \
 	$(RDP_OBJS) \
+	$(PRDP_OBJS) \
 	$(SUB_OBJS) \
 	$(CORE_OBJS)

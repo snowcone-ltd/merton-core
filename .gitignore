@@ -21,5 +21,5 @@ mgba/mgba
 mupen64plus/mupen64plus-core
 mupen64plus/mupen64plus-rsp-cxd4
 mupen64plus/angrylion-rdp-plus
-mupen64plus/experimental/parallel-rdp-standalone
+mupen64plus/parallel-rdp
 stella/stella
