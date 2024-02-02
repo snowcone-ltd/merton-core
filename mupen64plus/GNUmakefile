@@ -30,16 +30,19 @@ DEFS := $(DEFS) \
 LIBS = \
 	-lc
 
+ifeq ($(ARCH), x86_64)
+OBJS := $(OBJS) $(ASM_OBJ_X64)
+DEFS := $(DEFS) $(X64_DEFS)
+else
+# FIXME No dynarec support on arm64
+# OBJS := $(OBJS) $(ASM_OBJ_ARM64)
+DEFS := $(DEFS) $(ARM64_DEFS)
+endif
+
 ### Linux
 ifeq ($(UNAME_S), Linux)
 
 NASM_FORMAT = elf64
-
-OBJS := $(OBJS) \
-	$(ASM_OBJ_X64)
-
-DEFS := $(DEFS) \
-	$(X64_DEFS)
 
 LIBS := $(LIBS) \
 	-lm \
@@ -53,15 +56,6 @@ ifeq ($(UNAME_S), Darwin)
 
 NASM_FORMAT = macho64
 NASM_DEFS = -d LEADING_UNDERSCORE
-
-ifeq ($(ARCH), x86_64)
-OBJS := $(OBJS) $(ASM_OBJ_X64)
-DEFS := $(DEFS) $(X64_DEFS)
-else
-# FIXME No dynarec support on arm64
-# OBJS := $(OBJS) $(ASM_OBJ_ARM64)
-DEFS := $(DEFS) $(ARM64_DEFS)
-endif
 
 LIBS := $(LIBS) \
 	-lc++

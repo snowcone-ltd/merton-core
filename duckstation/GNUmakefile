@@ -24,11 +24,16 @@ DEFS := $(DEFS) \
 LIBS = \
 	-lc
 
+ifeq ($(ARCH), x86_64)
+OBJS := $(OBJS) $(X64_OBJS)
+else
+INCLUDES := $(INCLUDES) $(ARM64_INCLUDES)
+OBJS := $(OBJS) $(ARM64_OBJS)
+DEFS := $(DEFS) $(ARM64_DEFS)
+endif
+
 ### Linux
 ifeq ($(UNAME_S), Linux)
-
-OBJS := $(OBJS) \
-	$(X64_OBJS)
 
 LIBS := $(LIBS) \
 	-lm \
@@ -39,14 +44,6 @@ endif ### Linux
 
 ### Apple
 ifeq ($(UNAME_S), Darwin)
-
-ifeq ($(ARCH), x86_64)
-OBJS := $(OBJS) $(X64_OBJS)
-else
-INCLUDES := $(INCLUDES) $(ARM64_INCLUDES)
-OBJS := $(OBJS) $(ARM64_OBJS)
-DEFS := $(DEFS) $(ARM64_DEFS)
-endif
 
 LIBS := $(LIBS) \
 	-lc++
