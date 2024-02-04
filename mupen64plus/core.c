@@ -74,7 +74,7 @@ struct Core {
 	char *system_dir;
 	m64p_dynlib_handle so;
 
-	uint32_t frame[1024][1024];
+	uint32_t frame[5120][1920];
 	uint32_t w;
 	uint32_t h;
 
@@ -91,18 +91,21 @@ struct Core {
 static CoreLogFunc CORE_LOG_FUNC;
 static void *CORE_LOG_OPAQUE;
 
-void core_log(const char *fmt, ...)
+void core_vlog(const char *fmt, va_list arg)
 {
-	va_list arg;
-	va_start(arg, fmt);
-
 	if (CORE_LOG_FUNC) {
 		char msg[1024];
 		vsnprintf(msg, 1024, fmt, arg);
 
 		CORE_LOG_FUNC(msg, CORE_LOG_OPAQUE);
 	}
+}
 
+void core_log(const char *fmt, ...)
+{
+	va_list arg;
+	va_start(arg, fmt);
+	core_vlog(fmt, arg);
 	va_end(arg);
 }
 

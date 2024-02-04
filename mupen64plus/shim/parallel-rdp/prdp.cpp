@@ -8,18 +8,36 @@
 #include "device.hpp"
 
 extern "C" void core_log(const char *fmt, ...);
+extern "C" void core_vlog(const char *fmt, va_list arg);
 
 static GFX_INFO GFX;
 static std::vector<RDP::RGBA> PIXELS;
 static uint32_t CMD_DATA[0x10000];
 static int CMD_PTR;
 static int CMD_CUR;
-static bool SYNCH = true;
 static std::unique_ptr<RDP::CommandProcessor> CMDP;
 static std::unique_ptr<Vulkan::Device> VDEVICE;
 static std::unique_ptr<Vulkan::Context> VCONTEXT;
 
-static const unsigned CMD_LEN_LUT[64] = {
+// Settings
+static bool SYNC = true;
+
+static uint8_t UPSCALING = 1;
+static bool SUPER_SAMPLED_READ_BACK = false;
+static bool SUPER_SAMPLED_DITHER = true;
+
+static bool NATIVE_TEXTURE_LOD = false;
+static bool NATIVE_TEX_RECT = true;
+
+static uint32_t DOWNSCALE_STEPS = 0;
+static bool DIVOT_FILTER = true;
+static bool GAMMA_DITHER = true;
+static bool VI_AA = true;
+static bool VI_SCALE = true;
+static bool DITHER_FILTER = true;
+static bool INTERLACING = true;
+
+static const uint8_t CMD_LEN_LUT[64] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 4, 6, 12, 14, 12, 14, 20, 22,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1,  1,
 	1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1,  1,  1,  1,  1,  1,
@@ -28,6 +46,25 @@ static const unsigned CMD_LEN_LUT[64] = {
 
 static void (*VIDEO_FUNC)(void *, uint32_t, uint32_t, void *);
 static void *VIDEO_OPAQUE;
+
+class PRDP_Logger : public Util::LoggingInterface {
+	bool log(const char *tag, const char *fmt, va_list va)
+	{
+		char level = tag[1];
+		if (level == 'I')
+			return true;
+
+		size_t new_fmt_len = strlen(fmt) + 128;
+		char *new_fmt = (char *) malloc(new_fmt_len);
+		snprintf(new_fmt, new_fmt_len, "[parallel-rdp %c] %s", level, fmt);
+		core_vlog(new_fmt, va);
+		free(new_fmt);
+
+		return true;
+	}
+};
+
+static PRDP_Logger LOGGER;
 
 void prdp_set_video_func(void (*func)(void *, uint32_t, uint32_t, void *), void *opaque)
 {
@@ -56,7 +93,7 @@ m64p_error PRDP_PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersio
 		*PluginVersion = 0x010000;
 
 	if (APIVersion)
-		*APIVersion = 0x020100;
+		*APIVersion = 0x020500;
 
 	if (PluginNamePtr)
 		*PluginNamePtr = "paraLLEl-RDP";
@@ -82,51 +119,50 @@ void PRDP_ProcessDList(void)
 {
 }
 
+static void prdp_load_commands(uint32_t dpc_cur, uint32_t len, uint8_t *mem, uint32_t mask)
+{
+	uint32_t offset = dpc_cur & mask;
+
+	for (uint32_t x = 0; x < len; x++) {
+		CMD_DATA[2 * CMD_PTR + 0] = *((uint32_t *) (mem + offset));
+		CMD_DATA[2 * CMD_PTR + 1] = *((uint32_t *) (mem + offset + 4));
+		CMD_PTR++;
+
+		offset += 8;
+		offset &= mask;
+	}
+}
+
 void PRDP_ProcessRDPList(void)
 {
-	uint32_t DP_CURRENT = *GFX.DPC_CURRENT_REG & 0xFFFFF8;
-	uint32_t DP_END = *GFX.DPC_END_REG & 0xFFFFF8;
+	uint32_t dpc_cur = *GFX.DPC_CURRENT_REG & 0xFFFFF8;
+	uint32_t dpc_end = *GFX.DPC_END_REG & 0xFFFFF8;
 
 	// Angrylion does not clear this bit here.
 	// *GFX.DPC_STATUS_REG &= ~DPC_STATUS_FREEZE;
 
-	int length = DP_END - DP_CURRENT;
-	if (length <= 0)
+	if (dpc_cur >= dpc_end)
 		return;
 
-	length = (unsigned) length >> 3;
-	if ((CMD_PTR + length) & ~(0x3FFFF >> 3))
+	uint32_t len = (dpc_end - dpc_cur) >> 3;
+
+	if ((CMD_PTR + len) & ~(0x3FFFF >> 3))
 		return;
 
-	uint32_t offset = DP_CURRENT;
 	if (*GFX.DPC_STATUS_REG & DPC_STATUS_XBUS_DMEM_DMA) {
-		do {
-			offset &= 0xFF8;
-			CMD_DATA[2 * CMD_PTR + 0] = *((uint32_t *) (GFX.DMEM + offset));
-			CMD_DATA[2 * CMD_PTR + 1] = *((uint32_t *) (GFX.DMEM + offset + 4));
-			offset += 8;
-			CMD_PTR++;
-		} while (--length > 0);
+		prdp_load_commands(dpc_cur, len, GFX.DMEM, 0xFF8);
 
 	} else {
-		if (DP_END > 0x7FFFFFF || DP_CURRENT > 0x7FFFFFF) {
+		if (dpc_end > 0x7FFFFFF || dpc_cur > 0x7FFFFFF)
 			return;
 
-		} else {
-			do {
-				offset &= 0xFFFFF8;
-				CMD_DATA[2 * CMD_PTR + 0] = *((uint32_t *) (GFX.RDRAM + offset));
-				CMD_DATA[2 * CMD_PTR + 1] = *((uint32_t *) (GFX.RDRAM + offset + 4));
-				offset += 8;
-				CMD_PTR++;
-			} while (--length > 0);
-		}
+		prdp_load_commands(dpc_cur, len, GFX.RDRAM, 0xFFFFF8);
 	}
 
-	while (CMD_CUR - CMD_PTR < 0) {
+	while (CMD_CUR < CMD_PTR) {
 		uint32_t w1 = CMD_DATA[2 * CMD_CUR];
-		uint32_t command = (w1 >> 24) & 63;
-		int cmd_length = CMD_LEN_LUT[command];
+		uint32_t command = (w1 >> 24) & 0x3F;
+		uint8_t cmd_length = CMD_LEN_LUT[command];
 
 		if (CMD_PTR - CMD_CUR - cmd_length < 0) {
 			*GFX.DPC_START_REG = *GFX.DPC_CURRENT_REG = *GFX.DPC_END_REG;
@@ -137,7 +173,7 @@ void PRDP_ProcessRDPList(void)
 			CMDP->enqueue_command(cmd_length * 2, &CMD_DATA[2 * CMD_CUR]);
 
 		if (RDP::Op(command) == RDP::Op::SyncFull) {
-			if (SYNCH && CMDP)
+			if (SYNC && CMDP)
 				CMDP->wait_for_timeline(CMDP->signal_timeline());
 
 			*GFX.MI_INTR_REG |= MI_INTR_DP;
@@ -154,6 +190,8 @@ void PRDP_ProcessRDPList(void)
 
 int PRDP_RomOpen(void)
 {
+	Util::set_thread_logging_interface(&LOGGER);
+
 	if (!Vulkan::Context::init_loader(nullptr))
 		return 0;
 
@@ -170,32 +208,45 @@ int PRDP_RomOpen(void)
 
 	VCONTEXT = std::make_unique<Vulkan::Context>();
 	VCONTEXT->set_application_info(&info);
-	VCONTEXT->set_num_thread_indices(1);
 
-	if (!VCONTEXT->init_instance(instance_ext.data(), instance_ext.size(),
-		Vulkan::ContextCreationFlagBits::CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT))
-	{
+	if (!VCONTEXT->init_instance(instance_ext.data(), instance_ext.size(), 0))
 		return 0;
-	}
 
-	if (!VCONTEXT->init_device(VK_NULL_HANDLE, VK_NULL_HANDLE, device_ext.data(), device_ext.size(),
-		Vulkan::ContextCreationFlagBits::CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT))
-	{
+	if (!VCONTEXT->init_device(VK_NULL_HANDLE, VK_NULL_HANDLE, device_ext.data(), device_ext.size(), 0))
 		return 0;
-	}
 
 	VDEVICE = std::make_unique<Vulkan::Device>();
 	VDEVICE->set_context(*VCONTEXT);
 
+	RDP::CommandProcessorFlags flags = 0;
+
+	switch (UPSCALING) {
+		case 2:
+			flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_2X_BIT;
+			break;
+		case 4:
+			flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_4X_BIT;
+			break;
+		case 8:
+			flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_8X_BIT;
+			break;
+	}
+
+	if (UPSCALING > 1 && SUPER_SAMPLED_READ_BACK)
+		flags |= RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_READ_BACK_BIT;
+
+	if (SUPER_SAMPLED_DITHER)
+		flags |= RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_DITHER_BIT;
+
 	CMDP = std::make_unique<RDP::CommandProcessor>(
-		*VDEVICE, GFX.RDRAM, 0, *GFX.RDRAM_SIZE, *GFX.RDRAM_SIZE / 2, RDP::CommandProcessorFlags{});
+		*VDEVICE, GFX.RDRAM, 0, *GFX.RDRAM_SIZE, *GFX.RDRAM_SIZE / 2, flags);
 
 	if (!CMDP->device_is_supported())
 		return 0;
 
-	RDP::Quirks quirks;
-	quirks.set_native_texture_lod(false);
-	quirks.set_native_resolution_tex_rect(true);
+	RDP::Quirks quirks = {};
+	quirks.set_native_texture_lod(NATIVE_TEXTURE_LOD);
+	quirks.set_native_resolution_tex_rect(NATIVE_TEX_RECT);
 	CMDP->set_quirks(quirks);
 
 	return 1;
@@ -208,6 +259,7 @@ void PRDP_RomClosed(void)
 	CMD_PTR = 0;
 	CMD_CUR = 0;
 
+	PIXELS.clear();
 	CMDP.reset();
 	VDEVICE.reset();
 	VCONTEXT.reset();
@@ -236,26 +288,26 @@ void PRDP_UpdateScreen(void)
 	CMDP->set_vi_register(RDP::VIRegister::XScale, *GFX.VI_X_SCALE_REG);
 	CMDP->set_vi_register(RDP::VIRegister::YScale, *GFX.VI_Y_SCALE_REG);
 
-	RDP::ScanoutOptions opts;
+	RDP::ScanoutOptions opts = {};
 	opts.persist_frame_on_invalid_input = true;
-	opts.vi.aa = true;
-	opts.vi.scale = true;
-	opts.vi.dither_filter = true;
-	opts.vi.divot_filter = true;
-	opts.vi.gamma_dither = true;
-	opts.blend_previous_frame = true;
-	opts.upscale_deinterlacing = false;
-	opts.downscale_steps = 0;
+	opts.vi.aa = VI_AA;
+	opts.vi.scale = VI_SCALE;
+	opts.vi.dither_filter = DITHER_FILTER;
+	opts.vi.divot_filter = DIVOT_FILTER;
+	opts.vi.gamma_dither = GAMMA_DITHER;
+	opts.blend_previous_frame = INTERLACING;
+	opts.upscale_deinterlacing = !INTERLACING;
+	opts.downscale_steps = DOWNSCALE_STEPS;
 	opts.crop_overscan_pixels = 0;
 
 	uint32_t w = 0;
 	uint32_t h = 0;
 	CMDP->scanout_sync(PIXELS, w, h, opts);
 
-	CMDP->begin_frame_context();
-
 	if (VIDEO_FUNC)
 		VIDEO_FUNC(PIXELS.data(), w, h, VIDEO_OPAQUE);
+
+	CMDP->begin_frame_context();
 }
 
 void PRDP_ViStatusChanged(void)
