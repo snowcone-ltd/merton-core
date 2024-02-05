@@ -7,9 +7,11 @@
 
 #if defined(_WIN32)
 	#include <windows.h>
+	#define USE_PRSP false
 #else
-	#define _strdup strdup
 	#include <dlfcn.h>
+	#define _strdup strdup
+	#define USE_PRSP true
 #endif
 
 #define M64P_CORE_PROTOTYPES
@@ -31,14 +33,8 @@ m64p_error RDP_PluginStartup(m64p_dynlib_handle handle, void *opaque,
 	void (*debug_callback)(void *opaque, int level, const char *msg));
 m64p_error RDP_PluginShutdown(void);
 
-m64p_error AUDIO_PluginStartup(m64p_dynlib_handle handle, void *opaque,
-	void (*debug_callback)(void *opaque, int level, const char *msg));
-m64p_error AUDIO_PluginShutdown(void);
 void audio_set_callback(CoreAudioFunc func, void *opaque);
 
-m64p_error INPUT_PluginStartup(m64p_dynlib_handle handle, void *opaque,
-	void (*debug_callback)(void *opaque, int level, const char *msg));
-m64p_error INPUT_PluginShutdown(void);
 void input_set_button(uint8_t player, CoreButton button, bool pressed);
 void input_set_axis(uint8_t player, CoreAxis axis, int16_t value);
 
@@ -71,6 +67,7 @@ void vdac_set_video_func(void (*func)(void *, uint32_t, uint32_t, void *), void 
 struct Core {
 	bool loaded;
 	bool use_prdp;
+	bool use_prsp;
 	char *system_dir;
 	m64p_dynlib_handle so;
 
@@ -217,7 +214,9 @@ static void *core_load_file(const char *path, size_t *size)
 bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *saveData,
 	size_t saveDataSize)
 {
-	ctx->use_prdp = true; // TODO This needs to be a setting
+	// TODO These need to be settings
+	ctx->use_prdp = true;
+	ctx->use_prsp = USE_PRSP;
 
 	m64p_error r = CoreStartup(FRONTEND_API_VERSION, ctx->system_dir, ctx->system_dir,
 		NULL, core_debug_callback, NULL, core_state_callback);
@@ -234,16 +233,11 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 	if (r != M64ERR_SUCCESS)
 		return false;
 
-	if (ctx->use_prdp) {
-		PRDP_PluginStartup(ctx->so, NULL, core_debug_callback);
-
-	} else {
+	if (!ctx->use_prdp)
 		RDP_PluginStartup(ctx->so, NULL, core_debug_callback);
-	}
 
-	AUDIO_PluginStartup(ctx->so, NULL, core_debug_callback);
-	INPUT_PluginStartup(ctx->so, NULL, core_debug_callback);
-	RSP_PluginStartup(ctx->so, NULL, core_debug_callback);
+	if (!ctx->use_prsp)
+		RSP_PluginStartup(ctx->so, NULL, core_debug_callback);
 
 	osal_dynlib_set_prefix(ctx->use_prdp ? "PRDP_" : "RDP_");
 	CoreAttachPlugin(M64PLUGIN_GFX, ctx->so);
@@ -254,7 +248,7 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 	osal_dynlib_set_prefix("INPUT_");
 	CoreAttachPlugin(M64PLUGIN_INPUT, ctx->so);
 
-	osal_dynlib_set_prefix("RSP_");
+	osal_dynlib_set_prefix(ctx->use_prsp ? "PRSP_" : "RSP_");
 	CoreAttachPlugin(M64PLUGIN_RSP, ctx->so);
 
 	if (saveData)
@@ -288,16 +282,11 @@ void CoreUnloadGame(Core *ctx)
 	CoreDetachPlugin(M64PLUGIN_AUDIO);
 	CoreDetachPlugin(M64PLUGIN_GFX);
 
-	RSP_PluginShutdown();
-	INPUT_PluginShutdown();
-	AUDIO_PluginShutdown();
+	if (!ctx->use_prsp)
+		RSP_PluginShutdown();
 
-	if (ctx->use_prdp) {
-		PRDP_PluginShutdown();
-
-	} else {
+	if (!ctx->use_prdp)
 		RDP_PluginShutdown();
-	}
 
 	CoreDoCommand(M64CMD_ROM_CLOSE, 0, NULL);
 	CoreShutdown();

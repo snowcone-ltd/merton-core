@@ -72,17 +72,6 @@ void prdp_set_video_func(void (*func)(void *, uint32_t, uint32_t, void *), void 
 	VIDEO_OPAQUE = opaque;
 }
 
-m64p_error PRDP_PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Context,
-	void (*DebugCallback)(void *, int, const char *))
-{
-	return M64ERR_SUCCESS;
-}
-
-m64p_error PRDP_PluginShutdown(void)
-{
-	return M64ERR_SUCCESS;
-}
-
 m64p_error PRDP_PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion,
 	int *APIVersion, const char **PluginNamePtr, int *Capabilities)
 {
@@ -109,14 +98,6 @@ int PRDP_InitiateGFX(GFX_INFO Gfx_Info)
 	GFX = Gfx_Info;
 
 	return 1;
-}
-
-void PRDP_MoveScreen(int xpos, int ypos)
-{
-}
-
-void PRDP_ProcessDList(void)
-{
 }
 
 static void prdp_load_commands(uint32_t dpc_cur, uint32_t len, uint8_t *mem, uint32_t mask)
@@ -265,10 +246,6 @@ void PRDP_RomClosed(void)
 	VCONTEXT.reset();
 }
 
-void PRDP_ShowCFB(void)
-{
-}
-
 void PRDP_UpdateScreen(void)
 {
 	CMDP->signal_timeline();
@@ -308,6 +285,18 @@ void PRDP_UpdateScreen(void)
 		VIDEO_FUNC(PIXELS.data(), w, h, VIDEO_OPAQUE);
 
 	CMDP->begin_frame_context();
+}
+
+void PRDP_MoveScreen(int xpos, int ypos)
+{
+}
+
+void PRDP_ProcessDList(void)
+{
+}
+
+void PRDP_ShowCFB(void)
+{
 }
 
 void PRDP_ViStatusChanged(void)

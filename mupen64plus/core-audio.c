@@ -16,17 +16,6 @@ void audio_set_callback(CoreAudioFunc func, void *opaque)
 	CORE_AUDIO_OPAQUE = opaque;
 }
 
-EXPORT m64p_error AUDIO_PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Context,
-	void (*DebugCallback)(void *, int, const char *))
-{
-	return M64ERR_SUCCESS;
-}
-
-EXPORT m64p_error AUDIO_PluginShutdown(void)
-{
-	return M64ERR_SUCCESS;
-}
-
 EXPORT m64p_error AUDIO_PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion, int *APIVersion,
 	const char **PluginNamePtr, int *Capabilities)
 {

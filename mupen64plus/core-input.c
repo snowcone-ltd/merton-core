@@ -70,17 +70,6 @@ void input_set_axis(uint8_t player, CoreAxis axis, int16_t value)
 	}
 }
 
-EXPORT m64p_error INPUT_PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Context,
-	void (*DebugCallback)(void *, int, const char *))
-{
-	return M64ERR_SUCCESS;
-}
-
-EXPORT m64p_error INPUT_PluginShutdown(void)
-{
-	return M64ERR_SUCCESS;
-}
-
 EXPORT m64p_error INPUT_PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion, int *APIVersion,
 	const char **PluginNamePtr, int *Capabilities)
 {

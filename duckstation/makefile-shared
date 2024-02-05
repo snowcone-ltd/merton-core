@@ -13,6 +13,7 @@ INCLUDES = \
 	-I$(PROJ)/dep/lzma/include \
 	-I$(PROJ)/dep/minizip/include \
 	-I$(PROJ)/dep/rapidjson/include \
+	-I$(PROJ)/dep/rapidyaml/include \
 	-I$(PROJ)/dep/reshadefx/include \
 	-I$(PROJ)/dep/simpleini/include \
 	-I$(PROJ)/dep/stb/include \
@@ -33,6 +34,7 @@ DEFS = \
 	-DENABLE_NEWREC \
 	-DZSTDLIB_VISIBLE= \
 	-DZSTD_DISABLE_ASM \
+	-DC4_NO_DEBUG_BREAK \
 	-D_7ZIP_ST
 
 ARM64_DEFS = \
@@ -81,6 +83,15 @@ DEPS_OBJS = \
 	$(PROJ)/dep/lzma/src/LzmaDec.$(O) \
 	$(PROJ)/dep/lzma/src/LzmaEnc.$(O) \
 	$(PROJ)/dep/minizip/src/ioapi.$(O) \
+	$(PROJ)/dep/rapidyaml/src/c4/yml/common.$(O) \
+	$(PROJ)/dep/rapidyaml/src/c4/yml/node.$(O) \
+	$(PROJ)/dep/rapidyaml/src/c4/yml/parse.$(O) \
+	$(PROJ)/dep/rapidyaml/src/c4/yml/preprocess.$(O) \
+	$(PROJ)/dep/rapidyaml/src/c4/yml/tree.$(O) \
+	$(PROJ)/dep/rapidyaml/src/c4/base64.$(O) \
+	$(PROJ)/dep/rapidyaml/src/c4/language.$(O) \
+	$(PROJ)/dep/rapidyaml/src/c4/memory_util.$(O) \
+	$(PROJ)/dep/rapidyaml/src/c4/utf.$(O) \
 	$(PROJ)/dep/reshadefx/src/effect_codegen_glsl.$(O) \
 	$(PROJ)/dep/reshadefx/src/effect_codegen_hlsl.$(O) \
 	$(PROJ)/dep/reshadefx/src/effect_expression.$(O) \
@@ -236,6 +247,8 @@ OBJS = \
 	rename/format.$(O) \
 	rename/os.$(O) \
 	rename/zstd_xxhash.$(O) \
+	rename/c4_error.$(O) \
+	rename/c4_format.$(O) \
 	$(SHIM_OBJS) \
 	$(DEPS_OBJS) \
 	$(UTIL_OBJS) \

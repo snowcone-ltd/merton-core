@@ -1,8 +1,14 @@
 PROJ = mupen64plus-core
 PROJ_RSP = mupen64plus-rsp-cxd4
+PROJ_PRSP = parallel-rsp
 PROJ_RDP = angrylion-rdp-plus
 PROJ_PRDP = parallel-rdp
 NAME = mupen64plus
+
+PRSP_INCLUDES = \
+	-I$(PROJ_PRSP)/arch/simd/rsp \
+	-I$(PROJ_PRSP)/lightning/include \
+	-I$(PROJ_PRSP)
 
 RDP_INCLUDES = \
 	-Ishim/$(PROJ_RDP) \
@@ -25,6 +31,7 @@ INCLUDES = \
 	-I$(PROJ)/subprojects/md5 \
 	-I$(PROJ)/subprojects/xxhash \
 	-I$(PROJ)/subprojects/minizip \
+	$(PRSP_INCLUDES) \
 	$(RDP_INCLUDES) \
 	$(PRDP_INCLUDES)
 
@@ -36,7 +43,9 @@ DEFS = \
 X64_DEFS = \
 	-DDYNAREC \
 	-DNEW_DYNAREC=NEW_DYNAREC_X64 \
-	-DARCH_MIN_SSE2
+	-DPARALLEL_INTEGRATION \
+	-DARCH_MIN_SSE2  \
+	-DHAVE_MMAP
 
 # FIXME No dynarec support on arm64
 # -DNEW_DYNAREC=NEW_DYNAREC_ARM64
@@ -65,6 +74,24 @@ RSP_OBJS = \
 	$(PROJ_RSP)/vu/select.$(O) \
 	$(PROJ_RSP)/vu/vu.$(O) \
 	$(PROJ_RSP)/su.$(O)
+
+PRSP_OBJS = \
+	shim/$(PROJ_PRSP)/prsp.$(O) \
+	shim/$(PROJ_PRSP)/prsp-rsp_core.$(O) \
+	shim/$(PROJ_PRSP)/prsp-cp0.$(O) \
+	shim/$(PROJ_PRSP)/prsp-cp2.$(O) \
+	$(PROJ_PRSP)/lightning/lib/jit_disasm.$(O) \
+	$(PROJ_PRSP)/lightning/lib/jit_memory.$(O) \
+	$(PROJ_PRSP)/lightning/lib/jit_note.$(O) \
+	$(PROJ_PRSP)/lightning/lib/jit_print.$(O) \
+	$(PROJ_PRSP)/lightning/lib/jit_size.$(O) \
+	$(PROJ_PRSP)/lightning/lib/lightning.$(O) \
+	$(PROJ_PRSP)/rsp/ls.$(O) \
+	$(PROJ_PRSP)/rsp/reciprocal.$(O) \
+	$(PROJ_PRSP)/rsp/vfunctions.$(O) \
+	$(PROJ_PRSP)/jit_allocator.$(O) \
+	$(PROJ_PRSP)/rsp_disasm.$(O) \
+	$(PROJ_PRSP)/rsp_jit.$(O)
 
 RDP_OBJS = \
 	shim/$(PROJ_RDP)/gfx_m64p.$(O) \

@@ -30,6 +30,10 @@ git clone git@github.com:Themaister/parallel-rdp-standalone mupen64plus/parallel
 git -C mupen64plus/parallel-rdp reset --hard HEAD
 git -C mupen64plus/parallel-rdp pull
 
+git clone git@github.com:libretro/parallel-rsp mupen64plus/parallel-rsp
+git -C mupen64plus/parallel-rsp reset --hard HEAD
+git -C mupen64plus/parallel-rsp pull
+
 git clone git@github.com:stella-emu/stella stella/stella
 git -C stella/stella reset --hard HEAD
 git -C stella/stella pull

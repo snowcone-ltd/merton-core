@@ -6,6 +6,9 @@ include makefile-shared
 .asm.o:
 	nasm -f $(NASM_FORMAT) $(NASM_DEFS) -i $(PROJ)/src/asm_defines/ $< -o $@
 
+OBJS := $(OBJS) \
+	$(PRSP_OBJS)
+
 FLAGS := $(FLAGS) \
 	-Wno-unused-result \
 	-Wno-unused-parameter \

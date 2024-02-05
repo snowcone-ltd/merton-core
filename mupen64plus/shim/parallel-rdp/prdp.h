@@ -15,9 +15,6 @@ extern "C" {
 
 void prdp_set_video_func(void (*func)(void *, uint32_t, uint32_t, void *), void *opaque);
 
-PRDP_EXPORT m64p_error PRDP_PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Context,
-	void (*DebugCallback)(void *, int, const char *));
-PRDP_EXPORT m64p_error PRDP_PluginShutdown(void);
 PRDP_EXPORT m64p_error PRDP_PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion,
 	int *APIVersion, const char **PluginNamePtr, int *Capabilities);
 PRDP_EXPORT int PRDP_InitiateGFX(GFX_INFO Gfx_Info);
