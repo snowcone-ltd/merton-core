@@ -12,7 +12,6 @@ INCLUDES = \
 	-I$(PROJ)/dep/libchdr/include \
 	-I$(PROJ)/dep/lzma/include \
 	-I$(PROJ)/dep/minizip/include \
-	-I$(PROJ)/dep/rapidjson/include \
 	-I$(PROJ)/dep/rapidyaml/include \
 	-I$(PROJ)/dep/reshadefx/include \
 	-I$(PROJ)/dep/simpleini/include \
@@ -69,7 +68,8 @@ UTIL_OBJS = \
 	$(PROJ)/src/util/shadergen.$(O) \
 	$(PROJ)/src/util/shiftjis.$(O) \
 	$(PROJ)/src/util/state_wrapper.$(O) \
-	$(PROJ)/src/util/wav_writer.$(O)
+	$(PROJ)/src/util/wav_writer.$(O) \
+	$(PROJ)/src/util/zstd_byte_stream.$(O)
 
 DEPS_OBJS = \
 	$(PROJ)/dep/libchdr/src/libchdr_bitstream.$(O) \
