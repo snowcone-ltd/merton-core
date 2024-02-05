@@ -299,11 +299,6 @@ void CoreUnloadGame(Core *ctx)
 	CoreShutdown();
 }
 
-bool CoreGameIsLoaded(Core *ctx)
-{
-	return ctx ? ctx->loaded : false;
-}
-
 static void core_frame_callback(unsigned int index)
 {
 }

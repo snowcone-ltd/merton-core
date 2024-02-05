@@ -273,11 +273,6 @@ bool CoreInsertDisc(Core *ctx, const char *path)
 	return false;
 }
 
-bool CoreGameIsLoaded(Core *ctx)
-{
-	return ctx ? ctx->loaded : false;
-}
-
 static bool core_is_ntsc(Core *ctx)
 {
 	return ctx->sys->console().gameRefreshRate() == 60;

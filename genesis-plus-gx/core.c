@@ -287,11 +287,6 @@ void CoreUnloadGame(Core *ctx)
 	audio_shutdown();
 }
 
-bool CoreGameIsLoaded(Core *ctx)
-{
-	return ctx ? ctx->loaded : false;
-}
-
 double CoreGetFrameRate(Core *ctx)
 {
 	if (!ctx || !ctx->loaded)

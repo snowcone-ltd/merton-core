@@ -322,11 +322,6 @@ void *CoreGetSaveData(Core *ctx, size_t *size)
 	return sd;
 }
 
-bool CoreGameIsLoaded(Core *ctx)
-{
-	return ctx ? ctx->loaded : false;
-}
-
 double CoreGetFrameRate(Core *ctx)
 {
 	return 59.95;

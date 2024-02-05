@@ -243,11 +243,6 @@ void CoreUnloadGame(Core *ctx)
 	ctx->loaded = false;
 }
 
-bool CoreGameIsLoaded(Core *ctx)
-{
-	return ctx ? ctx->loaded : false;
-}
-
 double CoreGetFrameRate(Core *ctx)
 {
 	if (!ctx || !ctx->loaded)
