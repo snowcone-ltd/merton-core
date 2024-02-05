@@ -60,6 +60,9 @@ ifeq ($(UNAME_S), Darwin)
 NASM_FORMAT = macho64
 NASM_DEFS = -d LEADING_UNDERSCORE
 
+FLAGS := $(FLAGS) \
+	-Wno-deprecated-declarations
+
 LIBS := $(LIBS) \
 	-lc++
 

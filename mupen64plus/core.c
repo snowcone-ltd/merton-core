@@ -8,10 +8,17 @@
 #if defined(_WIN32)
 	#include <windows.h>
 	#define USE_PRSP false
+	#define USE_PRDP true
 #else
 	#include <dlfcn.h>
 	#define _strdup strdup
 	#define USE_PRSP true
+
+	#if defined(__APPLE__)
+		#define USE_PRDP false
+	#else
+		#define USE_PRDP true
+	#endif
 #endif
 
 #define M64P_CORE_PROTOTYPES
@@ -215,7 +222,7 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 	size_t saveDataSize)
 {
 	// TODO These need to be settings
-	ctx->use_prdp = true;
+	ctx->use_prdp = USE_PRDP;
 	ctx->use_prsp = USE_PRSP;
 
 	m64p_error r = CoreStartup(FRONTEND_API_VERSION, ctx->system_dir, ctx->system_dir,
