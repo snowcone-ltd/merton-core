@@ -2,8 +2,7 @@ PROJ = Genesis-Plus-GX
 NAME = genesis-plus-gx
 
 INCLUDES = \
-	-I. \
-	-I.. \
+	-Ishim \
 	-I$(PROJ)/core \
 	-I$(PROJ)/core/cart_hw \
 	-I$(PROJ)/core/cart_hw/svp \

@@ -6,7 +6,7 @@
 #include "md_ntsc.h"
 #include "sms_ntsc.h"
 
-#include "osd.h"
+#include "shim/osd.h"
 
 #define CORE_BITMAP_W 720
 #define CORE_BITMAP_H 576
