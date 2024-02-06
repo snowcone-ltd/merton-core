@@ -235,6 +235,7 @@ CORE_SNES_OBJS = \
 
 SHIM_OBJS = \
 	shim/SoundMixer.$(O) \
+	shim/CoreKeyManager.$(O) \
 	shim/Debugger.$(O) \
 	shim/PpuTools.$(O) \
 	shim/ScriptManager.$(O) \
@@ -250,7 +251,6 @@ SHIM_OBJS = \
 
 OBJS = \
 	core.$(O) \
-	core-key-manager.$(O) \
 	$(SZ_OBJS) \
 	$(UTIL_OBJS) \
 	$(CORE_SHARED_OBJS) \

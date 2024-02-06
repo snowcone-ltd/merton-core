@@ -1,4 +1,4 @@
-#include "core-key-manager.h"
+#include "CoreKeymanager.h"
 
 #define MAX_PLAYERS 8
 

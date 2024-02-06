@@ -17,9 +17,9 @@
 #include "Utilities/miniz.h"
 #include "Utilities/Serializer.h"
 
-#include "core-key-manager.h"
+#include "shim/CoreKeyManager.h"
 #include "palette.h"
-#include "rom-db.h"
+#include "romdb.h"
 
 #if defined(_MSC_VER)
 	#define strdup _strdup
