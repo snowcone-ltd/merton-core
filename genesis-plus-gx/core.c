@@ -8,6 +8,8 @@
 
 #include "shim/osd.h"
 
+#include "settings.h"
+
 #define CORE_BITMAP_W 720
 #define CORE_BITMAP_H 576
 #define CORE_SAMPLE_RATE 48000
@@ -117,7 +119,7 @@ void core_log(const char *fmt, ...)
 	va_end(arg);
 }
 
-static void core_reset_settings(void)
+static void core_set_settings(void)
 {
 	memset(&config, 0, sizeof(config));
 
@@ -128,7 +130,9 @@ static void core_reset_settings(void)
 	config.pcm_volume = 100;
 	config.hq_fm = 1;
 	config.hq_psg = 1;
-	config.filter = 2;
+	config.filter = CMP_ENUM("lpf", "3-Pass") ? 2 :
+		CMP_ENUM("lpf", "Simple") ? 1 : 0;
+	config.mono = !CMP_BOOL("stereo");
 	config.low_freq = 200;
 	config.high_freq = 8000;
 	config.lg = 100;
@@ -147,13 +151,36 @@ static void core_reset_settings(void)
 	// System
 	config.addr_error = 1;
 	config.cd_latency = 1;
+	config.no_sprite_limit = CMP_BOOL("no-sprite-limit");
 
 	// Display
 	config.enhanced_vscroll_limit = 8;
+	config.ntsc = CMP_ENUM("ntsc", "Monochrome") ? 1 : CMP_ENUM("ntsc", "Composite") ? 2 :
+		CMP_ENUM("ntsc", "S-Video") ? 3 : CMP_ENUM("ntsc", "RGB") ? 4 : 0;
 
 	// Input
 	for (uint8_t x = 0; x < MAX_INPUTS; x++)
 		config.input[x].padtype = DEVICE_PAD2B | DEVICE_PAD3B | DEVICE_PAD6B;
+
+	// NTSC filter
+	switch (config.ntsc) {
+		case 1:
+			md_ntsc_init(md_ntsc, &md_ntsc_monochrome);
+			sms_ntsc_init(sms_ntsc, &sms_ntsc_monochrome);
+			break;
+		case 2:
+			md_ntsc_init(md_ntsc, &md_ntsc_composite);
+			sms_ntsc_init(sms_ntsc, &sms_ntsc_composite);
+			break;
+		case 3:
+			md_ntsc_init(md_ntsc, &md_ntsc_svideo);
+			sms_ntsc_init(sms_ntsc, &sms_ntsc_svideo);
+			break;
+		case 4:
+			md_ntsc_init(md_ntsc, &md_ntsc_rgb);
+			sms_ntsc_init(sms_ntsc, &sms_ntsc_rgb);
+			break;
+	}
 }
 
 Core *CoreLoad(const char *systemDir)
@@ -187,8 +214,6 @@ Core *CoreLoad(const char *systemDir)
 	bitmap.height = CORE_BITMAP_H;
 	bitmap.pitch = CORE_BITMAP_W * sizeof(uint16_t);
 	bitmap.data = (unsigned char *) ctx->bitmap_data;
-
-	core_reset_settings();
 
 	input.system[0] = SYSTEM_GAMEPAD;
 	input.system[1] = SYSTEM_GAMEPAD;
@@ -264,6 +289,8 @@ static void core_load_save_data(const void *data, size_t size)
 bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *saveData,
 	size_t saveDataSize)
 {
+	core_set_settings();
+
 	if (!load_rom((char *) path))
 		return false;
 
@@ -445,17 +472,15 @@ bool CoreInsertDisc(Core *ctx, const char *path)
 
 CoreSetting *CoreGetSettings(uint32_t *len)
 {
-	// TODO
+	*len = sizeof(CORE_SETTINGS) / sizeof(CoreSetting);
 
-	*len = 0;
-
-	return NULL;
+	return CORE_SETTINGS;
 }
 
 void CoreUpdateSettings(Core *ctx)
 {
-	// TODO
-
 	if (!ctx)
 		return;
+
+	core_set_settings();
 }
