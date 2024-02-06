@@ -217,6 +217,8 @@ SHIM_OBJS = \
 	shim/$(PROJ)/screenshot.$(O) \
 	shim/$(PROJ)/vidext.$(O) \
 	shim/SDL/SDL.$(O) \
+	shim/core-audio.$(O) \
+	shim/core-input.$(O) \
 	shim/osal_dynamiclib.$(O)
 
 DEPS_OBJS = \
@@ -232,8 +234,6 @@ DEPS_OBJS = \
 
 OBJS = \
 	core.$(O) \
-	core-audio.$(O) \
-	core-input.$(O) \
 	$(SHIM_OBJS) \
 	$(DEPS_OBJS) \
 	$(ASM_OBJ) \

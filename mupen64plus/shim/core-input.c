@@ -1,6 +1,6 @@
 #include "m64p_plugin.h"
 
-#include "../core.h"
+#include "../../core.h"
 
 static uint16_t CORE_BUTTONS;
 static int16_t AXIS_LX;

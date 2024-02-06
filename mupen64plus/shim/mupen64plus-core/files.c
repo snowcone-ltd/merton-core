@@ -6,7 +6,7 @@
 #include "main/rom.h"
 #include "osal/files.h"
 
-#include "../../rom-db.h"
+#include "../../romdb.h"
 
 #include "SDL.h"
 

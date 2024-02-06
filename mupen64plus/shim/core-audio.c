@@ -1,6 +1,6 @@
 #include "m64p_plugin.h"
 
-#include "../core.h"
+#include "../../core.h"
 
 static uint32_t SAMPLE_RATE;
 static AUDIO_INFO AI;
