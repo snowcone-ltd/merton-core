@@ -13,7 +13,7 @@
 #include "TIASurface.hxx"
 
 #include "shim/SoundCore.hxx"
-#include "osystem-core.hxx"
+#include "shim/OSystemCore.hxx"
 
 #define SAMPLE_RATE ((262 * 76 * 60) / 38.0)
 
