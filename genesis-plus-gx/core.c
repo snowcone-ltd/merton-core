@@ -443,126 +443,19 @@ bool CoreInsertDisc(Core *ctx, const char *path)
 	return cdd.loaded;
 }
 
-
-// Settings
-
-#define CORE_SETTING_PREFIX "genesis-plus-gx-"
-
-#define CMP_SETTING(key, suffix) \
-	!strcmp(key, CORE_SETTING_PREFIX suffix)
-
-#define CMP_BOOL(b) \
-	!strcmp(b, "true")
-
-#define CMP_ENUM(e, val) \
-	!strcmp(e, val)
-
-static const CoreSetting CORE_SETTINGS[] = {{
-	.type = CORE_SETTING_ENUM,
-	.group = CORE_SETTING_GROUP_AUDIO,
-	.desc = "Low-Pass Filter",
-	.key = CORE_SETTING_PREFIX "lpf",
-	.opts = {"Off", "Simple", "3-Pass"},
-	.nopts = 3,
-}, {
-	.type = CORE_SETTING_ENUM,
-	.group = CORE_SETTING_GROUP_VIDEO,
-	.desc = "NTSC Filter",
-	.key = CORE_SETTING_PREFIX "ntsc",
-	.opts = {"Off", "Monochrome", "Composite", "S-Video", "RGB"},
-	.nopts = 5,
-}, {
-	.type = CORE_SETTING_BOOL,
-	.group = CORE_SETTING_GROUP_AUDIO,
-	.desc = "Stereo",
-	.key = CORE_SETTING_PREFIX "stereo",
-}, {
-	.type = CORE_SETTING_BOOL,
-	.group = CORE_SETTING_GROUP_VIDEO,
-	.desc = "Disable Sprite Limit",
-	.key = CORE_SETTING_PREFIX "no-sprite-limit",
-}};
-
-const CoreSetting *CoreGetAllSettings(Core *ctx, uint32_t *len)
+CoreSetting *CoreGetSettings(uint32_t *len)
 {
-	*len = sizeof(CORE_SETTINGS) / sizeof(CoreSetting);
+	// TODO
 
-	return CORE_SETTINGS;
-}
-
-const char *CoreGetSetting(Core *ctx, const char *key)
-{
-	if (!ctx)
-		return NULL;
-
-	if (CMP_SETTING(key, "lpf")) {
-		return config.filter == 2 ? "3-Pass" :
-			config.filter == 1 ? "Simple" : "Off";
-
-	} else if (CMP_SETTING(key, "ntsc")) {
-		return config.ntsc == 1 ? "Monochrome" :
-			config.ntsc == 2 ? "Composite" :
-			config.ntsc == 3 ? "S-Video" :
-			config.ntsc == 4 ? "RGB" :
-			"Off";
-
-	} else if (CMP_SETTING(key, "stereo")) {
-		return config.mono == 0 ? "true" : "false";
-
-	} else if (CMP_SETTING(key, "no-sprite-limit")) {
-		return config.no_sprite_limit == 1 ? "true" : "false";
-	}
+	*len = 0;
 
 	return NULL;
 }
 
-void CoreSetSetting(Core *ctx, const char *key, const char *val)
+void CoreUpdateSettings(Core *ctx)
 {
+	// TODO
+
 	if (!ctx)
 		return;
-
-	if (CMP_SETTING(key, "lpf")) {
-		config.filter = CMP_ENUM(val, "3-Pass") ? 2 :
-			CMP_ENUM(val, "Simple") ? 1 : 0;
-
-	} else if (CMP_SETTING(key, "ntsc")) {
-		config.ntsc = CMP_ENUM(val, "Monochrome") ? 1 :
-			CMP_ENUM(val, "Composite") ? 2 :
-			CMP_ENUM(val, "S-Video") ? 3 :
-			CMP_ENUM(val, "RGB") ? 4 :
-			0;
-
-		switch (config.ntsc) {
-			case 1:
-				md_ntsc_init(md_ntsc, &md_ntsc_monochrome);
-				sms_ntsc_init(sms_ntsc, &sms_ntsc_monochrome);
-				break;
-			case 2:
-				md_ntsc_init(md_ntsc, &md_ntsc_composite);
-				sms_ntsc_init(sms_ntsc, &sms_ntsc_composite);
-				break;
-			case 3:
-				md_ntsc_init(md_ntsc, &md_ntsc_svideo);
-				sms_ntsc_init(sms_ntsc, &sms_ntsc_svideo);
-				break;
-			case 4:
-				md_ntsc_init(md_ntsc, &md_ntsc_rgb);
-				sms_ntsc_init(sms_ntsc, &sms_ntsc_rgb);
-				break;
-		}
-
-	} else if (CMP_SETTING(key, "stereo")) {
-		config.mono = CMP_BOOL(val) ? 0 : 1;
-
-	} else if (CMP_SETTING(key, "no-sprite-limit")) {
-		config.no_sprite_limit = CMP_BOOL(val) ? 1 : 0;
-	}
-}
-
-void CoreResetSettings(Core *ctx)
-{
-	if (!ctx)
-		return;
-
-	core_reset_settings();
 }

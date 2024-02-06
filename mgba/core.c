@@ -412,7 +412,7 @@ bool CoreInsertDisc(Core *ctx, const char *path)
 	return false;
 }
 
-const CoreSetting *CoreGetAllSettings(Core *ctx, uint32_t *len)
+CoreSetting *CoreGetSettings(uint32_t *len)
 {
 	// TODO
 
@@ -421,19 +421,10 @@ const CoreSetting *CoreGetAllSettings(Core *ctx, uint32_t *len)
 	return NULL;
 }
 
-const char *CoreGetSetting(Core *ctx, const char *key)
+void CoreUpdateSettings(Core *ctx)
 {
 	// TODO
 
-	return NULL;
-}
-
-void CoreSetSetting(Core *ctx, const char *key, const char *val)
-{
-	// TODO
-}
-
-void CoreResetSettings(Core *ctx)
-{
-	// TODO
+	if (!ctx)
+		return;
 }

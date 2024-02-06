@@ -550,50 +550,19 @@ static void core_reset_settings(Core *ctx)
 	core_reset_snes_settings(ctx);
 }
 
-void CoreSetSetting(Core *ctx, const char *key, const char *val)
+CoreSetting *CoreGetSettings(uint32_t *len)
 {
-	if (!ctx)
-		return;
+	// TODO
 
-	// NES
-	NesConfig &nes_cfg = ctx->emu->GetSettings()->GetNesConfig();
-
-	if (CMP_SETTING(key, "triangle-pop")) {
-		nes_cfg.SilenceTriangleHighFreq = !CMP_BOOL(val);
-
-	} else if (CMP_SETTING(key, "stereo")) {
-		core_nes_set_stereo(nes_cfg, CMP_BOOL(val));
-
-	} else if (CMP_SETTING(key, "wait-for-pr")) {
-		ctx->settings.wait_for_pr = CMP_BOOL(val);
-	}
-}
-
-const char *CoreGetSetting(Core *ctx, const char *key)
-{
-	if (!ctx)
-		return NULL;
-
-	// NES
-	NesConfig &nes_cfg = ctx->emu->GetSettings()->GetNesConfig();
-
-	if (CMP_SETTING(key, "triangle-pop")) {
-		return nes_cfg.SilenceTriangleHighFreq ? "false" : "true";
-
-	} else if (CMP_SETTING(key, "stereo")) {
-		return core_nes_get_stereo(nes_cfg) ? "true" : "false";
-
-	} else if (CMP_SETTING(key, "wait-for-pr")) {
-		return ctx->settings.wait_for_pr ? "true" : "false";
-	}
+	*len = 0;
 
 	return NULL;
 }
 
-void CoreResetSettings(Core *ctx)
+void CoreUpdateSettings(Core *ctx)
 {
+	// TODO
+
 	if (!ctx)
 		return;
-
-	core_reset_settings(ctx);
 }

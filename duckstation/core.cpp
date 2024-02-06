@@ -351,7 +351,7 @@ void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
 	gpu_device_set_func(func, opaque);
 }
 
-const CoreSetting *CoreGetAllSettings(Core *ctx, uint32_t *len)
+CoreSetting *CoreGetSettings(uint32_t *len)
 {
 	// TODO
 
@@ -360,25 +360,7 @@ const CoreSetting *CoreGetAllSettings(Core *ctx, uint32_t *len)
 	return NULL;
 }
 
-void CoreSetSetting(Core *ctx, const char *key, const char *val)
-{
-	// TODO
-
-	if (!ctx)
-		return;
-}
-
-const char *CoreGetSetting(Core *ctx, const char *key)
-{
-	// TODO
-
-	if (!ctx)
-		return NULL;
-
-	return NULL;
-}
-
-void CoreResetSettings(Core *ctx)
+void CoreUpdateSettings(Core *ctx)
 {
 	// TODO
 

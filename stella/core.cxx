@@ -330,26 +330,19 @@ void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
 	ctx->video_opaque = opaque;
 }
 
-const CoreSetting *CoreGetAllSettings(Core *ctx, uint32_t *len)
+CoreSetting *CoreGetSettings(uint32_t *len)
 {
 	// TODO
+
+	*len = 0;
 
 	return NULL;
 }
 
-void CoreSetSetting(Core *ctx, const char *key, const char *val)
-{
-	// TODO
-}
-
-const char *CoreGetSetting(Core *ctx, const char *key)
+void CoreUpdateSettings(Core *ctx)
 {
 	// TODO
 
-	return NULL;
-}
-
-void CoreResetSettings(Core *ctx)
-{
-	// TODO
+	if (!ctx)
+		return;
 }

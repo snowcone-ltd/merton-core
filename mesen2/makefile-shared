@@ -251,7 +251,6 @@ SHIM_OBJS = \
 OBJS = \
 	core.$(O) \
 	core-key-manager.$(O) \
-	settings.$(O) \
 	$(SZ_OBJS) \
 	$(UTIL_OBJS) \
 	$(CORE_SHARED_OBJS) \
