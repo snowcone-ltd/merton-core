@@ -18,6 +18,7 @@
 #include "Utilities/Serializer.h"
 
 #include "shim/CoreKeyManager.h"
+#include "settings.h"
 #include "palette.h"
 #include "romdb.h"
 
@@ -55,8 +56,6 @@ void sound_mixer_set_audio_func(CoreAudioFunc func, void *opaque);
 
 // API
 
-static void core_reset_settings(Core *ctx);
-
 void core_log(const char *fmt, ...)
 {
 	va_list arg;
@@ -87,6 +86,177 @@ static void core_load_rom_db(void)
 	free(ubuf);
 }
 
+static void core_set_buttons(ControllerConfig *controller, ControllerType type, uint32_t index)
+{
+	index <<= 8;
+
+	controller->Type = type;
+
+	// All Mesen mappings use the Nintendo layout
+
+	controller->Keys.Mapping1.A = index | CORE_BUTTON_B;
+	controller->Keys.Mapping1.B = index | CORE_BUTTON_A;
+	controller->Keys.Mapping1.Start = index | CORE_BUTTON_START;
+	controller->Keys.Mapping1.Select = index | CORE_BUTTON_SELECT;
+	controller->Keys.Mapping1.Up = index | CORE_BUTTON_DPAD_U;
+	controller->Keys.Mapping1.Down = index | CORE_BUTTON_DPAD_D;
+	controller->Keys.Mapping1.Left = index | CORE_BUTTON_DPAD_L;
+	controller->Keys.Mapping1.Right = index | CORE_BUTTON_DPAD_R;
+
+	if (type == ControllerType::SnesController) {
+		controller->Keys.Mapping1.X = index | CORE_BUTTON_Y;
+		controller->Keys.Mapping1.Y = index | CORE_BUTTON_X;
+		controller->Keys.Mapping1.L = index | CORE_BUTTON_L;
+		controller->Keys.Mapping1.R = index | CORE_BUTTON_R;
+	}
+}
+
+static void core_set_video_settings(Core *ctx)
+{
+	VideoConfig cfg = {};
+
+	// Use correct aspect ratio
+	cfg.AspectRatio = VideoAspectRatio::Auto;
+
+	ctx->emu->GetSettings()->SetVideoConfig(cfg);
+}
+
+static void core_nes_set_stereo(NesConfig &cfg, bool enabled)
+{
+	if (enabled) {
+		// Left
+		cfg.ChannelPanning[(int) AudioChannel::Triangle] = -33;
+		cfg.ChannelPanning[(int) AudioChannel::Noise] = -33;
+		cfg.ChannelPanning[(int) AudioChannel::Square1] = -33;
+
+		// Right
+		cfg.ChannelPanning[(int) AudioChannel::DMC] = 33;
+		cfg.ChannelPanning[(int) AudioChannel::Square2] = 33;
+
+		// Center
+		cfg.ChannelPanning[(int) AudioChannel::FDS] = 0;
+		cfg.ChannelPanning[(int) AudioChannel::MMC5] = 0;
+		cfg.ChannelPanning[(int) AudioChannel::VRC6] = 0;
+		cfg.ChannelPanning[(int) AudioChannel::VRC7] = 0;
+		cfg.ChannelPanning[(int) AudioChannel::Namco163] = 0;
+		cfg.ChannelPanning[(int) AudioChannel::Sunsoft5B] = 0;
+
+	} else {
+		memset(cfg.ChannelPanning, 0, sizeof(cfg.ChannelPanning));
+	}
+}
+
+static void core_set_nes_settings(Core *ctx)
+{
+	NesConfig cfg = {};
+
+	// FDS
+	cfg.FdsFastForwardOnLoad = true;
+	cfg.FdsAutoInsertDisk = true;
+
+	// Input
+	core_set_buttons(&cfg.Port1, ControllerType::NesController, 0);
+	core_set_buttons(&cfg.Port2, ControllerType::NesController, 1);
+
+	// Cut overscan top / bottom
+	cfg.NtscOverscan.Top = cfg.NtscOverscan.Bottom = 8;
+
+	// Defualt config has volumes all zeroed out
+	for (uint32_t x = 0; x < sizeof(cfg.ChannelVolumes) / sizeof(uint32_t); x++)
+		cfg.ChannelVolumes[x] = 100;
+
+	// Trianble popping
+	cfg.SilenceTriangleHighFreq = !CMP_BOOL("triangle-pop");
+
+	// Fake stereo, same config as merton-nes
+	core_nes_set_stereo(cfg, CMP_BOOL("stereo"));
+
+	// Zero out RAM
+	cfg.RamPowerOnState = RamState::AllZeros;
+
+	// Default config has zeroed out palette
+	memcpy(cfg.UserPalette, PALETTE_NES_DEFAULT, sizeof(PALETTE_NES_DEFAULT));
+
+	// Wait for palette RAM writes before showing frames
+	ctx->settings.wait_for_pr = CMP_BOOL("wait-for-pr");
+
+	ctx->emu->GetSettings()->SetNesConfig(cfg);
+}
+
+static void core_set_sms_settings(Core *ctx)
+{
+	SmsConfig cfg = {};
+
+	// Input
+	core_set_buttons(&cfg.Port1, ControllerType::SmsController, 0);
+	core_set_buttons(&cfg.Port2, ControllerType::SmsController, 1);
+
+	// Zero out RAM
+	cfg.RamPowerOnState = RamState::AllZeros;
+
+	// Defualt config has volumes all zeroed out
+	for (uint32_t x = 0; x < sizeof(cfg.ChannelVolumes) / sizeof(uint32_t); x++)
+		cfg.ChannelVolumes[x] = 100;
+
+	ctx->emu->GetSettings()->SetSmsConfig(cfg);
+}
+
+static void core_set_pce_settings(Core *ctx)
+{
+	PcEngineConfig cfg = {};
+
+	// Input
+	core_set_buttons(&cfg.Port1, ControllerType::PceController, 0);
+
+	// Zero out RAM
+	cfg.RamPowerOnState = RamState::AllZeros;
+
+	// Default config has zeroed out palette
+	memcpy(cfg.Palette, PALETTE_PCE_DEFAULT, sizeof(PALETTE_PCE_DEFAULT));
+
+	ctx->emu->GetSettings()->SetPcEngineConfig(cfg);
+}
+
+static void core_set_gameboy_settings(Core *ctx)
+{
+	GameboyConfig cfg = {};
+
+	// Input
+	core_set_buttons(&cfg.Controller, ControllerType::GameboyController, 0);
+
+	// Zero out RAM
+	cfg.RamPowerOnState = RamState::AllZeros;
+
+	// Use original gameboy by default
+	cfg.Model = GameboyModel::AutoFavorGb;
+
+	ctx->emu->GetSettings()->SetGameboyConfig(cfg);
+}
+
+static void core_set_snes_settings(Core *ctx)
+{
+	SnesConfig cfg = {};
+
+	// Zero out RAM
+	cfg.RamPowerOnState = RamState::AllZeros;
+
+	// Input
+	core_set_buttons(&cfg.Port1, ControllerType::SnesController, 0);
+	core_set_buttons(&cfg.Port2, ControllerType::SnesController, 1);
+
+	ctx->emu->GetSettings()->SetSnesConfig(cfg);
+}
+
+static void core_set_settings(Core *ctx)
+{
+	core_set_video_settings(ctx);
+	core_set_nes_settings(ctx);
+	core_set_sms_settings(ctx);
+	core_set_pce_settings(ctx);
+	core_set_gameboy_settings(ctx);
+	core_set_snes_settings(ctx);
+}
+
 Core *CoreLoad(const char *system_dir)
 {
 	Core *ctx = (Core *) calloc(1, sizeof(Core));
@@ -96,13 +266,6 @@ Core *CoreLoad(const char *system_dir)
 	FolderUtilities::SetFolderOverrides("", "", "", system_dir);
 
 	ctx->emu = new Emulator();
-
-	KeyManager::SetSettings(ctx->emu->GetSettings());
-
-	ctx->km = new CoreKeyManager(ctx->emu);
-	KeyManager::RegisterKeyManager(ctx->km);
-
-	core_reset_settings(ctx);
 
 	return ctx;
 }
@@ -118,9 +281,6 @@ void CoreUnload(Core **core)
 
 	if (ctx->filter)
 		delete ctx->filter;
-
-	if (ctx->km)
-		delete ctx->km;
 
 	if (ctx->emu)
 		delete ctx->emu;
@@ -168,6 +328,13 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	if (!ctx || !ctx->emu)
 		return false;
 
+	core_set_settings(ctx);
+
+	KeyManager::SetSettings(ctx->emu->GetSettings());
+
+	ctx->km = new CoreKeyManager(ctx->emu);
+	KeyManager::RegisterKeyManager(ctx->km);
+
 	battery_manager_set_save_data(save_data, save_data_size);
 	emulator_set_system(system);
 
@@ -206,6 +373,11 @@ void CoreUnloadGame(Core *ctx)
 		ctx->emu->Stop(false);
 
 	battery_manager_set_save_data(NULL, 0);
+
+	if (ctx->km) {
+		delete ctx->km;
+		ctx->km = nullptr;
+	}
 }
 
 void CoreReset(Core *ctx)
@@ -360,209 +532,17 @@ void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
 	ctx->video_opaque = opaque;
 }
 
-
-// Settings
-
-#define CORE_SETTING_PREFIX "mesen2-"
-
-#define CMP_SETTING(key, suffix) \
-	!strcmp(key, CORE_SETTING_PREFIX suffix)
-
-#define CMP_BOOL(b) \
-	!strcmp(b, "true")
-
-#define CMP_ENUM(e, val) \
-	!strcmp(e, val)
-
-static void core_set_buttons(ControllerConfig *controller, ControllerType type, uint32_t index)
-{
-	index <<= 8;
-
-	controller->Type = type;
-
-	// All Mesen mappings use the Nintendo layout
-
-	controller->Keys.Mapping1.A = index | CORE_BUTTON_B;
-	controller->Keys.Mapping1.B = index | CORE_BUTTON_A;
-	controller->Keys.Mapping1.Start = index | CORE_BUTTON_START;
-	controller->Keys.Mapping1.Select = index | CORE_BUTTON_SELECT;
-	controller->Keys.Mapping1.Up = index | CORE_BUTTON_DPAD_U;
-	controller->Keys.Mapping1.Down = index | CORE_BUTTON_DPAD_D;
-	controller->Keys.Mapping1.Left = index | CORE_BUTTON_DPAD_L;
-	controller->Keys.Mapping1.Right = index | CORE_BUTTON_DPAD_R;
-
-	if (type == ControllerType::SnesController) {
-		controller->Keys.Mapping1.X = index | CORE_BUTTON_Y;
-		controller->Keys.Mapping1.Y = index | CORE_BUTTON_X;
-		controller->Keys.Mapping1.L = index | CORE_BUTTON_L;
-		controller->Keys.Mapping1.R = index | CORE_BUTTON_R;
-	}
-}
-
-static void core_reset_video_settings(Core *ctx)
-{
-	VideoConfig cfg = {};
-
-	// Use correct aspect ratio
-	cfg.AspectRatio = VideoAspectRatio::Auto;
-
-	ctx->emu->GetSettings()->SetVideoConfig(cfg);
-}
-
-static void core_nes_set_stereo(NesConfig &cfg, bool enabled)
-{
-	if (enabled) {
-		// Left
-		cfg.ChannelPanning[(int) AudioChannel::Triangle] = -33;
-		cfg.ChannelPanning[(int) AudioChannel::Noise] = -33;
-		cfg.ChannelPanning[(int) AudioChannel::Square1] = -33;
-
-		// Right
-		cfg.ChannelPanning[(int) AudioChannel::DMC] = 33;
-		cfg.ChannelPanning[(int) AudioChannel::Square2] = 33;
-
-		// Center
-		cfg.ChannelPanning[(int) AudioChannel::FDS] = 0;
-		cfg.ChannelPanning[(int) AudioChannel::MMC5] = 0;
-		cfg.ChannelPanning[(int) AudioChannel::VRC6] = 0;
-		cfg.ChannelPanning[(int) AudioChannel::VRC7] = 0;
-		cfg.ChannelPanning[(int) AudioChannel::Namco163] = 0;
-		cfg.ChannelPanning[(int) AudioChannel::Sunsoft5B] = 0;
-
-	} else {
-		memset(cfg.ChannelPanning, 0, sizeof(cfg.ChannelPanning));
-	}
-}
-
-static bool core_nes_get_stereo(NesConfig &cfg)
-{
-	return cfg.ChannelPanning[(int) AudioChannel::Triangle] != 0;
-}
-
-static void core_reset_nes_settings(Core *ctx)
-{
-	NesConfig cfg = {};
-
-	// FDS
-	cfg.FdsFastForwardOnLoad = true;
-	cfg.FdsAutoInsertDisk = true;
-
-	// Input
-	core_set_buttons(&cfg.Port1, ControllerType::NesController, 0);
-	core_set_buttons(&cfg.Port2, ControllerType::NesController, 1);
-
-	// Cut overscan top / bottom
-	cfg.NtscOverscan.Top = cfg.NtscOverscan.Bottom = 8;
-
-	// Defualt config has volumes all zeroed out
-	for (uint32_t x = 0; x < sizeof(cfg.ChannelVolumes) / sizeof(uint32_t); x++)
-		cfg.ChannelVolumes[x] = 100;
-
-	// Trianble popping
-	cfg.SilenceTriangleHighFreq = true;
-
-	// Fake stereo, same config as merton-nes
-	core_nes_set_stereo(cfg, true);
-
-	// Zero out RAM
-	cfg.RamPowerOnState = RamState::AllZeros;
-
-	// Default config has zeroed out palette
-	memcpy(cfg.UserPalette, PALETTE_NES_DEFAULT, sizeof(PALETTE_NES_DEFAULT));
-
-	// Wait for palette RAM writes before showing frames
-	ctx->settings.wait_for_pr = true;
-
-	ctx->emu->GetSettings()->SetNesConfig(cfg);
-}
-
-static void core_reset_sms_settings(Core *ctx)
-{
-	SmsConfig cfg = {};
-
-	// Input
-	core_set_buttons(&cfg.Port1, ControllerType::SmsController, 0);
-	core_set_buttons(&cfg.Port2, ControllerType::SmsController, 1);
-
-	// Zero out RAM
-	cfg.RamPowerOnState = RamState::AllZeros;
-
-	// Defualt config has volumes all zeroed out
-	for (uint32_t x = 0; x < sizeof(cfg.ChannelVolumes) / sizeof(uint32_t); x++)
-		cfg.ChannelVolumes[x] = 100;
-
-	ctx->emu->GetSettings()->SetSmsConfig(cfg);
-}
-
-static void core_reset_pce_settings(Core *ctx)
-{
-	PcEngineConfig cfg = {};
-
-	// Input
-	core_set_buttons(&cfg.Port1, ControllerType::PceController, 0);
-
-	// Zero out RAM
-	cfg.RamPowerOnState = RamState::AllZeros;
-
-	// Default config has zeroed out palette
-	memcpy(cfg.Palette, PALETTE_PCE_DEFAULT, sizeof(PALETTE_PCE_DEFAULT));
-
-	ctx->emu->GetSettings()->SetPcEngineConfig(cfg);
-}
-
-static void core_reset_gameboy_settings(Core *ctx)
-{
-	GameboyConfig cfg = {};
-
-	// Input
-	core_set_buttons(&cfg.Controller, ControllerType::GameboyController, 0);
-
-	// Zero out RAM
-	cfg.RamPowerOnState = RamState::AllZeros;
-
-	// Use original gameboy by default
-	cfg.Model = GameboyModel::AutoFavorGb;
-
-	ctx->emu->GetSettings()->SetGameboyConfig(cfg);
-}
-
-static void core_reset_snes_settings(Core *ctx)
-{
-	SnesConfig cfg = {};
-
-	// Zero out RAM
-	cfg.RamPowerOnState = RamState::AllZeros;
-
-	// Input
-	core_set_buttons(&cfg.Port1, ControllerType::SnesController, 0);
-	core_set_buttons(&cfg.Port2, ControllerType::SnesController, 1);
-
-	ctx->emu->GetSettings()->SetSnesConfig(cfg);
-}
-
-static void core_reset_settings(Core *ctx)
-{
-	core_reset_video_settings(ctx);
-	core_reset_nes_settings(ctx);
-	core_reset_sms_settings(ctx);
-	core_reset_pce_settings(ctx);
-	core_reset_gameboy_settings(ctx);
-	core_reset_snes_settings(ctx);
-}
-
 CoreSetting *CoreGetSettings(uint32_t *len)
 {
-	// TODO
+	*len = sizeof(CORE_SETTINGS) / sizeof(CoreSetting);
 
-	*len = 0;
-
-	return NULL;
+	return CORE_SETTINGS;
 }
 
 void CoreUpdateSettings(Core *ctx)
 {
-	// TODO
-
 	if (!ctx)
 		return;
+
+	core_set_settings(ctx);
 }
