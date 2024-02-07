@@ -320,18 +320,18 @@ float CoreGetAspectRatio(Core *ctx)
 	return g_gpu->ComputeDisplayAspectRatio();
 }
 
-void CoreSetLogFunc(Core *ctx, CoreLogFunc func, void *opaque)
+void CoreSetLogFunc(CoreLogFunc func, void *opaque)
 {
 	CORE_LOG_FUNC = func;
 	CORE_LOG_OPAQUE = opaque;
 }
 
-void CoreSetAudioFunc(Core *ctx, CoreAudioFunc func, void *opaque)
+void CoreSetAudioFunc(CoreAudioFunc func, void *opaque)
 {
 	audio_stream_set_func(func, opaque);
 }
 
-void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
+void CoreSetVideoFunc(CoreVideoFunc func, void *opaque)
 {
 	gpu_device_set_func(func, opaque);
 }

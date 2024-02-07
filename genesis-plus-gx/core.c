@@ -17,15 +17,14 @@
 struct Core {
 	int16 audio_buffer[2048];
 	uint16_t bitmap_data[CORE_BITMAP_H][CORE_BITMAP_W];
-
-	CoreVideoFunc video_func;
-	CoreAudioFunc audio_func;
-	void *video_opaque;
-	void *audio_opaque;
 };
 
-static CoreLogFunc CORE_LOG_FUNC;
+static CoreLogFunc CORE_LOG;
+static CoreAudioFunc CORE_AUDIO;
+static CoreVideoFunc CORE_VIDEO;
 static void *CORE_LOG_OPAQUE;
+static void *CORE_AUDIO_OPAQUE;
+static void *CORE_VIDEO_OPAQUE;
 
 
 // From "osd.h"
@@ -108,12 +107,10 @@ void core_log(const char *fmt, ...)
 	va_list arg;
 	va_start(arg, fmt);
 
-	if (CORE_LOG_FUNC) {
-		char msg[1024];
-		vsnprintf(msg, 1024, fmt, arg);
+	char msg[1024];
+	vsnprintf(msg, 1024, fmt, arg);
 
-		CORE_LOG_FUNC(msg, CORE_LOG_OPAQUE);
-	}
+	CORE_LOG(msg, CORE_LOG_OPAQUE);
 
 	va_end(arg);
 }
@@ -193,22 +190,22 @@ void CoreUnloadGame(Core **core)
 	*core = NULL;
 }
 
-void CoreSetLogFunc(Core *ctx, CoreLogFunc func, void *opaque)
+void CoreSetLogFunc(CoreLogFunc func, void *opaque)
 {
-	CORE_LOG_FUNC = func;
+	CORE_LOG = func;
 	CORE_LOG_OPAQUE = opaque;
 }
 
-void CoreSetAudioFunc(Core *ctx, CoreAudioFunc func, void *opaque)
+void CoreSetAudioFunc(CoreAudioFunc func, void *opaque)
 {
-	ctx->audio_func = func;
-	ctx->audio_opaque = opaque;
+	CORE_AUDIO = func;
+	CORE_AUDIO_OPAQUE = opaque;
 }
 
-void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
+void CoreSetVideoFunc(CoreVideoFunc func, void *opaque)
 {
-	ctx->video_func = func;
-	ctx->video_opaque = opaque;
+	CORE_VIDEO = func;
+	CORE_VIDEO_OPAQUE = opaque;
 }
 
 static void core_mcd_format_bram(uint8_t *bram, uint32_t size)
@@ -332,22 +329,18 @@ void CoreRun(Core *ctx)
 		system_frame_gen(0);
 	}
 
-	if (ctx->video_func) {
-		size_t o = bitmap.viewport.x + bitmap.viewport.y * bitmap.pitch;
-		uint32_t w = bitmap.viewport.w;
+	size_t o = bitmap.viewport.x + bitmap.viewport.y * bitmap.pitch;
+	uint32_t w = bitmap.viewport.w;
 
-		// XXX Oddly MD need to use the SMS NTSC filter from time to time
-		if (config.ntsc)
-			w = reg[12] & 1 ? MD_NTSC_OUT_WIDTH(w) : SMS_NTSC_OUT_WIDTH(w);
+	// XXX Oddly MD need to use the SMS NTSC filter from time to time
+	if (config.ntsc)
+		w = reg[12] & 1 ? MD_NTSC_OUT_WIDTH(w) : SMS_NTSC_OUT_WIDTH(w);
 
-		ctx->video_func(ctx->bitmap_data + o, CORE_COLOR_FORMAT_B5G6R5, w, bitmap.viewport.h,
-			bitmap.pitch, ctx->video_opaque);
-	}
+	CORE_VIDEO(ctx->bitmap_data + o, CORE_COLOR_FORMAT_B5G6R5, w, bitmap.viewport.h,
+		bitmap.pitch, CORE_VIDEO_OPAQUE);
 
-	if (ctx->audio_func) {
-		int frames = audio_update(ctx->audio_buffer);
-		ctx->audio_func(ctx->audio_buffer, frames, CORE_SAMPLE_RATE, ctx->audio_opaque);
-	}
+	int frames = audio_update(ctx->audio_buffer);
+	CORE_AUDIO(ctx->audio_buffer, frames, CORE_SAMPLE_RATE, CORE_AUDIO_OPAQUE);
 }
 
 void *CoreGetSaveData(Core *ctx, size_t *size)

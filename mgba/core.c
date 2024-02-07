@@ -20,10 +20,6 @@
 
 struct Core {
 	struct mCore *core;
-	CoreVideoFunc video_func;
-	CoreAudioFunc audio_func;
-	void *audio_opaque;
-	void *video_opaque;
 
 	color_t frame[FRAME_HEIGHT][FRAME_WIDTH];
 	int16_t samples[SAMPLES_MAX];
@@ -43,8 +39,12 @@ struct Core {
 	} settings;
 };
 
-static CoreLogFunc CORE_LOG_FUNC;
+static CoreLogFunc CORE_LOG;
+static CoreAudioFunc CORE_AUDIO;
+static CoreVideoFunc CORE_VIDEO;
 static void *CORE_LOG_OPAQUE;
+static void *CORE_AUDIO_OPAQUE;
+static void *CORE_VIDEO_OPAQUE;
 
 const char * const projectName = "";
 const char * const projectVersion = "";
@@ -54,21 +54,16 @@ void core_log(const char *fmt, ...)
 	va_list arg;
 	va_start(arg, fmt);
 
-	if (CORE_LOG_FUNC) {
-		char msg[1024];
-		vsnprintf(msg, 1024, fmt, arg);
+	char msg[1024];
+	vsnprintf(msg, 1024, fmt, arg);
 
-		CORE_LOG_FUNC(msg, CORE_LOG_OPAQUE);
-	}
+	CORE_LOG(msg, CORE_LOG_OPAQUE);
 
 	va_end(arg);
 }
 
 static void core_mgba_log(struct mLogger *logger, int category, enum mLogLevel level, const char *format, va_list args)
 {
-	if (!CORE_LOG_FUNC)
-		return;
-
 	// TODO This generates tons of spam, better filters?
 	if (level == mLOG_GAME_ERROR || level == mLOG_INFO || level == mLOG_DEBUG)
 		return;
@@ -79,7 +74,7 @@ static void core_mgba_log(struct mLogger *logger, int category, enum mLogLevel l
 	char wnl[512];
 	snprintf(wnl, 512, "%s\n", msg);
 
-	CORE_LOG_FUNC(wnl, CORE_LOG_OPAQUE);
+	CORE_LOG(wnl, CORE_LOG_OPAQUE);
 }
 
 static uint8_t core_read_luminance(struct GBALuminanceSource *lux)
@@ -144,22 +139,22 @@ void CoreUnloadGame(Core **core)
 	*core = NULL;
 }
 
-void CoreSetLogFunc(Core *ctx, CoreLogFunc func, void *opaque)
+void CoreSetLogFunc(CoreLogFunc func, void *opaque)
 {
-	CORE_LOG_FUNC = func;
+	CORE_LOG = func;
 	CORE_LOG_OPAQUE = opaque;
 }
 
-void CoreSetAudioFunc(Core *ctx, CoreAudioFunc func, void *opaque)
+void CoreSetAudioFunc(CoreAudioFunc func, void *opaque)
 {
-	ctx->audio_func = func;
-	ctx->audio_opaque = opaque;
+	CORE_AUDIO = func;
+	CORE_AUDIO_OPAQUE = opaque;
 }
 
-void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
+void CoreSetVideoFunc(CoreVideoFunc func, void *opaque)
 {
-	ctx->video_func = func;
-	ctx->video_opaque = opaque;
+	CORE_VIDEO = func;
+	CORE_VIDEO_OPAQUE = opaque;
 }
 
 Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
@@ -286,25 +281,22 @@ void CoreRun(Core *ctx)
 	unsigned height = 0;
 	ctx->core->currentVideoSize(ctx->core, &width, &height);
 
-	if (ctx->video_func)
-		ctx->video_func(ctx->frame, CORE_COLOR_FORMAT_B5G6R5,
-			width, height, FRAME_WIDTH * sizeof(color_t), ctx->video_opaque);
+	CORE_VIDEO(ctx->frame, CORE_COLOR_FORMAT_B5G6R5,
+		width, height, FRAME_WIDTH * sizeof(color_t), CORE_VIDEO_OPAQUE);
 
-	if (ctx->audio_func) {
-		blip_t *l = ctx->core->getAudioChannel(ctx->core, 0);
-		blip_t *r = ctx->core->getAudioChannel(ctx->core, 1);
+	blip_t *l = ctx->core->getAudioChannel(ctx->core, 0);
+	blip_t *r = ctx->core->getAudioChannel(ctx->core, 1);
 
-		int available = blip_samples_avail(l);
+	int available = blip_samples_avail(l);
 
-		if (available > 0) {
-			int frames = blip_read_samples(l, ctx->samples, SAMPLES_MAX, true);
-			blip_read_samples(r, ctx->samples + 1, SAMPLES_MAX, true);
+	if (available > 0) {
+		int frames = blip_read_samples(l, ctx->samples, SAMPLES_MAX, true);
+		blip_read_samples(r, ctx->samples + 1, SAMPLES_MAX, true);
 
-			if (ctx->settings.lpass > 0)
-				core_audio_filter(ctx, ctx->settings.lpass, ctx->samples, frames);
+		if (ctx->settings.lpass > 0)
+			core_audio_filter(ctx, ctx->settings.lpass, ctx->samples, frames);
 
-			ctx->audio_func(ctx->samples, frames, SAMPLE_RATE, ctx->audio_opaque);
-		}
+		CORE_AUDIO(ctx->samples, frames, SAMPLE_RATE, CORE_AUDIO_OPAQUE);
 	}
 }
 

@@ -39,7 +39,7 @@ m64p_error RDP_PluginStartup(m64p_dynlib_handle handle, void *opaque,
 	void (*debug_callback)(void *opaque, int level, const char *msg));
 m64p_error RDP_PluginShutdown(void);
 
-void audio_set_callback(CoreAudioFunc func, void *opaque);
+void audio_set_func(CoreAudioFunc func, void *opaque);
 
 void input_set_button(uint8_t player, CoreButton button, bool pressed);
 void input_set_axis(uint8_t player, CoreAxis axis, int16_t value);
@@ -65,7 +65,7 @@ void osal_dynlib_set_prefix(const char *prefix);
 m64p_dynlib_handle osal_dynlib_get_handle(const char *name);
 void osal_dynlib_close_handle(m64p_dynlib_handle h);
 
-void vdac_set_video_func(void (*func)(void *, uint32_t, uint32_t, void *), void *opaque);
+void vdac_set_func(void (*func)(void *, uint32_t, uint32_t, void *), void *opaque);
 
 
 // Core
@@ -84,22 +84,19 @@ struct Core {
 	SDL_Thread *game_thread;
 	SDL_Mutex *mutex;
 	SDL_Condition *cond;
-
-	CoreVideoFunc video_func;
-	void *video_opaque;
 };
 
-static CoreLogFunc CORE_LOG_FUNC;
+static CoreLogFunc CORE_LOG;
+static CoreVideoFunc CORE_VIDEO;
 static void *CORE_LOG_OPAQUE;
+static void *CORE_VIDEO_OPAQUE;
 
 void core_vlog(const char *fmt, va_list arg)
 {
-	if (CORE_LOG_FUNC) {
-		char msg[1024];
-		vsnprintf(msg, 1024, fmt, arg);
+	char msg[1024];
+	vsnprintf(msg, 1024, fmt, arg);
 
-		CORE_LOG_FUNC(msg, CORE_LOG_OPAQUE);
-	}
+	CORE_LOG(msg, CORE_LOG_OPAQUE);
 }
 
 void core_log(const char *fmt, ...)
@@ -149,9 +146,9 @@ void CoreUnloadGame(Core **core)
 	CoreDoCommand(M64CMD_ROM_CLOSE, 0, NULL);
 	CoreShutdown();
 
-	vdac_set_video_func(NULL, NULL);
-	prdp_set_video_func(NULL, NULL);
-	audio_set_callback(NULL, NULL);
+	vdac_set_func(NULL, NULL);
+	prdp_set_func(NULL, NULL);
+	audio_set_func(NULL, NULL);
 
 	if (ctx->cond)
 		SDL_DestroyCondition(ctx->cond);
@@ -166,21 +163,21 @@ void CoreUnloadGame(Core **core)
 	*core = NULL;
 }
 
-void CoreSetLogFunc(Core *ctx, CoreLogFunc func, void *opaque)
+void CoreSetLogFunc(CoreLogFunc func, void *opaque)
 {
-	CORE_LOG_FUNC = func;
+	CORE_LOG = func;
 	CORE_LOG_OPAQUE = opaque;
 }
 
-void CoreSetAudioFunc(Core *ctx, CoreAudioFunc func, void *opaque)
+void CoreSetAudioFunc(CoreAudioFunc func, void *opaque)
 {
-	audio_set_callback(func, opaque);
+	audio_set_func(func, opaque);
 }
 
-void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
+void CoreSetVideoFunc(CoreVideoFunc func, void *opaque)
 {
-	ctx->video_func = func;
-	ctx->video_opaque = opaque;
+	CORE_VIDEO = func;
+	CORE_VIDEO_OPAQUE = opaque;
 }
 
 static void *core_load_file(const char *path, size_t *size)
@@ -309,8 +306,8 @@ static void core_new_frame(void *pixels, uint32_t width, uint32_t height, void *
 
 static int core_game_thread(void *opaque)
 {
-	vdac_set_video_func(core_new_frame, opaque);
-	prdp_set_video_func(core_new_frame, opaque);
+	vdac_set_func(core_new_frame, opaque);
+	prdp_set_func(core_new_frame, opaque);
 
 	CoreDoCommand(M64CMD_EXECUTE, 0, NULL);
 
@@ -334,13 +331,12 @@ void CoreRun(Core *ctx)
 
 	ctx->prev_frame_ctr = ctx->frame_ctr;
 
-	if (ctx->video_func && ctx->w > 0 && ctx->h > 0) {
-		ctx->video_func(ctx->frame, CORE_COLOR_FORMAT_RGBA, ctx->w, ctx->h,
-			ctx->w * 4, ctx->video_opaque);
+	if (ctx->w > 0 && ctx->h > 0) {
+		CORE_VIDEO(ctx->frame, CORE_COLOR_FORMAT_RGBA, ctx->w, ctx->h,
+			ctx->w * 4, CORE_VIDEO_OPAQUE);
 
-	} else if (ctx->video_func) {
-		uint32_t dummy[16][16] = {0};
-		ctx->video_func(dummy, CORE_COLOR_FORMAT_RGBA, 16, 16, 16 * 4, ctx->video_opaque);
+	} else {
+		CORE_VIDEO(NULL, CORE_COLOR_FORMAT_UNKNOWN, 0, 0, 0, CORE_VIDEO_OPAQUE);
 	}
 
 	// g_rom_pause = 1;

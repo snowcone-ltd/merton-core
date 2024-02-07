@@ -10,7 +10,7 @@ static void *CORE_AUDIO_OPAQUE;
 
 static int16_t REV_BUF[8 * 1024];
 
-void audio_set_callback(CoreAudioFunc func, void *opaque)
+void audio_set_func(CoreAudioFunc func, void *opaque)
 {
 	CORE_AUDIO = func;
 	CORE_AUDIO_OPAQUE = opaque;
@@ -51,14 +51,12 @@ EXPORT void AUDIO_AiLenChanged(void)
 	int16_t *buf = (int16_t *) (AI.RDRAM + (*AI.AI_DRAM_ADDR_REG & 0xFFFFFF));
 	size_t frames = *AI.AI_LEN_REG / 4;
 
-	if (CORE_AUDIO) {
-		for (size_t x = 0; x < frames * 2; x += 2) {
-			REV_BUF[x] = buf[x + 1];
-			REV_BUF[x + 1] = buf[x];
-		}
-
-		CORE_AUDIO(REV_BUF, frames, SAMPLE_RATE, CORE_AUDIO_OPAQUE);
+	for (size_t x = 0; x < frames * 2; x += 2) {
+		REV_BUF[x] = buf[x + 1];
+		REV_BUF[x + 1] = buf[x];
 	}
+
+	CORE_AUDIO(REV_BUF, frames, SAMPLE_RATE, CORE_AUDIO_OPAQUE);
 }
 
 EXPORT int AUDIO_InitiateAudio(AUDIO_INFO Audio_Info)

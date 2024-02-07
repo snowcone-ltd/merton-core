@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-void prdp_set_video_func(void (*func)(void *, uint32_t, uint32_t, void *), void *opaque);
+void prdp_set_func(void (*func)(void *, uint32_t, uint32_t, void *), void *opaque);
 
 PRDP_EXPORT m64p_error PRDP_PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion,
 	int *APIVersion, const char **PluginNamePtr, int *Capabilities);

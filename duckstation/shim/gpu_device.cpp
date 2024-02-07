@@ -6,24 +6,22 @@ std::unique_ptr<GPUDevice> g_gpu_device;
 size_t GPUDevice::s_total_vram_usage;
 GPUDevice::Statistics GPUDevice::s_stats;
 
-static CoreVideoFunc GPU_DEVICE_FUNC;
-static void *GPU_DEVICE_OPAQUE;
+static CoreVideoFunc CORE_VIDEO;
+static void *CORE_VIDEO_OPAQUE;
 static bool GPU_DEVICE_GOT_FRAME;
 
 void core_log(const char *fmt, ...);
 
 void gpu_device_set_func(CoreVideoFunc func, void *opaque)
 {
-	GPU_DEVICE_FUNC = func;
-	GPU_DEVICE_OPAQUE = opaque;
+	CORE_VIDEO = func;
+	CORE_VIDEO_OPAQUE = opaque;
 }
 
 void gpu_device_finish(void)
 {
-	if (GPU_DEVICE_FUNC && !GPU_DEVICE_GOT_FRAME) {
-		uint32_t dummy[16][16] = {0};
-		GPU_DEVICE_FUNC(dummy, CORE_COLOR_FORMAT_BGRA, 16, 16, 16 * 4, GPU_DEVICE_OPAQUE);
-	}
+	if (!GPU_DEVICE_GOT_FRAME)
+		CORE_VIDEO(NULL, CORE_COLOR_FORMAT_UNKNOWN, 0, 0, 0, CORE_VIDEO_OPAQUE);
 
 	GPU_DEVICE_GOT_FRAME = false;
 }
@@ -66,8 +64,7 @@ bool NullTexture::Update(u32 x, u32 y, u32 width, u32 height, const void* data, 
 			return false;
 	}
 
-	if (GPU_DEVICE_FUNC)
-		GPU_DEVICE_FUNC(data, f, width, height, pitch, GPU_DEVICE_OPAQUE);
+	CORE_VIDEO(data, f, width, height, pitch, CORE_VIDEO_OPAQUE);
 
 	GPU_DEVICE_GOT_FRAME = true;
 

@@ -8,8 +8,8 @@ static int16_t AUDIO_STREAM_BUF[AUDIO_STREAM_MAX];
 static uint32_t AUDIO_SAMPLE_RATE;
 static size_t AUDIO_PTR;
 
-static CoreAudioFunc AUDIO_STREAM_FUNC;
-static void *AUDIO_STREAM_OPAQUE;
+static CoreAudioFunc CORE_AUDIO;
+static void *CORE_AUDIO_OPAQUE;
 
 class soundtouch::SoundTouch {
 };
@@ -18,14 +18,14 @@ void core_log(const char *fmt, ...);
 
 void audio_stream_set_func(CoreAudioFunc func, void *opaque)
 {
-	AUDIO_STREAM_FUNC = func;
-	AUDIO_STREAM_OPAQUE = opaque;
+	CORE_AUDIO = func;
+	CORE_AUDIO_OPAQUE = opaque;
 }
 
 void audio_stream_finish(void)
 {
-	if (AUDIO_STREAM_FUNC && AUDIO_PTR > 0)
-		AUDIO_STREAM_FUNC(AUDIO_STREAM_BUF, AUDIO_PTR / 2, AUDIO_SAMPLE_RATE, AUDIO_STREAM_OPAQUE);
+	if (AUDIO_PTR > 0)
+		CORE_AUDIO(AUDIO_STREAM_BUF, AUDIO_PTR / 2, AUDIO_SAMPLE_RATE, CORE_AUDIO_OPAQUE);
 
 	AUDIO_PTR = 0;
 }

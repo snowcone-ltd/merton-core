@@ -28,11 +28,8 @@
 
 struct Core {
 	Emulator *emu;
-	CoreVideoFunc video_func;
 	BaseVideoFilter *filter;
 	CoreKeyManager *km;
-	void *video_opaque;
-	void *audio_opaque;
 	uint8_t pr_initial[0x20];
 	bool pr_written;
 
@@ -41,8 +38,10 @@ struct Core {
 	} settings;
 };
 
-static CoreLogFunc CORE_LOG_FUNC;
+static CoreLogFunc CORE_LOG;
+static CoreVideoFunc CORE_VIDEO;
 static void *CORE_LOG_OPAQUE;
+static void *CORE_VIDEO_OPAQUE;
 
 
 // Shimmed
@@ -50,7 +49,7 @@ static void *CORE_LOG_OPAQUE;
 void battery_manager_set_save_data(const void *save_data, size_t save_data_size);
 const void *battery_manager_get_save_data(size_t *save_data_size);
 void emulator_set_system(CoreSystem system);
-void sound_mixer_set_audio_func(CoreAudioFunc func, void *opaque);
+void sound_mixer_set_func(CoreAudioFunc func, void *opaque);
 
 
 // API
@@ -60,12 +59,10 @@ void core_log(const char *fmt, ...)
 	va_list arg;
 	va_start(arg, fmt);
 
-	if (CORE_LOG_FUNC) {
-		char msg[1024];
-		vsnprintf(msg, 1024, fmt, arg);
+	char msg[1024];
+	vsnprintf(msg, 1024, fmt, arg);
 
-		CORE_LOG_FUNC(msg, CORE_LOG_OPAQUE);
-	}
+	CORE_LOG(msg, CORE_LOG_OPAQUE);
 
 	va_end(arg);
 }
@@ -266,7 +263,7 @@ void CoreUnloadGame(Core **core)
 	ctx->pr_written = false;
 
 	battery_manager_set_save_data(NULL, 0);
-	sound_mixer_set_audio_func(NULL, NULL);
+	sound_mixer_set_func(NULL, NULL);
 
 	if (ctx->emu)
 		ctx->emu->Stop(false);
@@ -284,16 +281,13 @@ void CoreUnloadGame(Core **core)
 	*core = NULL;
 }
 
-static void core_get_logs(CoreLogFunc func, void *opaque)
+static void core_get_logs(void)
 {
-	if (!func)
-		return;
-
 	string log = MessageManager::GetLog();
 	if (log.empty())
 		return;
 
-	func(log.c_str(), opaque);
+	CORE_LOG(log.c_str(), CORE_LOG_OPAQUE);
 	MessageManager::ClearLog();
 }
 
@@ -354,7 +348,7 @@ Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 		CoreUnloadGame(&ctx);
 	}
 
-	core_get_logs(CORE_LOG_FUNC, CORE_LOG_OPAQUE);
+	core_get_logs();
 
 	return ctx;
 }
@@ -380,14 +374,10 @@ static bool core_palette_ram_written(Core *ctx)
 	return ctx->pr_written;
 }
 
-static void core_get_frame(Core *ctx, CoreVideoFunc func, void *opaque)
+static void core_get_frame(Core *ctx)
 {
-	if (!func)
-		return;
-
 	if (!core_palette_ram_written(ctx)) {
-		uint32_t dummy[16][16] = {0};
-		func(dummy, CORE_COLOR_FORMAT_BGRA, 16, 16, 16 * 4, opaque);
+		CORE_VIDEO(NULL, CORE_COLOR_FORMAT_UNKNOWN, 0, 0, 0, CORE_VIDEO_OPAQUE);
 		return;
 	}
 
@@ -397,7 +387,7 @@ static void core_get_frame(Core *ctx, CoreVideoFunc func, void *opaque)
 
 	uint32_t *frame = ctx->filter->GetOutputBuffer();
 
-	func(frame, CORE_COLOR_FORMAT_BGRA, fi.Width, fi.Height, fi.Width * 4, opaque);
+	CORE_VIDEO(frame, CORE_COLOR_FORMAT_BGRA, fi.Width, fi.Height, fi.Width * 4, CORE_VIDEO_OPAQUE);
 }
 
 void CoreRun(Core *ctx)
@@ -407,8 +397,8 @@ void CoreRun(Core *ctx)
 
 	ctx->emu->Run();
 
-	core_get_frame(ctx, ctx->video_func, ctx->video_opaque);
-	core_get_logs(CORE_LOG_FUNC, CORE_LOG_OPAQUE);
+	core_get_frame(ctx);
+	core_get_logs();
 }
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
@@ -494,21 +484,21 @@ float CoreGetAspectRatio(Core *ctx)
 	return ctx->emu->GetSettings()->GetAspectRatio(ctx->emu->GetRegion(), {fi.Width, fi.Height});
 }
 
-void CoreSetLogFunc(Core *ctx, CoreLogFunc func, void *opaque)
+void CoreSetLogFunc(CoreLogFunc func, void *opaque)
 {
-	CORE_LOG_FUNC = func;
+	CORE_LOG = func;
 	CORE_LOG_OPAQUE = opaque;
 }
 
-void CoreSetAudioFunc(Core *ctx, CoreAudioFunc func, void *opaque)
+void CoreSetAudioFunc(CoreAudioFunc func, void *opaque)
 {
-	sound_mixer_set_audio_func(func, opaque);
+	sound_mixer_set_func(func, opaque);
 }
 
-void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
+void CoreSetVideoFunc(CoreVideoFunc func, void *opaque)
 {
-	ctx->video_func = func;
-	ctx->video_opaque = opaque;
+	CORE_VIDEO = func;
+	CORE_VIDEO_OPAQUE = opaque;
 }
 
 CoreSetting *CoreGetSettings(uint32_t *len)

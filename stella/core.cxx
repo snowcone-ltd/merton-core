@@ -19,30 +19,28 @@
 
 struct Core {
 	bool crop_overscan;
-	CoreVideoFunc video_func;
-	CoreAudioFunc audio_func;
-	void *video_opaque;
-	void *audio_opaque;
 
 	unique_ptr<OSystemCore> sys;
 	uint8_t ram[128];
 	int16_t audio_buf[(31440 / 50 * 4 * 5) / 4];
 };
 
-static CoreLogFunc CORE_LOG_FUNC;
+static CoreLogFunc CORE_LOG;
+static CoreAudioFunc CORE_AUDIO;
+static CoreVideoFunc CORE_VIDEO;
 static void *CORE_LOG_OPAQUE;
+static void *CORE_AUDIO_OPAQUE;
+static void *CORE_VIDEO_OPAQUE;
 
 void core_log(const char *fmt, ...)
 {
 	va_list arg;
 	va_start(arg, fmt);
 
-	if (CORE_LOG_FUNC) {
-		char msg[1024];
-		vsnprintf(msg, 1024, fmt, arg);
+	char msg[1024];
+	vsnprintf(msg, 1024, fmt, arg);
 
-		CORE_LOG_FUNC(msg, CORE_LOG_OPAQUE);
-	}
+	CORE_LOG(msg, CORE_LOG_OPAQUE);
 
 	va_end(arg);
 }
@@ -149,33 +147,29 @@ void CoreRun(Core *ctx)
 		tia.renderToFrameBuffer();
 		frame.updateInEmulationMode(0);
 
-		if (ctx->video_func) {
-			uint8_t zoom = frame.tiaSurface().ntscEnabled() ? 2 : 1;
-			uint32_t max_w = AtariNTSC::outWidth(160);
-			uint32_t h = console.tia().height();
-			uint32_t pitch = max_w * 4;
-			uint32_t w = zoom == 1 ? console.tia().width() : max_w;
+		uint8_t zoom = frame.tiaSurface().ntscEnabled() ? 2 : 1;
+		uint32_t max_w = AtariNTSC::outWidth(160);
+		uint32_t h = console.tia().height();
+		uint32_t pitch = max_w * 4;
+		uint32_t w = zoom == 1 ? console.tia().width() : max_w;
 
-			uint32_t crop_left = ctx->crop_overscan ? (zoom == 2 ? 26 : 8) : 0;
+		uint32_t crop_left = ctx->crop_overscan ? (zoom == 2 ? 26 : 8) : 0;
 
-			const FBSurface& surface = frame.tiaSurface().tiaSurface();
+		const FBSurface& surface = frame.tiaSurface().tiaSurface();
 
-			uInt32 _pitch = 0;
-			uint32_t *frame_ptr = NULL;
-			surface.basePtr(frame_ptr, _pitch);
+		uInt32 _pitch = 0;
+		uint32_t *frame_ptr = NULL;
+		surface.basePtr(frame_ptr, _pitch);
 
-			ctx->video_func(frame_ptr + crop_left, CORE_COLOR_FORMAT_BGRA, w - crop_left, h, pitch, ctx->video_opaque);
-		}
+		CORE_VIDEO(frame_ptr + crop_left, CORE_COLOR_FORMAT_BGRA, w - crop_left, h, pitch, CORE_VIDEO_OPAQUE);
 	}
 
 	// Audio
-	if (ctx->audio_func) {
-		uInt32 audio_samples = 0;
-		static_cast<SoundCore&>(ctx->sys->sound()).dequeue(ctx->audio_buf, &audio_samples);
+	uInt32 audio_samples = 0;
+	static_cast<SoundCore&>(ctx->sys->sound()).dequeue(ctx->audio_buf, &audio_samples);
 
-		if (audio_samples > 0)
-			ctx->audio_func(ctx->audio_buf, audio_samples, SAMPLE_RATE, ctx->audio_opaque);
-	}
+	if (audio_samples > 0)
+		CORE_AUDIO(ctx->audio_buf, audio_samples, SAMPLE_RATE, CORE_AUDIO_OPAQUE);
 
 	memcpy(ctx->ram, console.system().m6532().getRAM(), 128);
 }
@@ -298,22 +292,22 @@ float CoreGetAspectRatio(Core *ctx)
 	return par * base_w / base_h;
 }
 
-void CoreSetLogFunc(Core *ctx, CoreLogFunc func, void *opaque)
+void CoreSetLogFunc(CoreLogFunc func, void *opaque)
 {
-	CORE_LOG_FUNC = func;
+	CORE_LOG = func;
 	CORE_LOG_OPAQUE = opaque;
 }
 
-void CoreSetAudioFunc(Core *ctx, CoreAudioFunc func, void *opaque)
+void CoreSetAudioFunc(CoreAudioFunc func, void *opaque)
 {
-	ctx->audio_func = func;
-	ctx->audio_opaque = opaque;
+	CORE_AUDIO = func;
+	CORE_AUDIO_OPAQUE = opaque;
 }
 
-void CoreSetVideoFunc(Core *ctx, CoreVideoFunc func, void *opaque)
+void CoreSetVideoFunc(CoreVideoFunc func, void *opaque)
 {
-	ctx->video_func = func;
-	ctx->video_opaque = opaque;
+	CORE_VIDEO = func;
+	CORE_VIDEO_OPAQUE = opaque;
 }
 
 CoreSetting *CoreGetSettings(uint32_t *len)

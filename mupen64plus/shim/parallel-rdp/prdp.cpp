@@ -44,7 +44,7 @@ static const uint8_t CMD_LEN_LUT[64] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1,  1,
 };
 
-static void (*VIDEO_FUNC)(void *, uint32_t, uint32_t, void *);
+static void (*VIDEO)(void *, uint32_t, uint32_t, void *);
 static void *VIDEO_OPAQUE;
 
 class PRDP_Logger : public Util::LoggingInterface {
@@ -66,9 +66,9 @@ class PRDP_Logger : public Util::LoggingInterface {
 
 static PRDP_Logger LOGGER;
 
-void prdp_set_video_func(void (*func)(void *, uint32_t, uint32_t, void *), void *opaque)
+void prdp_set_func(void (*func)(void *, uint32_t, uint32_t, void *), void *opaque)
 {
-	VIDEO_FUNC = func;
+	VIDEO = func;
 	VIDEO_OPAQUE = opaque;
 }
 
@@ -281,8 +281,7 @@ void PRDP_UpdateScreen(void)
 	uint32_t h = 0;
 	CMDP->scanout_sync(PIXELS, w, h, opts);
 
-	if (VIDEO_FUNC)
-		VIDEO_FUNC(PIXELS.data(), w, h, VIDEO_OPAQUE);
+	VIDEO(PIXELS.data(), w, h, VIDEO_OPAQUE);
 
 	CMDP->begin_frame_context();
 }
