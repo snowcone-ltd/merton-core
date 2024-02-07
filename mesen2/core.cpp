@@ -35,7 +35,6 @@ struct Core {
 	void *audio_opaque;
 	uint8_t pr_initial[0x20];
 	bool pr_written;
-	bool loaded;
 
 	struct {
 		bool wait_for_pr;
@@ -257,35 +256,29 @@ static void core_set_settings(Core *ctx)
 	core_set_snes_settings(ctx);
 }
 
-Core *CoreLoad(const char *system_dir)
-{
-	Core *ctx = (Core *) calloc(1, sizeof(Core));
-
-	core_load_rom_db();
-
-	FolderUtilities::SetFolderOverrides("", "", "", system_dir);
-
-	ctx->emu = new Emulator();
-
-	return ctx;
-}
-
-void CoreUnload(Core **core)
+void CoreUnloadGame(Core **core)
 {
 	if (!core || !*core)
 		return;
 
 	Core *ctx = *core;
 
-	CoreUnloadGame(ctx);
+	ctx->pr_written = false;
+
+	battery_manager_set_save_data(NULL, 0);
+	sound_mixer_set_audio_func(NULL, NULL);
+
+	if (ctx->emu)
+		ctx->emu->Stop(false);
+
+	if (ctx->km)
+		delete ctx->km;
 
 	if (ctx->filter)
 		delete ctx->filter;
 
 	if (ctx->emu)
 		delete ctx->emu;
-
-	sound_mixer_set_audio_func(NULL, NULL);
 
 	free(ctx);
 	*core = NULL;
@@ -322,12 +315,16 @@ static void core_nes_init_triangle(Core *ctx)
 	apu->Serialize(s_out);
 }
 
-bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
-	const void *save_data, size_t save_data_size)
+Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
+	const void *saveData, size_t saveDataSize)
 {
-	if (!ctx || !ctx->emu)
-		return false;
+	Core *ctx = (Core *) calloc(1, sizeof(Core));
 
+	core_load_rom_db();
+	FolderUtilities::SetFolderOverrides("", "", "", systemDir);
+
+	ctx->emu = new Emulator();
+	emulator_set_system(system);
 	core_set_settings(ctx);
 
 	KeyManager::SetSettings(ctx->emu->GetSettings());
@@ -335,14 +332,13 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	ctx->km = new CoreKeyManager(ctx->emu);
 	KeyManager::RegisterKeyManager(ctx->km);
 
-	battery_manager_set_save_data(save_data, save_data_size);
-	emulator_set_system(system);
+	battery_manager_set_save_data(saveData, saveDataSize);
 
 	VirtualFile vfile = VirtualFile(path);
 
-	ctx->loaded = ctx->emu->LoadRom(vfile, {});
+	bool loaded = ctx->emu->LoadRom(vfile, {});
 
-	if (ctx->loaded) {
+	if (loaded) {
 		ctx->filter = ctx->emu->GetVideoFilter(true);
 
 		if (system == CORE_SYSTEM_NES) {
@@ -354,35 +350,18 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 		} else {
 			ctx->pr_written = true;
 		}
+	} else {
+		CoreUnloadGame(&ctx);
 	}
 
 	core_get_logs(CORE_LOG_FUNC, CORE_LOG_OPAQUE);
 
-	return ctx->loaded;
-}
-
-void CoreUnloadGame(Core *ctx)
-{
-	if (!ctx || !ctx->loaded)
-		return;
-
-	ctx->loaded = false;
-	ctx->pr_written = false;
-
-	if (ctx->emu)
-		ctx->emu->Stop(false);
-
-	battery_manager_set_save_data(NULL, 0);
-
-	if (ctx->km) {
-		delete ctx->km;
-		ctx->km = nullptr;
-	}
+	return ctx;
 }
 
 void CoreReset(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	ctx->emu->Reset();
@@ -423,7 +402,7 @@ static void core_get_frame(Core *ctx, CoreVideoFunc func, void *opaque)
 
 void CoreRun(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	ctx->emu->Run();
@@ -434,7 +413,7 @@ void CoreRun(Core *ctx)
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	ctx->km->SetButton(player, button, pressed);
@@ -446,7 +425,7 @@ void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 
 void *CoreGetState(Core *ctx, size_t *size)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return NULL;
 
 	std::stringstream ss;
@@ -463,7 +442,7 @@ void *CoreGetState(Core *ctx, size_t *size)
 
 bool CoreSetState(Core *ctx, const void *state, size_t size)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return false;
 
 	std::stringstream ss;
@@ -481,7 +460,7 @@ bool CoreInsertDisc(Core *ctx, const char *path)
 
 void *CoreGetSaveData(Core *ctx, size_t *size)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return NULL;
 
 	ctx->emu->GetConsole()->SaveBattery();
@@ -499,7 +478,7 @@ void *CoreGetSaveData(Core *ctx, size_t *size)
 
 double CoreGetFrameRate(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return 60;
 
 	return ctx->emu->GetFps();
@@ -507,7 +486,7 @@ double CoreGetFrameRate(Core *ctx)
 
 float CoreGetAspectRatio(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return 1;
 
 	PpuFrameInfo fi = ctx->emu->GetPpuFrame();

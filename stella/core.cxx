@@ -18,7 +18,6 @@
 #define SAMPLE_RATE ((262 * 76 * 60) / 38.0)
 
 struct Core {
-	bool loaded;
 	bool crop_overscan;
 	CoreVideoFunc video_func;
 	CoreAudioFunc audio_func;
@@ -48,19 +47,15 @@ void core_log(const char *fmt, ...)
 	va_end(arg);
 }
 
-Core *CoreLoad(const char *system_dir)
-{
-	return (Core *) calloc(1, sizeof(Core));
-}
-
-void CoreUnload(Core **core)
+void CoreUnloadGame(Core **core)
 {
 	if (!core || !*core)
 		return;
 
 	Core *ctx = *core;
 
-	CoreUnloadGame(ctx);
+	if (ctx->sys)
+		ctx->sys.reset();
 
 	free(ctx);
 	*core = NULL;
@@ -74,11 +69,10 @@ static void core_show_logs(void)
 		core_log("%s", messages.c_str());
 }
 
-bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
+Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 	const void *save_data, size_t save_data_size)
 {
-	if (!ctx)
-		return false;
+	Core *ctx = (Core *) calloc(1, sizeof(Core));
 
 	ctx->sys = make_unique<OSystemCore>();
 
@@ -110,27 +104,19 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 
 	FSNode rom(path);
 
-	ctx->loaded = ctx->sys->createConsole(rom) == EmptyString;
+	bool loaded = ctx->sys->createConsole(rom) == EmptyString;
 
 	core_show_logs();
 
-	return ctx->loaded;
-}
+	if (!loaded)
+		CoreUnloadGame(&ctx);
 
-void CoreUnloadGame(Core *ctx)
-{
-	if (!ctx || !ctx->loaded)
-		return;
-
-	if (ctx->sys)
-		ctx->sys.reset();
-
-	ctx->loaded = false;
+	return ctx;
 }
 
 void CoreReset(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	ctx->sys->console().system().reset();
@@ -138,7 +124,7 @@ void CoreReset(Core *ctx)
 
 void CoreRun(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	for (int lcv = 0; lcv <= 127; lcv++)
@@ -196,7 +182,7 @@ void CoreRun(Core *ctx)
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	Event::Type e;
@@ -232,7 +218,7 @@ void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 
 void *CoreGetState(Core *ctx, size_t *size)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return NULL;
 
 	Serializer s;
@@ -249,7 +235,7 @@ void *CoreGetState(Core *ctx, size_t *size)
 
 bool CoreSetState(Core *ctx, const void *state, size_t size)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return false;
 
 	Serializer s;
@@ -280,7 +266,7 @@ static bool core_is_ntsc(Core *ctx)
 
 double CoreGetFrameRate(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return 60;
 
 	return core_is_ntsc(ctx) ? 60 : 50;
@@ -288,7 +274,7 @@ double CoreGetFrameRate(Core *ctx)
 
 float CoreGetAspectRatio(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return 1;
 
 	const Console& console = ctx->sys->console();

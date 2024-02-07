@@ -22,7 +22,6 @@ struct Core {
 	CoreAudioFunc audio_func;
 	void *video_opaque;
 	void *audio_opaque;
-	bool loaded;
 };
 
 static CoreLogFunc CORE_LOG_FUNC;
@@ -183,52 +182,14 @@ static void core_set_settings(void)
 	}
 }
 
-Core *CoreLoad(const char *systemDir)
-{
-	Core *ctx = calloc(1, sizeof(Core));
-
-	#if defined(_WIN32)
-		const char *delim = "\\";
-	#else
-		const char *delim = "/";
-	#endif
-
-	bool has_delim = systemDir[strlen(systemDir) - 1] == delim[0];
-
-	#define FILL_BIOS(var, name) \
-		snprintf(var, sizeof(var), "%s%s%s", systemDir, has_delim ? "" : delim, name)
-
-	FILL_BIOS(GG_ROM, "ggenie.bin");
-	FILL_BIOS(GG_BIOS, "bios.gg");
-	FILL_BIOS(AR_ROM, "areplay.bin");
-	FILL_BIOS(SK_ROM, "sk.bin");
-	FILL_BIOS(SK_UPMEM, "sk2chip.bin");
-	FILL_BIOS(CD_BIOS_US, "bios_CD_U.bin");
-	FILL_BIOS(CD_BIOS_EU, "bios_CD_E.bin");
-	FILL_BIOS(CD_BIOS_JP, "bios_CD_J.bin");
-	FILL_BIOS(MS_BIOS_US, "bios_U.sms");
-	FILL_BIOS(MS_BIOS_EU, "bios_E.sms");
-	FILL_BIOS(MS_BIOS_JP, "bios_J.sms");
-
-	bitmap.width = CORE_BITMAP_W;
-	bitmap.height = CORE_BITMAP_H;
-	bitmap.pitch = CORE_BITMAP_W * sizeof(uint16_t);
-	bitmap.data = (unsigned char *) ctx->bitmap_data;
-
-	input.system[0] = SYSTEM_GAMEPAD;
-	input.system[1] = SYSTEM_GAMEPAD;
-
-	return ctx;
-}
-
-void CoreUnload(Core **core)
+void CoreUnloadGame(Core **core)
 {
 	if (!core || !*core)
 		return;
 
-	Core *ctx = *core;
+	audio_shutdown();
 
-	free(ctx);
+	free(*core);
 	*core = NULL;
 }
 
@@ -286,37 +247,62 @@ static void core_load_save_data(const void *data, size_t size)
 		memcpy(ptr, data, size);
 }
 
-bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *saveData,
-	size_t saveDataSize)
+Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
+	const void *saveData, size_t saveDataSize)
 {
+	Core *ctx = calloc(1, sizeof(Core));
+
+	#if defined(_WIN32)
+		const char *delim = "\\";
+	#else
+		const char *delim = "/";
+	#endif
+
+	bool has_delim = systemDir[strlen(systemDir) - 1] == delim[0];
+
+	#define FILL_BIOS(var, name) \
+		snprintf(var, sizeof(var), "%s%s%s", systemDir, has_delim ? "" : delim, name)
+
+	FILL_BIOS(GG_ROM, "ggenie.bin");
+	FILL_BIOS(GG_BIOS, "bios.gg");
+	FILL_BIOS(AR_ROM, "areplay.bin");
+	FILL_BIOS(SK_ROM, "sk.bin");
+	FILL_BIOS(SK_UPMEM, "sk2chip.bin");
+	FILL_BIOS(CD_BIOS_US, "bios_CD_U.bin");
+	FILL_BIOS(CD_BIOS_EU, "bios_CD_E.bin");
+	FILL_BIOS(CD_BIOS_JP, "bios_CD_J.bin");
+	FILL_BIOS(MS_BIOS_US, "bios_U.sms");
+	FILL_BIOS(MS_BIOS_EU, "bios_E.sms");
+	FILL_BIOS(MS_BIOS_JP, "bios_J.sms");
+
+	bitmap.width = CORE_BITMAP_W;
+	bitmap.height = CORE_BITMAP_H;
+	bitmap.pitch = CORE_BITMAP_W * sizeof(uint16_t);
+	bitmap.data = (unsigned char *) ctx->bitmap_data;
+
+	input.system[0] = SYSTEM_GAMEPAD;
+	input.system[1] = SYSTEM_GAMEPAD;
+
 	core_set_settings();
 
-	if (!load_rom((char *) path))
-		return false;
+	if (load_rom((char *) path)) {
+		audio_init(CORE_SAMPLE_RATE, 0);
 
-	audio_init(CORE_SAMPLE_RATE, 0);
+		system_init();
+		core_load_save_data(saveData, saveDataSize);
 
-	system_init();
-	core_load_save_data(saveData, saveDataSize);
+		system_reset();
 
-	system_reset();
+	} else {
+		CoreUnloadGame(&ctx);
+	}
 
-	ctx->loaded = true;
-
-	return true;
-}
-
-void CoreUnloadGame(Core *ctx)
-{
-	if (!ctx || !ctx->loaded)
-		return;
-
-	audio_shutdown();
+	return ctx;
 }
 
 double CoreGetFrameRate(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return 60.0;
 
 	return (double) system_clock / (double) lines_per_frame / (double) MCYCLES_PER_LINE;
@@ -324,7 +310,7 @@ double CoreGetFrameRate(Core *ctx)
 
 float CoreGetAspectRatio(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return 1.0f;
 
 	bool is_h40 = bitmap.viewport.w == 320;
@@ -336,7 +322,7 @@ float CoreGetAspectRatio(Core *ctx)
 
 void CoreRun(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	if (system_hw == SYSTEM_MCD) {
@@ -366,7 +352,7 @@ void CoreRun(Core *ctx)
 
 void *CoreGetSaveData(Core *ctx, size_t *size)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return NULL;
 
 	void *ptr = NULL;
@@ -391,7 +377,7 @@ void *CoreGetSaveData(Core *ctx, size_t *size)
 
 void CoreReset(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	gen_reset(0);
@@ -399,7 +385,7 @@ void CoreReset(Core *ctx)
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
-	if (!ctx || !ctx->loaded || player >= MAX_INPUTS)
+	if (!ctx || player >= MAX_INPUTS)
 		return;
 
 	uint16 b = 0;
@@ -435,7 +421,7 @@ void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 
 void *CoreGetState(Core *ctx, size_t *size)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return NULL;
 
 	*size = STATE_SIZE;
@@ -448,7 +434,7 @@ void *CoreGetState(Core *ctx, size_t *size)
 
 bool CoreSetState(Core *ctx, const void *state, size_t size)
 {
-	if (!ctx || !ctx->loaded || size != STATE_SIZE)
+	if (!ctx || size != STATE_SIZE)
 		return false;
 
 	return state_load((unsigned char *) state);

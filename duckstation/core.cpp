@@ -19,7 +19,6 @@
 #include "util/ini_settings_interface.h"
 
 struct Core {
-	bool loaded;
 	std::unique_ptr<INISettingsInterface> settings;
 };
 
@@ -71,15 +70,37 @@ static void core_log_callback(void* pUserParam, const char* channelName, const c
 	core_log("[%s] %s\n", channelName, cmsg);
 }
 
-Core *CoreLoad(const char *system_dir)
+void CoreUnloadGame(Core **core)
+{
+	if (!core || !*core)
+		return;
+
+	Core *ctx = *core;
+
+	if (System::IsValid())
+		System::ShutdownSystem(false);
+
+	System::Internal::ProcessShutdown();
+
+	if (ctx->settings)
+		ctx->settings.reset();
+
+	Log::UnregisterCallback(core_log_callback, ctx);
+
+	free(ctx);
+	*core = NULL;
+}
+
+Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
+	const void *saveData, size_t saveDataSize)
 {
 	Core *ctx = (Core *) calloc(1, sizeof(Core));
 
 	Log::RegisterCallback(core_log_callback, ctx);
 
-	std::string subdir = Path::Combine(system_dir, "does_not_exist");
+	std::string subdir = Path::Combine(systemDir, "does_not_exist");
 
-	EmuFolders::Bios = system_dir;
+	EmuFolders::Bios = systemDir;
 	EmuFolders::AppRoot = subdir;
 	EmuFolders::DataRoot = subdir;
 	EmuFolders::Cache = subdir;
@@ -95,30 +116,6 @@ Core *CoreLoad(const char *system_dir)
 	EmuFolders::SaveStates = subdir;
 	EmuFolders::Shaders = subdir;
 	EmuFolders::Textures = subdir;
-
-	return ctx;
-}
-
-void CoreUnload(Core **core)
-{
-	if (!core || !*core)
-		return;
-
-	Core *ctx = *core;
-
-	CoreUnloadGame(ctx);
-
-	Log::UnregisterCallback(core_log_callback, ctx);
-
-	free(ctx);
-	*core = NULL;
-}
-
-bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
-	const void *save_data, size_t save_data_size)
-{
-	if (!ctx)
-		return false;
 
 	std::string settings_filename = Path::Combine(EmuFolders::DataRoot, "settings.ini");
 
@@ -139,40 +136,28 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path,
 	SystemBootParameters bp = {};
 	bp.filename = path;
 
-	ctx->loaded = System::BootSystem(bp);
+	bool loaded = System::BootSystem(bp);
 
-	if (ctx->loaded && save_data) {
+	if (loaded && saveData) {
 		MemoryCard *mc = Pad::GetMemoryCard(0);
 
 		if (mc) {
 			MemoryCardImage::DataArray& da = mc->GetData();
 
-			if (da.size() >= save_data_size)
-				std::copy_n((uint8_t *) save_data, save_data_size, da.begin());
+			if (da.size() >= saveDataSize)
+				std::copy_n((uint8_t *) saveData, saveDataSize, da.begin());
 		}
 	}
 
-	return ctx->loaded;
-}
+	if (!loaded)
+		CoreUnloadGame(&ctx);
 
-void CoreUnloadGame(Core *ctx)
-{
-	if (!ctx || !ctx->loaded)
-		return;
-
-	if (System::IsValid())
-		System::ShutdownSystem(false);
-
-	System::Internal::ProcessShutdown();
-
-	ctx->settings.reset();
-
-	ctx->loaded = false;
+	return ctx;
 }
 
 void CoreReset(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	System::ResetSystem();
@@ -180,7 +165,7 @@ void CoreReset(Core *ctx)
 
 void CoreRun(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	System::DoFrameStep();
@@ -192,7 +177,7 @@ void CoreRun(Core *ctx)
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	Controller *c = System::GetController(player);
@@ -240,7 +225,7 @@ static void core_set_axis(AnalogController::HalfAxis neg, AnalogController::Half
 
 void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	Controller *c = System::GetController(player);
@@ -267,7 +252,7 @@ void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 
 void *CoreGetState(Core *ctx, size_t *size)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return NULL;
 
 	std::unique_ptr<GrowableMemoryByteStream> ms =
@@ -286,7 +271,7 @@ void *CoreGetState(Core *ctx, size_t *size)
 
 bool CoreSetState(Core *ctx, const void *state, size_t size)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return false;
 
 	std::unique_ptr<MemoryByteStream> ms =
@@ -297,7 +282,7 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 
 bool CoreInsertDisc(Core *ctx, const char *path)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return false;
 
 	return System::InsertMedia(path);
@@ -305,7 +290,7 @@ bool CoreInsertDisc(Core *ctx, const char *path)
 
 void *CoreGetSaveData(Core *ctx, size_t *size)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return NULL;
 
 	MemoryCard *mc = Pad::GetMemoryCard(0);
@@ -329,7 +314,7 @@ double CoreGetFrameRate(Core *ctx)
 
 float CoreGetAspectRatio(Core *ctx)
 {
-	if (!ctx || !ctx->loaded || !g_gpu)
+	if (!ctx || !g_gpu)
 		return 4.0f / 3.0f;
 
 	return g_gpu->ComputeDisplayAspectRatio();

@@ -11,7 +11,6 @@
 	#define USE_PRDP true
 #else
 	#include <dlfcn.h>
-	#define _strdup strdup
 	#define USE_PRSP true
 
 	#if defined(__APPLE__)
@@ -72,10 +71,8 @@ void vdac_set_video_func(void (*func)(void *, uint32_t, uint32_t, void *), void 
 // Core
 
 struct Core {
-	bool loaded;
 	bool use_prdp;
 	bool use_prsp;
-	char *system_dir;
 	m64p_dynlib_handle so;
 
 	uint32_t frame[5120][1920];
@@ -126,49 +123,44 @@ static void core_state_callback(void *Context, m64p_core_param param_type, int n
 {
 }
 
-Core *CoreLoad(const char *systemDir)
-{
-	Core *ctx = calloc(1, sizeof(Core));
-
-	ctx->system_dir = _strdup(systemDir);
-
-	const char *so_name = "mupen64plus";
-
-	#if !defined(_WIN32)
-		Dl_info info = {0};
-
-		if (dladdr(CoreLoad, &info) && info.dli_fname)
-			so_name = info.dli_fname;
-	#endif
-
-	ctx->so = osal_dynlib_get_handle(so_name);
-
-	osal_startup();
-
-	ctx->mutex = SDL_CreateMutex();
-	ctx->cond = SDL_CreateCondition();
-
-	return ctx;
-}
-
-void CoreUnload(Core **core)
+void CoreUnloadGame(Core **core)
 {
 	if (!core || !*core)
 		return;
 
 	Core *ctx = *core;
 
-	CoreUnloadGame(ctx);
+	CoreDoCommand(M64CMD_STOP, 0, NULL);
 
-	SDL_DestroyCondition(ctx->cond);
-	SDL_DestroyMutex(ctx->mutex);
+	if (ctx->game_thread)
+		SDL_WaitThread(ctx->game_thread, NULL);
 
+	CoreDetachPlugin(M64PLUGIN_RSP);
+	CoreDetachPlugin(M64PLUGIN_INPUT);
+	CoreDetachPlugin(M64PLUGIN_AUDIO);
+	CoreDetachPlugin(M64PLUGIN_GFX);
+
+	if (!ctx->use_prsp)
+		RSP_PluginShutdown();
+
+	if (!ctx->use_prdp)
+		RDP_PluginShutdown();
+
+	CoreDoCommand(M64CMD_ROM_CLOSE, 0, NULL);
+	CoreShutdown();
+
+	vdac_set_video_func(NULL, NULL);
+	prdp_set_video_func(NULL, NULL);
 	audio_set_callback(NULL, NULL);
 
-	osal_shutdown();
+	if (ctx->cond)
+		SDL_DestroyCondition(ctx->cond);
 
+	if (ctx->mutex)
+		SDL_DestroyMutex(ctx->mutex);
+
+	osal_shutdown();
 	osal_dynlib_close_handle(ctx->so);
-	free(ctx->system_dir);
 
 	free(ctx);
 	*core = NULL;
@@ -218,18 +210,39 @@ static void *core_load_file(const char *path, size_t *size)
 	return data;
 }
 
-bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *saveData,
-	size_t saveDataSize)
+Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
+	const void *saveData, size_t saveDataSize)
 {
+	bool loaded = true;
+
+	Core *ctx = calloc(1, sizeof(Core));
+
 	// TODO These need to be settings
 	ctx->use_prdp = USE_PRDP;
 	ctx->use_prsp = USE_PRSP;
 
-	m64p_error r = CoreStartup(FRONTEND_API_VERSION, ctx->system_dir, ctx->system_dir,
+	const char *so_name = "mupen64plus";
+
+	#if !defined(_WIN32)
+		Dl_info info = {0};
+
+		if (dladdr(CoreLoadGame, &info) && info.dli_fname)
+			so_name = info.dli_fname;
+	#endif
+
+	ctx->so = osal_dynlib_get_handle(so_name);
+	osal_startup();
+
+	ctx->mutex = SDL_CreateMutex();
+	ctx->cond = SDL_CreateCondition();
+
+	m64p_error r = CoreStartup(FRONTEND_API_VERSION, systemDir, systemDir,
 		NULL, core_debug_callback, NULL, core_state_callback);
 
-	if (r != M64ERR_SUCCESS)
-		return false;
+	if (r != M64ERR_SUCCESS) {
+		loaded = false;
+		goto except;
+	}
 
 	size_t size = 0;
 	void *game = core_load_file(path, &size);
@@ -237,8 +250,10 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 	r = CoreDoCommand(M64CMD_ROM_OPEN, size, game);
 	free(game);
 
-	if (r != M64ERR_SUCCESS)
-		return false;
+	if (r != M64ERR_SUCCESS) {
+		loaded = false;
+		goto except;
+	}
 
 	if (!ctx->use_prdp)
 		RDP_PluginStartup(ctx->so, NULL, core_debug_callback);
@@ -264,39 +279,12 @@ bool CoreLoadGame(Core *ctx, CoreSystem system, const char *path, const void *sa
 	// int param = 0;
 	// CoreDoCommand(M64CMD_CORE_STATE_SET, M64CORE_SPEED_LIMITER, &param);
 
-	ctx->loaded = true;
+	except:
 
-	return true;
-}
+	if (!loaded)
+		CoreUnloadGame(&ctx);
 
-void CoreUnloadGame(Core *ctx)
-{
-	if (!ctx || !ctx->loaded)
-		return;
-
-	ctx->loaded = false;
-
-	CoreDoCommand(M64CMD_STOP, 0, NULL);
-
-	if (ctx->game_thread)
-		SDL_WaitThread(ctx->game_thread, NULL);
-
-	vdac_set_video_func(NULL, NULL);
-	prdp_set_video_func(NULL, NULL);
-
-	CoreDetachPlugin(M64PLUGIN_RSP);
-	CoreDetachPlugin(M64PLUGIN_INPUT);
-	CoreDetachPlugin(M64PLUGIN_AUDIO);
-	CoreDetachPlugin(M64PLUGIN_GFX);
-
-	if (!ctx->use_prsp)
-		RSP_PluginShutdown();
-
-	if (!ctx->use_prdp)
-		RDP_PluginShutdown();
-
-	CoreDoCommand(M64CMD_ROM_CLOSE, 0, NULL);
-	CoreShutdown();
+	return ctx;
 }
 
 static void core_frame_callback(unsigned int index)
@@ -331,7 +319,7 @@ static int core_game_thread(void *opaque)
 
 void CoreRun(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	if (!ctx->game_thread)
@@ -362,7 +350,7 @@ void CoreRun(Core *ctx)
 
 void CoreReset(Core *ctx)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	CoreDoCommand(M64CMD_RESET, 0, NULL);
@@ -380,7 +368,7 @@ float CoreGetAspectRatio(Core *ctx)
 
 void *CoreGetSaveData(Core *ctx, size_t *size)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return NULL;
 
 	void *sd = NULL;
@@ -416,7 +404,7 @@ void *CoreGetSaveData(Core *ctx, size_t *size)
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	input_set_button(player, button, pressed);
@@ -424,7 +412,7 @@ void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 
 void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return;
 
 	input_set_axis(player, axis, value);
@@ -432,7 +420,7 @@ void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 
 void *CoreGetState(Core *ctx, size_t *size)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return NULL;
 
 	void *state = NULL;
@@ -458,7 +446,7 @@ void *CoreGetState(Core *ctx, size_t *size)
 
 bool CoreSetState(Core *ctx, const void *state, size_t size)
 {
-	if (!ctx || !ctx->loaded)
+	if (!ctx)
 		return false;
 
 	osal_set_read_data(state, size);
