@@ -13,7 +13,7 @@
 	#include <dlfcn.h>
 	#define USE_PRSP true
 
-	#if defined(__APPLE__)
+	#if defined(__APPLE__) || defined(__aarch64__)
 		#define USE_PRDP false
 	#else
 		#define USE_PRDP true

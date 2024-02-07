@@ -76,6 +76,7 @@ RSP_OBJS = \
 	$(PROJ_RSP)/su.$(O)
 
 PRSP_OBJS = \
+	shim/$(PROJ_PRSP)/jit_allocator.$(O) \
 	shim/$(PROJ_PRSP)/prsp.$(O) \
 	shim/$(PROJ_PRSP)/prsp-rsp_core.$(O) \
 	shim/$(PROJ_PRSP)/prsp-cp0.$(O) \
@@ -89,7 +90,6 @@ PRSP_OBJS = \
 	$(PROJ_PRSP)/rsp/ls.$(O) \
 	$(PROJ_PRSP)/rsp/reciprocal.$(O) \
 	$(PROJ_PRSP)/rsp/vfunctions.$(O) \
-	$(PROJ_PRSP)/jit_allocator.$(O) \
 	$(PROJ_PRSP)/rsp_disasm.$(O) \
 	$(PROJ_PRSP)/rsp_jit.$(O)
 
