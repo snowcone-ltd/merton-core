@@ -161,6 +161,9 @@ public:
 	void UnmapIndexBuffer(u32 used_size);
 	void PushUniformBuffer(const void* data, u32 data_size);
 	void ResizeWindow(s32 new_window_width, s32 new_window_height, float new_window_scale);
+	std::unique_ptr<GPUDownloadTexture> CreateDownloadTexture(u32 width, u32 height, GPUTexture::Format format);
+	std::unique_ptr<GPUDownloadTexture> CreateDownloadTexture(u32 width, u32 height, GPUTexture::Format format,
+		void* memory, size_t memory_size, u32 memory_stride);
 	void CopyTextureRegion(GPUTexture* dst, u32 dst_x, u32 dst_y, u32 dst_layer, u32 dst_level,
 		GPUTexture* src, u32 src_x, u32 src_y, u32 src_layer, u32 src_level, u32 width, u32 height);
 	void ResolveTextureRegion(GPUTexture* dst, u32 dst_x, u32 dst_y, u32 dst_layer, u32 dst_level,
@@ -199,7 +202,7 @@ NullDevice::NullDevice() : GPUDevice()
 }
 
 bool GPUDevice::Create(const std::string_view& adapter, const std::string_view& shader_cache_path,
-	u32 shader_cache_version, bool debug_device, bool vsync, bool threaded_presentation,
+	u32 shader_cache_version, bool debug_device, DisplaySyncMode sync_mode, bool threaded_presentation,
 	std::optional<bool> exclusive_fullscreen_control, FeatureMask disabled_features, Error* error)
 {
 	return true;
@@ -244,6 +247,10 @@ void GPUDevice::SetRenderTarget(GPUTexture* rt, GPUTexture* ds)
 }
 
 void GPUDevice::UploadUniformBuffer(const void* data, u32 data_size)
+{
+}
+
+void GPUDevice::SetSyncMode(DisplaySyncMode mode)
 {
 }
 
@@ -498,6 +505,17 @@ void NullDevice::PushUniformBuffer(const void* data, u32 data_size)
 
 void NullDevice::ResizeWindow(s32 new_window_width, s32 new_window_height, float new_window_scale)
 {
+}
+
+std::unique_ptr<GPUDownloadTexture> NullDevice::CreateDownloadTexture(u32 width, u32 height, GPUTexture::Format format)
+{
+	return {};
+}
+
+std::unique_ptr<GPUDownloadTexture> NullDevice::CreateDownloadTexture(u32 width, u32 height, GPUTexture::Format format,
+	void* memory, size_t memory_size, u32 memory_stride)
+{
+	return {};
 }
 
 void NullDevice::CopyTextureRegion(GPUTexture* dst, u32 dst_x, u32 dst_y, u32 dst_layer, u32 dst_level,

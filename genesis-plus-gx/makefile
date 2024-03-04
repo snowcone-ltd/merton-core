@@ -6,7 +6,7 @@ FLAGS = $(FLAGS) \
 	/wd4146 /wd4201 /wd4244 \
 	/wd4245 /wd4267 /wd4389 \
 	/wd4459 /wd4456 /wd4457 \
-	/wd4701 /wd4706
+	/wd4701 /wd4706 /wd4324
 
 DEFS = $(DEFS) \
 	-D_CRT_SECURE_NO_WARNINGS

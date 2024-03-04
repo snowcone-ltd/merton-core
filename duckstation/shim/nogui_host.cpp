@@ -17,6 +17,11 @@ void Host::ReportDebuggerMessage(const std::string_view& message)
 	core_log("%s\n", std::string(message).c_str());
 }
 
+void Host::ReportFatalError(const std::string_view& title, const std::string_view& message)
+{
+	core_log("Fatal: %s\n", std::string(message).c_str());
+}
+
 std::optional<std::string> Host::ReadResourceFileToString(std::string_view filename, bool allow_override)
 {
 	return std::nullopt;
