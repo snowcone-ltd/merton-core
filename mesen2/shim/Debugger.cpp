@@ -33,12 +33,12 @@ void Debugger::ProcessInstruction()
 {
 }
 
-template<CpuType type, MemoryAccessFlags flags, typename T>
+template<CpuType type, uint8_t accessWidth, MemoryAccessFlags flags, typename T>
 void Debugger::ProcessMemoryRead(uint32_t addr, T& value, MemoryOperationType opType)
 {
 }
 
-template<CpuType type, MemoryAccessFlags flags, typename T>
+template<CpuType type, uint8_t accessWidth, MemoryAccessFlags flags, typename T>
 bool Debugger::ProcessMemoryWrite(uint32_t addr, T& value, MemoryOperationType opType)
 {
 	return false;
@@ -138,7 +138,7 @@ template void Debugger::ProcessInstruction<CpuType::Sms>();
 template void Debugger::ProcessMemoryRead<CpuType::Snes>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
 template void Debugger::ProcessMemoryRead<CpuType::Sa1>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
 template void Debugger::ProcessMemoryRead<CpuType::Spc>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
-template void Debugger::ProcessMemoryRead<CpuType::Spc, MemoryAccessFlags::DspAccess>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
+template void Debugger::ProcessMemoryRead<CpuType::Spc, 1, MemoryAccessFlags::DspAccess>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
 template void Debugger::ProcessMemoryRead<CpuType::Gsu>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
 template void Debugger::ProcessMemoryRead<CpuType::NecDsp>(uint32_t addr, uint32_t& value, MemoryOperationType opType);
 template void Debugger::ProcessMemoryRead<CpuType::NecDsp>(uint32_t addr, uint16_t& value, MemoryOperationType opType);
@@ -151,7 +151,7 @@ template void Debugger::ProcessMemoryRead<CpuType::Sms>(uint32_t addr, uint8_t& 
 template bool Debugger::ProcessMemoryWrite<CpuType::Snes>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
 template bool Debugger::ProcessMemoryWrite<CpuType::Sa1>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
 template bool Debugger::ProcessMemoryWrite<CpuType::Spc>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
-template bool Debugger::ProcessMemoryWrite<CpuType::Spc, MemoryAccessFlags::DspAccess>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
+template bool Debugger::ProcessMemoryWrite<CpuType::Spc, 1, MemoryAccessFlags::DspAccess>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
 template bool Debugger::ProcessMemoryWrite<CpuType::Gsu>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
 template bool Debugger::ProcessMemoryWrite<CpuType::NecDsp>(uint32_t addr, uint16_t& value, MemoryOperationType opType);
 template bool Debugger::ProcessMemoryWrite<CpuType::Cx4>(uint32_t addr, uint8_t& value, MemoryOperationType opType);

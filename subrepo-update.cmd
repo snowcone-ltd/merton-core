@@ -11,7 +11,7 @@ git -C genesis-plus-gx/Genesis-Plus-GX checkout f9f16d7a552c5606caea52c2179ca283
 git clone git@github.com:SourMesen/Mesen2 mesen2/Mesen2
 git -C mesen2/Mesen2 fetch
 git -C mesen2/Mesen2 reset --hard HEAD
-git -C mesen2/Mesen2 checkout f66c319464434c5bf92cea8cf97954dfbcb21979
+git -C mesen2/Mesen2 checkout 32e8125a871a2ec02d1256b5913e2b8ae795cee1
 
 git clone git@github.com:mgba-emu/mgba mgba/mgba
 git -C mgba/mgba fetch
