@@ -233,6 +233,23 @@ CORE_SNES_OBJS = \
 	$(PROJ)/Core/SNES/Spc.$(O) \
 	$(PROJ)/Core/SNES/Spc.Instructions.$(O)
 
+CORE_GBA_OBJS = \
+	$(PROJ)/Core/GBA/APU/GbaApu.$(O) \
+	$(PROJ)/Core/GBA/APU/GbaNoiseChannel.$(O) \
+	$(PROJ)/Core/GBA/APU/GbaSquareChannel.$(O) \
+	$(PROJ)/Core/GBA/APU/GbaWaveChannel.$(O) \
+	$(PROJ)/Core/GBA/Cart/GbaCart.$(O) \
+	$(PROJ)/Core/GBA/GbaConsole.$(O) \
+	$(PROJ)/Core/GBA/GbaControlManager.$(O) \
+	$(PROJ)/Core/GBA/GbaCpu.Arm.$(O) \
+	$(PROJ)/Core/GBA/GbaCpu.$(O) \
+	$(PROJ)/Core/GBA/GbaCpu.Thumb.$(O) \
+	$(PROJ)/Core/GBA/GbaDefaultVideoFilter.$(O) \
+	$(PROJ)/Core/GBA/GbaDmaController.$(O) \
+	$(PROJ)/Core/GBA/GbaMemoryManager.$(O) \
+	$(PROJ)/Core/GBA/GbaPpu.$(O) \
+	$(PROJ)/Core/GBA/GbaTimer.$(O)
+
 SHIM_OBJS = \
 	shim/SoundMixer.$(O) \
 	shim/CoreKeyManager.$(O) \
@@ -247,7 +264,9 @@ SHIM_OBJS = \
 	shim/VideoRenderer.$(O) \
 	shim/BatteryManager.$(O) \
 	shim/Emulator.$(O) \
-	shim/SaveStateManager.$(O)
+	shim/SaveStateManager.$(O) \
+	shim/DummyGbaCpu.$(O) \
+	shim/GbaPpuTools.$(O)
 
 OBJS = \
 	core.$(O) \
@@ -259,4 +278,5 @@ OBJS = \
 	$(CORE_PCE_OBJS) \
 	$(CORE_GAMEBOY_OBJS) \
 	$(CORE_SNES_OBJS) \
+	$(CORE_GBA_OBJS) \
 	$(SHIM_OBJS)

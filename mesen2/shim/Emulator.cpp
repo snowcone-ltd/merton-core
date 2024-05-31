@@ -33,6 +33,7 @@
 #include "PCE/PceConsole.h"
 #include "Gameboy/Gameboy.h"
 #include "SNES/SnesConsole.h"
+#include "GBA/GbaConsole.h"
 
 #include "core.h"
 
@@ -106,6 +107,7 @@ bool Emulator::LoadRom(VirtualFile romFile, VirtualFile patchFile, bool stopRom,
 		case CORE_SYSTEM_TG16:    _console.reset(new PceConsole(this));  break;
 		case CORE_SYSTEM_GAMEBOY: _console.reset(new Gameboy(this));     break;
 		case CORE_SYSTEM_SNES:    _console.reset(new SnesConsole(this)); break;
+		case CORE_SYSTEM_GBA:     _console.reset(new GbaConsole(this));  break;
 		default:
 			break;
 	}

@@ -99,11 +99,14 @@ static void core_set_buttons(ControllerConfig *controller, ControllerType type, 
 	controller->Keys.Mapping1.Left = index | CORE_BUTTON_DPAD_L;
 	controller->Keys.Mapping1.Right = index | CORE_BUTTON_DPAD_R;
 
+	if (type == ControllerType::SnesController || type == ControllerType::GbaController) {
+		controller->Keys.Mapping1.L = index | CORE_BUTTON_L;
+		controller->Keys.Mapping1.R = index | CORE_BUTTON_R;
+	}
+
 	if (type == ControllerType::SnesController) {
 		controller->Keys.Mapping1.X = index | CORE_BUTTON_Y;
 		controller->Keys.Mapping1.Y = index | CORE_BUTTON_X;
-		controller->Keys.Mapping1.L = index | CORE_BUTTON_L;
-		controller->Keys.Mapping1.R = index | CORE_BUTTON_R;
 	}
 }
 
@@ -243,6 +246,18 @@ static void core_set_snes_settings(Core *ctx)
 	ctx->emu->GetSettings()->SetSnesConfig(cfg);
 }
 
+static void core_set_gba_settings(Core *ctx)
+{
+	GbaConfig cfg = {};
+
+	cfg.GbaAdjustColors = false;
+
+	// Input
+	core_set_buttons(&cfg.Controller, ControllerType::GbaController, 0);
+
+	ctx->emu->GetSettings()->SetGbaConfig(cfg);
+}
+
 static void core_set_settings(Core *ctx)
 {
 	core_set_video_settings(ctx);
@@ -251,6 +266,7 @@ static void core_set_settings(Core *ctx)
 	core_set_pce_settings(ctx);
 	core_set_gameboy_settings(ctx);
 	core_set_snes_settings(ctx);
+	core_set_gba_settings(ctx);
 }
 
 void CoreUnloadGame(Core **core)
