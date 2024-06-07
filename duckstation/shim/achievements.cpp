@@ -49,7 +49,7 @@ void Achievements::GameChanged(const std::string& path, CDImage* image)
 {
 }
 
-bool Achievements::ResetHardcoreMode()
+bool Achievements::ResetHardcoreMode(bool is_booting)
 {
 	return false;
 }

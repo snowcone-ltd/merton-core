@@ -9,6 +9,7 @@
 #include "common/layered_settings_interface.h"
 #include "common/log.h"
 #include "common/path.h"
+#include "common/error.h"
 #include "core/analog_controller.h"
 #include "core/host.h"
 #include "core/gpu.h"
@@ -80,7 +81,7 @@ void CoreUnloadGame(Core **core)
 	if (System::IsValid())
 		System::ShutdownSystem(false);
 
-	System::Internal::ProcessShutdown();
+	System::Internal::CPUThreadShutdown();
 
 	if (ctx->settings)
 		ctx->settings.reset();
@@ -131,12 +132,13 @@ Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 	ctx->settings->SetStringValue("Audio", "StretchMode", "None");
 	ctx->settings->SetBoolValue("Logging", "LogToConsole", false);
 
-	System::Internal::ProcessStartup();
+	Error error;
+	System::Internal::CPUThreadInitialize(&error);
 
 	SystemBootParameters bp = {};
 	bp.filename = path;
 
-	bool loaded = System::BootSystem(bp);
+	bool loaded = System::BootSystem(bp, &error);
 
 	if (loaded && saveData) {
 		MemoryCard *mc = Pad::GetMemoryCard(0);
@@ -277,7 +279,9 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 	std::unique_ptr<MemoryByteStream> ms =
 		ByteStream::CreateMemoryStream((void *) state, size);
 
-	return System::LoadStateFromStream(ms.get(), false);
+	Error error;
+
+	return System::LoadStateFromStream(ms.get(), &error, false);
 }
 
 bool CoreInsertDisc(Core *ctx, const char *path)

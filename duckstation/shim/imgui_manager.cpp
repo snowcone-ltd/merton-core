@@ -21,10 +21,6 @@ void Host::AddIconOSDMessage(std::string key, const char* icon, std::string mess
 {
 }
 
-void Host::AddFormattedOSDMessage(float duration, const char* format, ...)
-{
-}
-
 void Host::RemoveKeyedOSDMessage(std::string key)
 {
 }
@@ -61,10 +57,6 @@ void ImGuiManager::Shutdown()
 }
 
 void ImGuiManager::WindowResized()
-{
-}
-
-void Host::AddKeyedFormattedOSDMessage(std::string key, float duration, const char* format, ...)
 {
 }
 

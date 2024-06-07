@@ -1,7 +1,7 @@
 git clone git@github.com:stenzek/duckstation duckstation/duckstation
 git -C duckstation/duckstation fetch
 git -C duckstation/duckstation reset --hard HEAD
-git -C duckstation/duckstation checkout faa64ec4ffd08ebb6ee9e378a23717a5c3310d1b
+git -C duckstation/duckstation checkout 5a185654ba5d50ad137a5f7fc4c80854e66addb0
 
 git clone git@github.com:ekeeke/Genesis-Plus-GX genesis-plus-gx/Genesis-Plus-GX
 git -C genesis-plus-gx/Genesis-Plus-GX fetch

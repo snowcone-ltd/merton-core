@@ -7,17 +7,17 @@ void core_log(const char *fmt, ...);
 
 const char *g_scm_tag_str = "";
 
-void Host::ReportErrorAsync(const std::string_view& title, const std::string_view& message)
+void Host::ReportErrorAsync(std::string_view title, std::string_view message)
 {
 	core_log("%s\n", std::string(message).c_str());
 }
 
-void Host::ReportDebuggerMessage(const std::string_view& message)
+void Host::ReportDebuggerMessage(std::string_view message)
 {
 	core_log("%s\n", std::string(message).c_str());
 }
 
-void Host::ReportFatalError(const std::string_view& title, const std::string_view& message)
+void Host::ReportFatalError(std::string_view title, std::string_view message)
 {
 	core_log("Fatal: %s\n", std::string(message).c_str());
 }
@@ -42,15 +42,24 @@ std::optional<std::vector<u8>> Host::ReadResourceFile(std::string_view filename,
 	return std::nullopt;
 }
 
-s32 Host::Internal::GetTranslatedStringImpl(const std::string_view& context,
-	const std::string_view& msg, char* tbuf, size_t tbuf_space)
+s32 Host::Internal::GetTranslatedStringImpl(std::string_view context,
+	std::string_view msg, char* tbuf, size_t tbuf_space)
 {
 	int32_t n = snprintf(tbuf, tbuf_space, "%s", std::string(msg).c_str());
 
 	return n > 0 ? n : 0;
 }
 
-bool Host::ConfirmMessage(const std::string_view& title, const std::string_view& message)
+std::string Host::TranslatePluralToString(const char* context, const char* msg, const char* disambiguation, int count)
+{
+	return "";
+}
+
+void Host::FrameDone()
+{
+}
+
+bool Host::ConfirmMessage(std::string_view title, std::string_view message)
 {
 	return false;
 }
@@ -117,10 +126,6 @@ void Host::PumpMessagesOnCPUThread()
 }
 
 void Host::RequestResizeHostDisplay(s32 width, s32 height)
-{
-}
-
-void Host::BeginPresentFrame()
 {
 }
 

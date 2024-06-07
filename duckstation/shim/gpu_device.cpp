@@ -32,7 +32,7 @@ void gpu_device_finish(void)
 class NullTexture final : public GPUTexture {
 public:
 	NullTexture(u16 width, u16 height, u8 layers, u8 levels, u8 samples, Type type, Format format);
-	void SetDebugName(const std::string_view& name);
+	void SetDebugName(std::string_view name);
 	bool Update(u32 x, u32 y, u32 width, u32 height, const void* data, u32 pitch, u32 layer = 0, u32 level = 0);
 	bool Map(void** map, u32* map_stride, u32 x, u32 y, u32 width, u32 height, u32 layer = 0, u32 level = 0);
 	void Unmap();
@@ -44,7 +44,7 @@ NullTexture::NullTexture(u16 width, u16 height, u8 layers, u8 levels, u8 samples
 {
 }
 
-void NullTexture::SetDebugName(const std::string_view& name)
+void NullTexture::SetDebugName(std::string_view name)
 {
 }
 
@@ -86,7 +86,7 @@ void NullTexture::Unmap()
 class NullShader final : public GPUShader {
 public:
 	NullShader(GPUShaderStage stage);
-	void SetDebugName(const std::string_view& name);
+	void SetDebugName(std::string_view name);
 };
 
 GPUShader::GPUShader(GPUShaderStage stage) : m_stage(stage)
@@ -101,7 +101,7 @@ NullShader::NullShader(GPUShaderStage stage) : GPUShader(stage)
 {
 }
 
-void NullShader::SetDebugName(const std::string_view& name)
+void NullShader::SetDebugName(std::string_view name)
 {
 }
 
@@ -111,7 +111,7 @@ void NullShader::SetDebugName(const std::string_view& name)
 class NullPipeline final : public GPUPipeline {
 public:
 	NullPipeline();
-	void SetDebugName(const std::string_view& name);
+	void SetDebugName(std::string_view name);
 };
 
 GPUPipeline::GPUPipeline()
@@ -126,7 +126,7 @@ NullPipeline::NullPipeline() : GPUPipeline()
 {
 }
 
-void NullPipeline::SetDebugName(const std::string_view& name)
+void NullPipeline::SetDebugName(std::string_view name)
 {
 }
 
@@ -142,7 +142,8 @@ public:
 	bool UpdateWindow();
 	AdapterAndModeList GetAdapterAndModeList();
 	void UnmapUniformBuffer(u32 size);
-	void SetRenderTargets(GPUTexture* const* rts, u32 num_rts, GPUTexture* ds);
+	void SetRenderTargets(GPUTexture* const* rts, u32 num_rts, GPUTexture* ds,
+		GPUPipeline::RenderPassFlag render_pass_flags);
 	void SetPipeline(GPUPipeline* pipeline);
 	void SetTextureSampler(u32 slot, GPUTexture* texture, GPUSampler* sampler);
 	void SetTextureBuffer(u32 slot, GPUTextureBuffer* buffer);
@@ -150,8 +151,10 @@ public:
 	void SetScissor(s32 x, s32 y, s32 width, s32 height);
 	void Draw(u32 vertex_count, u32 base_vertex);
 	void DrawIndexed(u32 index_count, u32 base_index, u32 base_vertex);
-	void EndPresent();
-	void SetVSync(bool enabled);
+	void DrawIndexedWithBarrier(u32 index_count, u32 base_index, u32 base_vertex, DrawBarrier type);
+	void EndPresent(bool explicit_submit);
+	void SubmitPresent();
+	void SetVSyncMode(GPUVSyncMode mode, bool allow_present_throttle);
 	void PushDebugGroup(const char* name);
 	void PopDebugGroup();
 	void InsertDebugMessage(const char* msg);
@@ -181,11 +184,11 @@ public:
 	void* MapUniformBuffer(u32 size);
 
 protected:
-	bool CreateDevice(const std::string_view& adapter, bool threaded_presentation,
+	bool CreateDevice(std::string_view adapter, bool threaded_presentation,
 		std::optional<bool> exclusive_fullscreen_control, FeatureMask disabled_features, Error* error);
 	void DestroyDevice();
 	std::unique_ptr<GPUShader> CreateShaderFromBinary(GPUShaderStage stage, std::span<const u8> data);
-	std::unique_ptr<GPUShader> CreateShaderFromSource(GPUShaderStage stage, const std::string_view& source,
+	std::unique_ptr<GPUShader> CreateShaderFromSource(GPUShaderStage stage, std::string_view source,
 		const char* entry_point, DynamicHeapArray<u8>* out_binary);
 };
 
@@ -201,8 +204,8 @@ NullDevice::NullDevice() : GPUDevice()
 {
 }
 
-bool GPUDevice::Create(const std::string_view& adapter, const std::string_view& shader_cache_path,
-	u32 shader_cache_version, bool debug_device, DisplaySyncMode sync_mode, bool threaded_presentation,
+bool GPUDevice::Create(std::string_view adapter, std::string_view shader_cache_path, u32 shader_cache_version,
+	bool debug_device, GPUVSyncMode vsync, bool allow_present_throttle, bool threaded_presentation,
 	std::optional<bool> exclusive_fullscreen_control, FeatureMask disabled_features, Error* error)
 {
 	return true;
@@ -213,12 +216,7 @@ RenderAPI GPUDevice::GetPreferredAPI()
 	return RenderAPI::None;
 }
 
-bool GPUDevice::ShouldSkipDisplayingFrame()
-{
-	return false;
-}
-
-std::unique_ptr<GPUShader> GPUDevice::CreateShader(GPUShaderStage stage, const std::string_view& source,
+std::unique_ptr<GPUShader> GPUDevice::CreateShader(GPUShaderStage stage, std::string_view source,
 	const char* entry_point)
 {
 	std::unique_ptr<NullShader> shader(new NullShader(stage));
@@ -242,15 +240,11 @@ void GPUDevice::SetViewportAndScissor(s32 x, s32 y, s32 width, s32 height)
 {
 }
 
-void GPUDevice::SetRenderTarget(GPUTexture* rt, GPUTexture* ds)
+void GPUDevice::SetRenderTarget(GPUTexture* rt, GPUTexture* ds, GPUPipeline::RenderPassFlag render_pass_flags)
 {
 }
 
 void GPUDevice::UploadUniformBuffer(const void* data, u32 data_size)
-{
-}
-
-void GPUDevice::SetSyncMode(DisplaySyncMode mode)
 {
 }
 
@@ -259,10 +253,6 @@ GPUShaderCache::GPUShaderCache()
 }
 
 GPUShaderCache::~GPUShaderCache()
-{
-}
-
-void GPUDevice::SetDisplayMaxFPS(float max_fps)
 {
 }
 
@@ -360,6 +350,17 @@ void GPUDevice::ResetStatistics()
 {
 }
 
+bool GPUDevice::ResizeTexture(std::unique_ptr<GPUTexture>* tex, u32 new_width, u32 new_height, GPUTexture::Type type,
+	GPUTexture::Format format, bool preserve)
+{
+	return false;
+}
+
+bool GPUDevice::ShouldSkipPresentingFrame()
+{
+	return false;
+}
+
 
 // Virutal
 
@@ -378,11 +379,6 @@ void GPUDevice::ClearDepth(GPUTexture* t, float d)
 
 void GPUDevice::InvalidateRenderTarget(GPUTexture* t)
 {
-}
-
-bool GPUDevice::GetHostRefreshRate(float* refresh_rate)
-{
-	return false;
 }
 
 bool GPUDevice::SetGPUTimingEnabled(bool enabled)
@@ -439,7 +435,8 @@ void NullDevice::UnmapUniformBuffer(u32 size)
 {
 }
 
-void NullDevice::SetRenderTargets(GPUTexture* const* rts, u32 num_rts, GPUTexture* ds)
+void NullDevice::SetRenderTargets(GPUTexture* const* rts, u32 num_rts, GPUTexture* ds,
+	GPUPipeline::RenderPassFlag render_pass_flags)
 {
 }
 
@@ -471,11 +468,19 @@ void NullDevice::DrawIndexed(u32 index_count, u32 base_index, u32 base_vertex)
 {
 }
 
-void NullDevice::EndPresent()
+void NullDevice::DrawIndexedWithBarrier(u32 index_count, u32 base_index, u32 base_vertex, DrawBarrier type)
 {
 }
 
-void NullDevice::SetVSync(bool enabled)
+void NullDevice::EndPresent(bool explicit_submit)
+{
+}
+
+void NullDevice::SubmitPresent()
+{
+}
+
+void NullDevice::SetVSyncMode(GPUVSyncMode mode, bool allow_present_throttle)
 {
 }
 
@@ -588,7 +593,7 @@ std::unique_ptr<GPUPipeline> NullDevice::CreatePipeline(const GPUPipeline::Graph
 
 // Pure virtual protected
 
-bool NullDevice::CreateDevice(const std::string_view& adapter, bool threaded_presentation,
+bool NullDevice::CreateDevice(std::string_view adapter, bool threaded_presentation,
 	std::optional<bool> exclusive_fullscreen_control, FeatureMask disabled_features, Error* error)
 {
 	return true;
@@ -603,7 +608,7 @@ std::unique_ptr<GPUShader> NullDevice::CreateShaderFromBinary(GPUShaderStage sta
 	return {};
 }
 
-std::unique_ptr<GPUShader> NullDevice::CreateShaderFromSource(GPUShaderStage stage, const std::string_view& source,
+std::unique_ptr<GPUShader> NullDevice::CreateShaderFromSource(GPUShaderStage stage, std::string_view source,
 	const char* entry_point, DynamicHeapArray<u8>* out_binary)
 {
 	return {};

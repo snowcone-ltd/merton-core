@@ -14,7 +14,7 @@ const char *InputManager::InputSourceToString(InputSourceType clazz)
 	return "";
 }
 
-GenericInputBindingMapping InputManager::GetGenericBindingMapping(const std::string_view& device)
+GenericInputBindingMapping InputManager::GetGenericBindingMapping(std::string_view device)
 {
 	return {};
 }
@@ -25,7 +25,7 @@ bool InputManager::MapController(SettingsInterface& si, u32 controller,
 	return true;
 }
 
-void InputManager::ReloadBindings(SettingsInterface& si, SettingsInterface& binding_si)
+void InputManager::ReloadBindings(SettingsInterface& si, SettingsInterface& binding_si, SettingsInterface& hotkey_binding_si)
 {
 }
 

@@ -1,1 +1,1 @@
-#include "zstd/lib/common/xxhash.c"
+#include "../deps/zstd/lib/common/xxhash.c"

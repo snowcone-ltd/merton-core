@@ -18,8 +18,8 @@ INCLUDES = \
 	-I$(PROJ)/dep/stb/include \
 	-I$(PROJ)/dep/xbyak/xbyak \
 	-I$(PROJ)/dep/xxhash/include \
-	-I$(PROJ)/dep/zlib/include \
-	-I$(PROJ)/dep/zstd/lib
+	-Ideps/zlib/include \
+	-Ideps/zstd/lib
 
 ARM64_INCLUDES = \
 	-I$(PROJ)/dep/vixl/include \
@@ -99,40 +99,6 @@ DEPS_OBJS = \
 	$(PROJ)/dep/reshadefx/src/effect_parser_exp.$(O) \
 	$(PROJ)/dep/reshadefx/src/effect_parser_stmt.$(O) \
 	$(PROJ)/dep/reshadefx/src/effect_symbol_table.$(O) \
-	$(PROJ)/dep/stb/src/stb_image.$(O) \
-	$(PROJ)/dep/stb/src/stb_image_resize.$(O) \
-	$(PROJ)/dep/stb/src/stb_image_write.$(O) \
-	$(PROJ)/dep/zlib/src/adler32.$(O) \
-	$(PROJ)/dep/zlib/src/compress.$(O) \
-	$(PROJ)/dep/zlib/src/crc32.$(O) \
-	$(PROJ)/dep/zlib/src/deflate.$(O) \
-	$(PROJ)/dep/zlib/src/inffast.$(O) \
-	$(PROJ)/dep/zlib/src/inflate.$(O) \
-	$(PROJ)/dep/zlib/src/inftrees.$(O) \
-	$(PROJ)/dep/zlib/src/trees.$(O) \
-	$(PROJ)/dep/zlib/src/zutil.$(O) \
-	$(PROJ)/dep/zstd/lib/common/entropy_common.$(O) \
-	$(PROJ)/dep/zstd/lib/common/error_private.$(O) \
-	$(PROJ)/dep/zstd/lib/common/fse_decompress.$(O) \
-	$(PROJ)/dep/zstd/lib/common/pool.$(O) \
-	$(PROJ)/dep/zstd/lib/common/zstd_common.$(O) \
-	$(PROJ)/dep/zstd/lib/compress/fse_compress.$(O) \
-	$(PROJ)/dep/zstd/lib/compress/hist.$(O) \
-	$(PROJ)/dep/zstd/lib/compress/huf_compress.$(O) \
-	$(PROJ)/dep/zstd/lib/compress/zstd_compress.$(O) \
-	$(PROJ)/dep/zstd/lib/compress/zstd_compress_literals.$(O) \
-	$(PROJ)/dep/zstd/lib/compress/zstd_compress_sequences.$(O) \
-	$(PROJ)/dep/zstd/lib/compress/zstd_compress_superblock.$(O) \
-	$(PROJ)/dep/zstd/lib/compress/zstd_double_fast.$(O) \
-	$(PROJ)/dep/zstd/lib/compress/zstd_fast.$(O) \
-	$(PROJ)/dep/zstd/lib/compress/zstd_lazy.$(O) \
-	$(PROJ)/dep/zstd/lib/compress/zstd_ldm.$(O) \
-	$(PROJ)/dep/zstd/lib/compress/zstd_opt.$(O) \
-	$(PROJ)/dep/zstd/lib/compress/zstdmt_compress.$(O) \
-	$(PROJ)/dep/zstd/lib/decompress/huf_decompress.$(O) \
-	$(PROJ)/dep/zstd/lib/decompress/zstd_ddict.$(O) \
-	$(PROJ)/dep/zstd/lib/decompress/zstd_decompress.$(O) \
-	$(PROJ)/dep/zstd/lib/decompress/zstd_decompress_block.$(O) \
 	$(PROJ)/dep/xxhash/src/xxh_x86dispatch.$(O) \
 	$(PROJ)/dep/xxhash/src/xxhash.$(O)
 
@@ -142,7 +108,6 @@ COMMON_OBJS = \
 	$(PROJ)/src/common/byte_stream.$(O) \
 	$(PROJ)/src/common/error.$(O) \
 	$(PROJ)/src/common/file_system.$(O) \
-	$(PROJ)/src/common/image.$(O) \
 	$(PROJ)/src/common/layered_settings_interface.$(O) \
 	$(PROJ)/src/common/log.$(O) \
 	$(PROJ)/src/common/md5_digest.$(O) \
@@ -210,11 +175,12 @@ CORE_OBJS = \
 	$(PROJ)/src/core/guncon.$(O) \
 	$(PROJ)/src/core/host_interface_progress_callback.$(O) \
 	$(PROJ)/src/core/interrupt_controller.$(O) \
+	$(PROJ)/src/core/justifier.$(O) \
 	$(PROJ)/src/core/mdec.$(O) \
 	$(PROJ)/src/core/memory_card.$(O) \
-	$(PROJ)/src/core/memory_card_image.$(O) \
 	$(PROJ)/src/core/multitap.$(O) \
 	$(PROJ)/src/core/negcon.$(O) \
+	$(PROJ)/src/core/negcon_rumble.$(O) \
 	$(PROJ)/src/core/pad.$(O) \
 	$(PROJ)/src/core/pcdrv.$(O) \
 	$(PROJ)/src/core/playstation_mouse.$(O) \
@@ -222,7 +188,6 @@ CORE_OBJS = \
 	$(PROJ)/src/core/settings.$(O) \
 	$(PROJ)/src/core/sio.$(O) \
 	$(PROJ)/src/core/spu.$(O) \
-	$(PROJ)/src/core/system.$(O) \
 	$(PROJ)/src/core/texture_replacements.$(O) \
 	$(PROJ)/src/core/timers.$(O) \
 	$(PROJ)/src/core/timing_event.$(O)
@@ -231,9 +196,11 @@ SHIM_OBJS = \
 	core.$(O) \
 	shim/achievements.$(O) \
 	shim/audio_stream.$(O) \
+	shim/crash_handler.$(O) \
 	shim/fullscreen_ui.$(O) \
 	shim/game_list.$(O) \
 	shim/gpu_device.$(O) \
+	shim/image.$(O) \
 	shim/imgui.$(O) \
 	shim/imgui_manager.$(O) \
 	shim/imgui_overlays.$(O) \
@@ -241,14 +208,50 @@ SHIM_OBJS = \
 	shim/nogui_host.$(O) \
 	shim/platform_misc.$(O)
 
+EXT_DEPS_OBJS = \
+	deps/zlib/src/adler32.$(O) \
+	deps/zlib/src/compress.$(O) \
+	deps/zlib/src/crc32.$(O) \
+	deps/zlib/src/deflate.$(O) \
+	deps/zlib/src/inffast.$(O) \
+	deps/zlib/src/inflate.$(O) \
+	deps/zlib/src/inftrees.$(O) \
+	deps/zlib/src/trees.$(O) \
+	deps/zlib/src/zutil.$(O) \
+	deps/zstd/lib/common/entropy_common.$(O) \
+	deps/zstd/lib/common/error_private.$(O) \
+	deps/zstd/lib/common/fse_decompress.$(O) \
+	deps/zstd/lib/common/pool.$(O) \
+	deps/zstd/lib/common/zstd_common.$(O) \
+	deps/zstd/lib/compress/fse_compress.$(O) \
+	deps/zstd/lib/compress/hist.$(O) \
+	deps/zstd/lib/compress/huf_compress.$(O) \
+	deps/zstd/lib/compress/zstd_compress.$(O) \
+	deps/zstd/lib/compress/zstd_compress_literals.$(O) \
+	deps/zstd/lib/compress/zstd_compress_sequences.$(O) \
+	deps/zstd/lib/compress/zstd_compress_superblock.$(O) \
+	deps/zstd/lib/compress/zstd_double_fast.$(O) \
+	deps/zstd/lib/compress/zstd_fast.$(O) \
+	deps/zstd/lib/compress/zstd_lazy.$(O) \
+	deps/zstd/lib/compress/zstd_ldm.$(O) \
+	deps/zstd/lib/compress/zstd_opt.$(O) \
+	deps/zstd/lib/compress/zstdmt_compress.$(O) \
+	deps/zstd/lib/decompress/huf_decompress.$(O) \
+	deps/zstd/lib/decompress/zstd_ddict.$(O) \
+	deps/zstd/lib/decompress/zstd_decompress.$(O) \
+	deps/zstd/lib/decompress/zstd_decompress_block.$(O)
+
 OBJS = \
 	rename/core_host.$(O) \
+	rename/memory_card_image.$(O) \
 	rename/effect_preprocessor.$(O) \
 	rename/format.$(O) \
 	rename/os.$(O) \
 	rename/zstd_xxhash.$(O) \
 	rename/c4_error.$(O) \
 	rename/c4_format.$(O) \
+	rename/system.$(O) \
+	$(EXT_DEPS_OBJS) \
 	$(SHIM_OBJS) \
 	$(DEPS_OBJS) \
 	$(UTIL_OBJS) \
