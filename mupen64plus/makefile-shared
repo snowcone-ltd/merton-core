@@ -111,6 +111,7 @@ PRDP_OBJS = \
 	$(PROJ_PRDP)/parallel-rdp/video_interface.$(O) \
 	$(PROJ_PRDP)/util/aligned_alloc.$(O) \
 	$(PROJ_PRDP)/util/arena_allocator.$(O) \
+	$(PROJ_PRDP)/util/environment.$(O) \
 	$(PROJ_PRDP)/util/logging.$(O) \
 	$(PROJ_PRDP)/util/thread_id.$(O) \
 	$(PROJ_PRDP)/util/thread_name.$(O) \

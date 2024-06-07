@@ -36,7 +36,7 @@ git -C mupen64plus/mupen64plus-rsp-cxd4 checkout f6ff3719cb68d3e1c1497fc87a66192
 git clone git@github.com:Themaister/parallel-rdp-standalone mupen64plus/parallel-rdp
 git -C mupen64plus/parallel-rdp fetch
 git -C mupen64plus/parallel-rdp reset --hard HEAD
-git -C mupen64plus/parallel-rdp checkout 37bf2967e3dd18e059cf5563717bb6c88c261f33
+git -C mupen64plus/parallel-rdp checkout e8a425fabc3a25d1855d5f217c6857e5e9bf1af2
 
 git clone git@github.com:libretro/parallel-rsp mupen64plus/parallel-rsp
 git -C mupen64plus/parallel-rsp fetch
