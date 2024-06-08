@@ -226,8 +226,11 @@ static void core_set_gameboy_settings(Core *ctx)
 	// Zero out RAM
 	cfg.RamPowerOnState = RamState::AllZeros;
 
+	// Do not blur frames
+	cfg.BlendFrames = false;
+
 	// Use original gameboy by default
-	cfg.Model = GameboyModel::AutoFavorGb;
+	// cfg.Model = GameboyModel::AutoFavorGb;
 
 	ctx->emu->GetSettings()->SetGameboyConfig(cfg);
 }
@@ -250,7 +253,8 @@ static void core_set_gba_settings(Core *ctx)
 {
 	GbaConfig cfg = {};
 
-	cfg.GbaAdjustColors = false;
+	// Do not blur frames
+	cfg.BlendFrames = false;
 
 	// Input
 	core_set_buttons(&cfg.Controller, ControllerType::GbaController, 0);
