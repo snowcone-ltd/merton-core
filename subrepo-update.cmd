@@ -21,27 +21,27 @@ git -C mgba/mgba checkout 3571b112dc821d3612e5073afb8b6be41a35dc55
 git clone git@github.com:mupen64plus/mupen64plus-core mupen64plus/mupen64plus-core
 git -C mupen64plus/mupen64plus-core fetch
 git -C mupen64plus/mupen64plus-core reset --hard HEAD
-git -C mupen64plus/mupen64plus-core checkout 5340dafcc0f5e8284057ab931dd5c66222d3d49e
+git -C mupen64plus/mupen64plus-core checkout e170c409fb006aa38fd02031b5eefab6886ec125
 
 git clone git@github.com:ata4/angrylion-rdp-plus mupen64plus/angrylion-rdp-plus
 git -C mupen64plus/angrylion-rdp-plus fetch
 git -C mupen64plus/angrylion-rdp-plus reset --hard HEAD
-git -C mupen64plus/angrylion-rdp-plus checkout 8a1cc860b1afcba8ac80f9569ca46ba0f8fbddd3
+git -C mupen64plus/angrylion-rdp-plus checkout 9c8b9ed3e7d7f00dff8bc872ccdd3fba1a3673fc
 
 git clone git@github.com:mupen64plus/mupen64plus-rsp-cxd4 mupen64plus/mupen64plus-rsp-cxd4
 git -C mupen64plus/mupen64plus-rsp-cxd4 fetch
 git -C mupen64plus/mupen64plus-rsp-cxd4 reset --hard HEAD
-git -C mupen64plus/mupen64plus-rsp-cxd4 checkout f6ff3719cb68d3e1c1497fc87a661921671db719
+git -C mupen64plus/mupen64plus-rsp-cxd4 checkout 162860dae86edd14e40601e7178bd7087b25a391
 
 git clone git@github.com:Themaister/parallel-rdp-standalone mupen64plus/parallel-rdp
 git -C mupen64plus/parallel-rdp fetch
 git -C mupen64plus/parallel-rdp reset --hard HEAD
-git -C mupen64plus/parallel-rdp checkout e8a425fabc3a25d1855d5f217c6857e5e9bf1af2
+git -C mupen64plus/parallel-rdp checkout 388d70f5835b352d841d9d9e5a08c5de01470f41
 
 git clone git@github.com:libretro/parallel-rsp mupen64plus/parallel-rsp
 git -C mupen64plus/parallel-rsp fetch
 git -C mupen64plus/parallel-rsp reset --hard HEAD
-git -C mupen64plus/parallel-rsp checkout 8f1d59d5393326358499edb8ecc8a328c680ce43
+git -C mupen64plus/parallel-rsp checkout fd28f47a96370c8bfcf41d680d1ab01879a801a8
 
 git clone git@github.com:stella-emu/stella stella/stella
 git -C stella/stella fetch
