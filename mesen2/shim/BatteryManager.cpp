@@ -28,11 +28,6 @@ void BatteryManager::Initialize(string romName, bool setBatteryFlag)
 {
 }
 
-string BatteryManager::GetBasePath()
-{
-	return "";
-}
-
 void BatteryManager::SetBatteryProvider(shared_ptr<IBatteryProvider> provider)
 {
 }
@@ -57,8 +52,8 @@ vector<uint8_t> BatteryManager::LoadBattery(string extension)
 
 void BatteryManager::LoadBattery(string extension, uint8_t* data, uint32_t length)
 {
-	if (BATTERY_MANAGER_SAVE_DATA && length >= BATTERY_MANAGER_SAVE_DATA_SIZE)
-		memcpy(data, BATTERY_MANAGER_SAVE_DATA, BATTERY_MANAGER_SAVE_DATA_SIZE);
+	if (BATTERY_MANAGER_SAVE_DATA && length <= BATTERY_MANAGER_SAVE_DATA_SIZE)
+		memcpy(data, BATTERY_MANAGER_SAVE_DATA, length);
 }
 
 uint32_t BatteryManager::GetBatteryFileSize(string extension)

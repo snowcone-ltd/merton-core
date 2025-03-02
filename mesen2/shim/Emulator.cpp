@@ -271,21 +271,26 @@ void Emulator::Serialize(ostream& out, bool includeSettings, int compressionLeve
 	s.SaveTo(out, 0);
 }
 
-bool Emulator::Deserialize(istream& in, uint32_t fileFormatVersion, bool includeSettings, optional<ConsoleType> consoleType, bool sendNotification)
+DeserializeResult Emulator::Deserialize(istream& in, uint32_t fileFormatVersion, bool includeSettings, optional<ConsoleType> consoleType, bool sendNotification)
 {
 	Serializer s(SaveStateManager::FileFormatVersion, false);
 
 	if (!s.LoadFrom(in))
-		return false;
+		return DeserializeResult::SpecificError;
 
 	s.Stream(_console, "");
 
-	return true;
+	return DeserializeResult::Success;
 }
 
 BaseVideoFilter* Emulator::GetVideoFilter(bool getDefaultFilter)
 {
 	return _console->GetVideoFilter(getDefaultFilter);
+}
+
+void Emulator::GetScreenRotationOverride(uint32_t& rotation)
+{
+	rotation = 0;
 }
 
 void Emulator::BlockDebuggerRequests()
