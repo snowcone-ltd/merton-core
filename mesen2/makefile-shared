@@ -33,6 +33,10 @@ SZ_OBJS = \
 	$(PROJ)/SevenZip/Ppmd7Dec.$(O)
 
 UTIL_OBJS = \
+	$(PROJ)/Utilities/Audio/ymfm/ymfm_adpcm.$(O) \
+	$(PROJ)/Utilities/Audio/ymfm/ymfm_misc.$(O) \
+	$(PROJ)/Utilities/Audio/ymfm/ymfm_opn.$(O) \
+	$(PROJ)/Utilities/Audio/ymfm/ymfm_ssg.$(O) \
 	$(PROJ)/Utilities/Audio/blip_buf.$(O) \
 	$(PROJ)/Utilities/Audio/HermiteResampler.$(O) \
 	$(PROJ)/Utilities/Audio/stb_vorbis.$(O) \
@@ -127,11 +131,13 @@ CORE_NES_OBJS = \
 	$(PROJ)/Core/NES/Mappers/FDS/Fds.$(O) \
 	$(PROJ)/Core/NES/Mappers/FDS/FdsAudio.$(O) \
 	$(PROJ)/Core/NES/Mappers/FDS/FdsInputButtons.$(O) \
+	$(PROJ)/Core/NES/Mappers/Homebrew/Rainbow.$(O) \
 	$(PROJ)/Core/NES/Mappers/NSF/NsfMapper.$(O) \
 	$(PROJ)/Core/NES/Mappers/VsSystem/VsControlManager.$(O) \
 	$(PROJ)/Core/NES/BaseMapper.$(O) \
 	$(PROJ)/Core/NES/BaseNesPpu.$(O) \
 	$(PROJ)/Core/NES/BisqwitNtscFilter.$(O) \
+	$(PROJ)/Core/NES/Epsm.$(O) \
 	$(PROJ)/Core/NES/GameDatabase.$(O) \
 	$(PROJ)/Core/NES/MapperFactory.$(O) \
 	$(PROJ)/Core/NES/NesConsole.$(O) \
@@ -213,6 +219,9 @@ CORE_SNES_OBJS = \
 	$(PROJ)/Core/SNES/Coprocessors/SPC7110/Rtc4513.$(O) \
 	$(PROJ)/Core/SNES/Coprocessors/SPC7110/Spc7110.$(O) \
 	$(PROJ)/Core/SNES/Coprocessors/SPC7110/Spc7110Decomp.$(O) \
+	$(PROJ)/Core/SNES/Coprocessors/ST018/ArmV3Cpu.$(O) \
+	$(PROJ)/Core/SNES/Coprocessors/ST018/St018.$(O) \
+	$(PROJ)/Core/SNES/Debugger/DummyArmV3Cpu.$(O) \
 	$(PROJ)/Core/SNES/DSP/Dsp.$(O) \
 	$(PROJ)/Core/SNES/DSP/DspVoice.$(O) \
 	$(PROJ)/Core/SNES/Input/Multitap.$(O) \
@@ -239,6 +248,8 @@ CORE_GBA_OBJS = \
 	$(PROJ)/Core/GBA/APU/GbaSquareChannel.$(O) \
 	$(PROJ)/Core/GBA/APU/GbaWaveChannel.$(O) \
 	$(PROJ)/Core/GBA/Cart/GbaCart.$(O) \
+	$(PROJ)/Core/GBA/Cart/GbaGpio.$(O) \
+	$(PROJ)/Core/GBA/Cart/GbaRtc.$(O) \
 	$(PROJ)/Core/GBA/GbaConsole.$(O) \
 	$(PROJ)/Core/GBA/GbaControlManager.$(O) \
 	$(PROJ)/Core/GBA/GbaCpu.Arm.$(O) \
@@ -252,6 +263,7 @@ CORE_GBA_OBJS = \
 
 SHIM_OBJS = \
 	shim/SoundMixer.$(O) \
+	shim/SmsVdpTools.$(O) \
 	shim/CoreKeyManager.$(O) \
 	shim/Debugger.$(O) \
 	shim/PpuTools.$(O) \

@@ -458,7 +458,8 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 	std::stringstream ss;
 	ss.write((char *) state, size);
 
-	return ctx->emu->Deserialize(ss, 0, false, std::optional<ConsoleType>());
+	return ctx->emu->Deserialize(ss, 0, false, std::optional<ConsoleType>()) ==
+		DeserializeResult::Success;
 }
 
 bool CoreInsertDisc(Core *ctx, const char *path)

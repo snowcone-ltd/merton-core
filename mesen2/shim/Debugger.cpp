@@ -130,6 +130,7 @@ template void Debugger::ProcessInstruction<CpuType::Spc>();
 template void Debugger::ProcessInstruction<CpuType::Gsu>();
 template void Debugger::ProcessInstruction<CpuType::NecDsp>();
 template void Debugger::ProcessInstruction<CpuType::Cx4>();
+template void Debugger::ProcessInstruction<CpuType::St018>();
 template void Debugger::ProcessInstruction<CpuType::Gameboy>();
 template void Debugger::ProcessInstruction<CpuType::Nes>();
 template void Debugger::ProcessInstruction<CpuType::Pce>();
@@ -144,6 +145,8 @@ template void Debugger::ProcessMemoryRead<CpuType::Gsu>(uint32_t addr, uint8_t& 
 template void Debugger::ProcessMemoryRead<CpuType::NecDsp>(uint32_t addr, uint32_t& value, MemoryOperationType opType);
 template void Debugger::ProcessMemoryRead<CpuType::NecDsp>(uint32_t addr, uint16_t& value, MemoryOperationType opType);
 template void Debugger::ProcessMemoryRead<CpuType::Cx4>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
+template void Debugger::ProcessMemoryRead<CpuType::St018, 1>(uint32_t addr, uint32_t& value, MemoryOperationType opType);
+template void Debugger::ProcessMemoryRead<CpuType::St018, 4>(uint32_t addr, uint32_t& value, MemoryOperationType opType);
 template void Debugger::ProcessMemoryRead<CpuType::Gameboy>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
 template void Debugger::ProcessMemoryRead<CpuType::Nes>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
 template void Debugger::ProcessMemoryRead<CpuType::Pce>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
@@ -159,6 +162,8 @@ template bool Debugger::ProcessMemoryWrite<CpuType::Spc, 1, MemoryAccessFlags::D
 template bool Debugger::ProcessMemoryWrite<CpuType::Gsu>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
 template bool Debugger::ProcessMemoryWrite<CpuType::NecDsp>(uint32_t addr, uint16_t& value, MemoryOperationType opType);
 template bool Debugger::ProcessMemoryWrite<CpuType::Cx4>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
+template bool Debugger::ProcessMemoryWrite<CpuType::St018, 1>(uint32_t addr, uint32_t& value, MemoryOperationType opType);
+template bool Debugger::ProcessMemoryWrite<CpuType::St018, 4>(uint32_t addr, uint32_t& value, MemoryOperationType opType);
 template bool Debugger::ProcessMemoryWrite<CpuType::Gameboy>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
 template bool Debugger::ProcessMemoryWrite<CpuType::Nes>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
 template bool Debugger::ProcessMemoryWrite<CpuType::Pce>(uint32_t addr, uint8_t& value, MemoryOperationType opType);
