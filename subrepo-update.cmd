@@ -8,6 +8,11 @@ git -C genesis-plus-gx/Genesis-Plus-GX fetch
 git -C genesis-plus-gx/Genesis-Plus-GX reset --hard HEAD
 git -C genesis-plus-gx/Genesis-Plus-GX checkout a203bbf2ab6c7164051ff90ad30cc8f6352a56ac
 
+git clone git@github.com:snowcone-ltd/mednafen mednafen/mednafen
+git -C mednafen/mednafen fetch
+git -C mednafen/mednafen reset --hard HEAD
+git -C mednafen/mednafen checkout f44bdf3cddc4937c273d2ff10087efe0da0399d7
+
 git clone git@github.com:SourMesen/Mesen2 mesen2/Mesen2
 git -C mesen2/Mesen2 fetch
 git -C mesen2/Mesen2 reset --hard HEAD
