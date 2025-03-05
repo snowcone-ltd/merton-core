@@ -1,10 +1,5 @@
-#include <mednafen/mednafen.h>
-#include <mednafen/FileStream.h>
-#include "resampler/resampler.h"
-#include <mednafen/Time.h>
+#include "mednafen.h"
 #include "qtrecord.h"
-#include <minilzo/minilzo.h>
-#include "video/png.h"
 
 namespace Mednafen
 {

@@ -12,26 +12,36 @@ INCLUDES = \
 
 DEFS = \
 	-DLSB_FIRST \
+	-DWANT_PSX_EMU \
 	-DMEDNAFEN_VERSION_NUMERIC=0x00103201 \
-	-DMEDNAFEN_VERSION=\"1.32.1\"
+	-DMEDNAFEN_VERSION=\"1.32.1\" \
+	-DSIZEOF_CHAR=1 \
+	-DSIZEOF_SHORT=2 \
+	-DSIZEOF_INT=4 \
+	-DSIZEOF_LONG=4 \
+	-DSIZEOF_OFF_T=4 \
+	-DSIZEOF_LONG_LONG=8 \
+	-DSIZEOF_PTRDIFF_T=8 \
+	-DSIZEOF_SIZE_T=8 \
+	-DSIZEOF_VOID_P=8
 
 DEPS_OBJS = \
 	deps/zlib/adler32.$(O) \
+	deps/zlib/compress.$(O) \
 	deps/zlib/crc32.$(O) \
 	deps/zlib/deflate.$(O) \
 	deps/zlib/inffast.$(O) \
 	deps/zlib/inflate.$(O) \
 	deps/zlib/inftrees.$(O) \
 	deps/zlib/trees.$(O) \
-	deps/zlib/uncompr.$(O) \
 	deps/zlib/zutil.$(O) \
 	$(PROJ)/src/trio/trio.$(O) \
 	$(PROJ)/src/trio/trionan.$(O) \
 	$(PROJ)/src/trio/triostr.$(O) \
-	$(PROJ)/src/string/escape.$(O) \
 	$(PROJ)/src/string/string.$(O) \
 	$(PROJ)/src/hash/crc.$(O) \
 	$(PROJ)/src/hash/md5.$(O) \
+	$(PROJ)/src/hash/sha1.$(O) \
 	$(PROJ)/src/hash/sha256.$(O) \
 	$(PROJ)/src/time/Time_Win32.$(O) \
 	$(PROJ)/src/compress/ArchiveReader.$(O) \
@@ -40,16 +50,76 @@ DEPS_OBJS = \
 	$(PROJ)/src/compress/ZLInflateFilter.$(O) \
 	$(PROJ)/src/compress/ZstdDecompressFilter.$(O) \
 	$(PROJ)/src/mthreading/MThreading_Win32.$(O) \
-	$(PROJ)/src/cheat_formats/psx.$(O) \
 	$(PROJ)/src/sound/Blip_Buffer.$(O) \
-	$(PROJ)/src/sound/CassowaryResampler.$(O) \
 	$(PROJ)/src/sound/DSPUtility.$(O) \
 	$(PROJ)/src/sound/Fir_Resampler.$(O) \
-	$(PROJ)/src/sound/okiadpcm.$(O) \
 	$(PROJ)/src/sound/OwlResampler.$(O) \
-	$(PROJ)/src/sound/Stereo_Buffer.$(O) \
 	$(PROJ)/src/sound/SwiftResampler.$(O) \
 	$(PROJ)/src/sound/WAVRecord.$(O) \
+	$(PROJ)/src/zstd/common/entropy_common.$(O) \
+	$(PROJ)/src/zstd/common/error_private.$(O) \
+	$(PROJ)/src/zstd/common/fse_decompress.$(O) \
+	$(PROJ)/src/zstd/common/xxhash.$(O) \
+	$(PROJ)/src/zstd/common/zstd_common.$(O) \
+	$(PROJ)/src/zstd/decompress/huf_decompress.$(O) \
+	$(PROJ)/src/zstd/decompress/zstd_ddict.$(O) \
+	$(PROJ)/src/zstd/decompress/zstd_decompress.$(O) \
+	$(PROJ)/src/zstd/decompress/zstd_decompress_block.$(O) \
+	$(PROJ)/src/quicklz/quicklz.$(O) \
+	$(PROJ)/src/cdrom/CDAccess.$(O) \
+	$(PROJ)/src/cdrom/CDAccess_CCD.$(O) \
+	$(PROJ)/src/cdrom/CDAccess_Image.$(O) \
+	$(PROJ)/src/cdrom/CDAFReader.$(O) \
+	$(PROJ)/src/cdrom/CDAFReader_MPC.$(O) \
+	$(PROJ)/src/cdrom/CDAFReader_PCM.$(O) \
+	$(PROJ)/src/cdrom/CDAFReader_Vorbis.$(O) \
+	$(PROJ)/src/cdrom/CDInterface.$(O) \
+	$(PROJ)/src/cdrom/CDInterface_MT.$(O) \
+	$(PROJ)/src/cdrom/CDInterface_ST.$(O) \
+	$(PROJ)/src/cdrom/CDUtility.$(O) \
+	$(PROJ)/src/cdrom/crc32.$(O) \
+	$(PROJ)/src/cdrom/galois.$(O) \
+	$(PROJ)/src/cdrom/lec.$(O) \
+	$(PROJ)/src/cdrom/l-ec.$(O) \
+	$(PROJ)/src/cdrom/recover-raw.$(O) \
+	$(PROJ)/src/mpcdec/crc32.$(O) \
+	$(PROJ)/src/mpcdec/huffman.$(O) \
+	$(PROJ)/src/mpcdec/mpc_bits_reader.$(O) \
+	$(PROJ)/src/mpcdec/mpc_decoder.$(O) \
+	$(PROJ)/src/mpcdec/mpc_demux.$(O) \
+	$(PROJ)/src/mpcdec/requant.$(O) \
+	$(PROJ)/src/mpcdec/streaminfo.$(O) \
+	$(PROJ)/src/mpcdec/synth_filter.$(O) \
+	$(PROJ)/src/cputest/cputest.$(O) \
+	$(PROJ)/src/tremor/bitwise.$(O) \
+	$(PROJ)/src/tremor/block.$(O) \
+	$(PROJ)/src/tremor/codebook.$(O) \
+	$(PROJ)/src/tremor/floor0.$(O) \
+	$(PROJ)/src/tremor/floor1.$(O) \
+	$(PROJ)/src/tremor/framing.$(O) \
+	$(PROJ)/src/tremor/info.$(O) \
+	$(PROJ)/src/tremor/mapping0.$(O) \
+	$(PROJ)/src/tremor/mdct.$(O) \
+	$(PROJ)/src/tremor/registry.$(O) \
+	$(PROJ)/src/tremor/res012.$(O) \
+	$(PROJ)/src/tremor/sharedbook.$(O) \
+	$(PROJ)/src/tremor/synthesis.$(O) \
+	$(PROJ)/src/tremor/vorbisfile.$(O) \
+	$(PROJ)/src/tremor/window.$(O) \
+	$(PROJ)/src/video/convert.$(O) \
+	$(PROJ)/src/video/Deinterlacer.$(O) \
+	$(PROJ)/src/video/Deinterlacer_Blend.$(O) \
+	$(PROJ)/src/video/Deinterlacer_Simple.$(O) \
+	$(PROJ)/src/video/primitives.$(O) \
+	$(PROJ)/src/video/resize.$(O) \
+	$(PROJ)/src/video/surface.$(O) \
+	$(PROJ)/src/video/tblur.$(O) \
+	$(PROJ)/src/video/text.$(O) \
+	$(PROJ)/src/video/font-data.$(O) \
+	$(PROJ)/src/minilzo/minilzo.$(O) \
+	$(PROJ)/src/demo/demo.$(O) \
+	$(PROJ)/src/cdplay/cdplay.$(O) \
+	$(PROJ)/src/resampler/resample.$(O)
 
 MDFN_OBJS = \
 	$(PROJ)/src/endian.$(O) \
@@ -64,22 +134,19 @@ MDFN_OBJS = \
 	$(PROJ)/src/MemoryStream.$(O) \
 	$(PROJ)/src/mempatcher.$(O) \
 	$(PROJ)/src/movie.$(O) \
-	$(PROJ)/src/MTStreamReader.$(O) \
+	$(PROJ)/src/NativeVFS.$(O) \
 	$(PROJ)/src/player.$(O) \
 	$(PROJ)/src/settings.$(O) \
-	$(PROJ)/src/SNSFLoader.$(O) \
-	$(PROJ)/src/SPCReader.$(O) \
-	$(PROJ)/src/SSFLoader.$(O) \
 	$(PROJ)/src/state.$(O) \
 	$(PROJ)/src/state_rewind.$(O) \
 	$(PROJ)/src/Stream.$(O) \
+	$(PROJ)/src/tests.$(O) \
+	$(PROJ)/src/testsexp.$(O) \
 	$(PROJ)/src/VirtualFS.$(O) \
 	$(PROJ)/src/win32-common.$(O)
 
-# TODO netplay
-# TODO qtrecord
-
 PSX_OBJS = \
+	$(PROJ)/src/cheat_formats/psx.$(O) \
 	$(PROJ)/src/psx/input/dualanalog.$(O) \
 	$(PROJ)/src/psx/input/dualshock.$(O) \
 	$(PROJ)/src/psx/input/gamepad.$(O) \
@@ -91,7 +158,6 @@ PSX_OBJS = \
 	$(PROJ)/src/psx/input/negcon.$(O) \
 	$(PROJ)/src/psx/cdc.$(O) \
 	$(PROJ)/src/psx/cpu.$(O) \
-	$(PROJ)/src/psx/dis.$(O) \
 	$(PROJ)/src/psx/dma.$(O) \
 	$(PROJ)/src/psx/frontio.$(O) \
 	$(PROJ)/src/psx/gpu.$(O) \
@@ -109,7 +175,6 @@ PSX_OBJS = \
 SHIM_OBJS = \
 	shim/FileStream.$(O) \
 	shim/GZFileStream.$(O) \
-	shim/NativeVFS.$(O) \
 	shim/netplay.$(O) \
 	shim/PSFLoader.$(O) \
 	shim/qtrecord.$(O)
