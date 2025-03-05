@@ -3,7 +3,6 @@ NAME = mednafen
 
 INCLUDES = \
 	-I.. \
-	-IC:\Users\cdd\Documents\clang\include \
 	-Irename \
 	-Ideps\zlib \
 	-I$(PROJ) \
@@ -11,6 +10,7 @@ INCLUDES = \
 	-I$(PROJ)/src/compress \
 
 DEFS = \
+	-DCORE_EXPORT \
 	-DLSB_FIRST \
 	-DWANT_PSX_EMU \
 	-DMEDNAFEN_VERSION_NUMERIC=0x00103201 \
@@ -18,7 +18,6 @@ DEFS = \
 	-DSIZEOF_CHAR=1 \
 	-DSIZEOF_SHORT=2 \
 	-DSIZEOF_INT=4 \
-	-DSIZEOF_LONG=4 \
 	-DSIZEOF_OFF_T=4 \
 	-DSIZEOF_LONG_LONG=8 \
 	-DSIZEOF_PTRDIFF_T=8 \
@@ -30,10 +29,15 @@ DEPS_OBJS = \
 	deps/zlib/compress.$(O) \
 	deps/zlib/crc32.$(O) \
 	deps/zlib/deflate.$(O) \
+	deps/zlib/gzclose.$(O) \
+	deps/zlib/gzlib.$(O) \
+	deps/zlib/gzread.$(O) \
+	deps/zlib/gzwrite.$(O) \
 	deps/zlib/inffast.$(O) \
 	deps/zlib/inflate.$(O) \
 	deps/zlib/inftrees.$(O) \
 	deps/zlib/trees.$(O) \
+	deps/zlib/uncompr.$(O) \
 	deps/zlib/zutil.$(O) \
 	$(PROJ)/src/trio/trio.$(O) \
 	$(PROJ)/src/trio/trionan.$(O) \
@@ -43,13 +47,12 @@ DEPS_OBJS = \
 	$(PROJ)/src/hash/md5.$(O) \
 	$(PROJ)/src/hash/sha1.$(O) \
 	$(PROJ)/src/hash/sha256.$(O) \
-	$(PROJ)/src/time/Time_Win32.$(O) \
 	$(PROJ)/src/compress/ArchiveReader.$(O) \
 	$(PROJ)/src/compress/DecompressFilter.$(O) \
+	$(PROJ)/src/compress/GZFileStream.$(O) \
 	$(PROJ)/src/compress/ZIPReader.$(O) \
 	$(PROJ)/src/compress/ZLInflateFilter.$(O) \
 	$(PROJ)/src/compress/ZstdDecompressFilter.$(O) \
-	$(PROJ)/src/mthreading/MThreading_Win32.$(O) \
 	$(PROJ)/src/sound/Blip_Buffer.$(O) \
 	$(PROJ)/src/sound/DSPUtility.$(O) \
 	$(PROJ)/src/sound/Fir_Resampler.$(O) \
@@ -126,6 +129,7 @@ MDFN_OBJS = \
 	$(PROJ)/src/error.$(O) \
 	$(PROJ)/src/ExtMemStream.$(O) \
 	$(PROJ)/src/file.$(O) \
+	$(PROJ)/src/FileStream.$(O) \
 	$(PROJ)/src/general.$(O) \
 	$(PROJ)/src/git.$(O) \
 	$(PROJ)/src/IPSPatcher.$(O) \
@@ -142,8 +146,7 @@ MDFN_OBJS = \
 	$(PROJ)/src/Stream.$(O) \
 	$(PROJ)/src/tests.$(O) \
 	$(PROJ)/src/testsexp.$(O) \
-	$(PROJ)/src/VirtualFS.$(O) \
-	$(PROJ)/src/win32-common.$(O)
+	$(PROJ)/src/VirtualFS.$(O)
 
 PSX_OBJS = \
 	$(PROJ)/src/cheat_formats/psx.$(O) \
@@ -173,8 +176,6 @@ PSX_OBJS = \
 	$(PROJ)/src/psx/timer.$(O)
 
 SHIM_OBJS = \
-	shim/FileStream.$(O) \
-	shim/GZFileStream.$(O) \
 	shim/netplay.$(O) \
 	shim/PSFLoader.$(O) \
 	shim/qtrecord.$(O)

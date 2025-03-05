@@ -2,16 +2,18 @@
 !INCLUDE makefile-shared
 
 .cpp.obj:
-	clang $(INCLUDES) $(DEFS) $(FLAGS) -c -o $@ $<
+	clang $(INCLUDES) $(DEFS) $(FLAGS) -std=c++14 -c -o $@ $<
 
 .c.obj:
-	clang $(INCLUDES) $(DEFS) $(FLAGS) -c -o $@ $<
+	clang $(INCLUDES) $(DEFS) $(FLAGS) -std=c11 -c -o $@ $<
 
 FLAGS = \
 	-Wall \
 	-Wextra \
+	-fwrapv \
 	-O2 \
 	-Wno-unused-parameter \
+	-Wno-unknown-pragmas \
 	-Wno-missing-field-initializers \
 	-Wno-deprecated-literal-operator \
 	-Wno-deprecated-declarations \
@@ -24,30 +26,23 @@ FLAGS = \
 	-Wno-unused-variable \
 	-Wno-self-assign \
 	-Wno-shift-negative-value \
-	-fwrapv \
-	-fno-fast-math \
-	-fomit-frame-pointer \
-	-fstrict-aliasing \
-	-fsigned-char \
-	-fjump-tables \
-	-mfunction-return=keep \
-	-mno-retpoline \
-	-fno-pic \
-	-fno-PIC \
-	-fno-pie \
-	-fno-PIE
+	-Wno-c++11-narrowing
 
 DEFS = $(DEFS) \
 	-DWIN32 \
+	-D_CRT_SECURE_NO_WARNINGS \
+	-DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP \
 	-DMDFN_DISABLE_NO_OPT_ERRWARN \
+	-DMDFN_DISABLE_PICPIE_ERRWARN \
 	-D__USING_SJLJ_EXCEPTIONS__ \
+	-DHAVE_INLINEASM_AVX \
+	-DSIZEOF_LONG=4 \
 	-DARCH_X86_64 \
 	-DMDFN_PSS_STYLE=2 \
-	-D_CRT_SECURE_NO_WARNINGS \
-	-DMDFN_DISABLE_PICPIE_ERRWARN \
 	-Dstrdup=_strdup \
 	-Dstrcmpi=_stricmp \
-	-DCORE_EXPORT
+	-Dssize_t=SSIZE_T \
+	-DSSIZE_MAX=INT64_MAX
 
 LIBS = \
 	libvcruntime.lib \
@@ -57,10 +52,16 @@ LIBS = \
 	kernel32.lib \
 	winmm.lib
 
-CFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
-CPPFLAGS = $(INCLUDES) $(DEFS) $(FLAGS)
+INCLUDES = $(INCLUDES) \
+	-IC:\Users\cdd\Documents\clang\include
 
-all: clean clear $(OBJS)
+OBJS = $(OBJS) \
+	shim/unistd.$(O) \
+	$(PROJ)/src/win32-common.$(O) \
+	$(PROJ)/src/mthreading/MThreading_Win32.$(O) \
+	$(PROJ)/src/time/Time_Win32.$(O)
+
+all: clear $(OBJS)
 	link /out:$(NAME).dll /nodefaultlib /nologo /dll /debug $(OBJS) $(LIBS)
 
 clean:
