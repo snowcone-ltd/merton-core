@@ -1,6 +1,7 @@
 #include "mednafen.h"
 #include "state-driver.h"
 #include "netplay-driver.h"
+#include "MemoryStream.h"
 
 #include "../core.h"
 
@@ -41,7 +42,7 @@ void core_log(const char *fmt, ...)
 }
 
 
-// Mednafen driver
+// Mednafen driver callbacks
 
 void Mednafen::MDFND_OutputNotice(MDFN_NoticeType t, const char* s) noexcept
 {
@@ -63,6 +64,7 @@ void Mednafen::MDFND_NetplayText(const char* text, bool NetEcho)
 
 void Mednafen::MDFND_MediaSetNotification(uint32 drive_idx, uint32 state_idx, uint32 media_idx, uint32 orientation_idx)
 {
+	core_log("[Media] drive_idx=%u, state_idx=%u, media_idx=%u\n", drive_idx, state_idx, media_idx);
 }
 
 void Mednafen::MDFND_MidSync(EmulateSpecStruct *espec, const unsigned flags)
@@ -224,21 +226,21 @@ void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 
 	switch (button) {
 		case CORE_BUTTON_SELECT: SET_STATE_BIT(0); break;
-		case CORE_BUTTON_R: SET_STATE_BIT(1); break;
-		case CORE_BUTTON_L: SET_STATE_BIT(2); break;
+		case CORE_BUTTON_L3: SET_STATE_BIT(1); break;
+		case CORE_BUTTON_R3: SET_STATE_BIT(2); break;
 		case CORE_BUTTON_START: SET_STATE_BIT(3); break;
 		case CORE_BUTTON_DPAD_U: SET_STATE_BIT(4); break;
 		case CORE_BUTTON_DPAD_R: SET_STATE_BIT(5); break;
 		case CORE_BUTTON_DPAD_D: SET_STATE_BIT(6); break;
 		case CORE_BUTTON_DPAD_L: SET_STATE_BIT(7); break;
-		//case CORE_BUTTON_L2: SET_STATE_BIT(8); break;
-		//case CORE_BUTTON_R2: SET_STATE_BIT(9); break;
-		case CORE_BUTTON_X: SET_STATE_BIT(12); break;
-		case CORE_BUTTON_Y: SET_STATE_BIT(13); break;
+		case CORE_BUTTON_L2: SET_STATE_BIT(8); break;
+		case CORE_BUTTON_R2: SET_STATE_BIT(9); break;
+		case CORE_BUTTON_L: SET_STATE_BIT(10); break;
+		case CORE_BUTTON_R: SET_STATE_BIT(11); break;
+		case CORE_BUTTON_Y: SET_STATE_BIT(12); break;
+		case CORE_BUTTON_B: SET_STATE_BIT(13); break;
 		case CORE_BUTTON_A: SET_STATE_BIT(14); break;
-		case CORE_BUTTON_B: SET_STATE_BIT(15); break;
-		case CORE_BUTTON_L3:
-		case CORE_BUTTON_R3:
+		case CORE_BUTTON_X: SET_STATE_BIT(15); break;
 		default:
 			return;
 	}
@@ -254,22 +256,42 @@ void CoreSetAxis(Core *ctx, uint8_t player, CoreAxis axis, int16_t value)
 
 void *CoreGetState(Core *ctx, size_t *size)
 {
-	// TODO
-
 	if (!ctx)
 		return NULL;
 
-	return NULL;
+	Mednafen::MemoryStream st(65536);
+
+	try {
+		MDFNSS_SaveSM(&st, true);
+
+	} catch (...) {
+		return NULL;
+	}
+
+	*size = st.size();
+
+	void *buf = malloc(*size);
+	memcpy(buf, st.map(), *size);
+
+	return buf;
 }
 
 bool CoreSetState(Core *ctx, const void *state, size_t size)
 {
-	// TODO
-
 	if (!ctx)
 		return false;
 
-	return false;
+	Mednafen::MemoryStream st(size, -1);
+	memcpy(st.map(), state, size);
+
+	try {
+		MDFNSS_LoadSM(&st, true);
+
+	} catch (...) {
+		return false;
+	}
+
+	return true;
 }
 
 bool CoreInsertDisc(Core *ctx, const char *path)
