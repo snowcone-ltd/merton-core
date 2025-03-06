@@ -1,6 +1,19 @@
 #include "FileStream.h"
 
+#include "filestream-cb.h"
+
 void core_log(const char *fmt, ...);
+
+static FILE_STREAM_WRITE_CB FILE_STREAM_WRITE;
+static FILE_STREAM_READ_CB FILE_STREAM_READ;
+static void *FILE_STREAM_OPAQUE;
+
+void file_stream_set_callbacks(FILE_STREAM_WRITE_CB write_cb, FILE_STREAM_READ_CB read_cb, void *opaque)
+{
+	FILE_STREAM_WRITE = write_cb;
+	FILE_STREAM_READ = read_cb;
+	FILE_STREAM_OPAQUE = opaque;
+}
 
 namespace Mednafen
 {
@@ -9,6 +22,10 @@ FileStream::FileStream(const std::string& path, const uint32 mode, const int do_
 	: pos(0), mapping(NULL), mapping_size(0), OpenedMode(mode), path_humesc(MDFN_strhumesc(path))
 {
 	if (mode == MODE_READ) {
+		if (FILE_STREAM_READ)
+			if (FILE_STREAM_READ(path.c_str(), &this->mapping, &this->mapping_size, FILE_STREAM_OPAQUE))
+				return;
+
 		const char *cpath = path.c_str();
 		struct stat st;
 
@@ -27,6 +44,9 @@ FileStream::FileStream(const std::string& path, const uint32 mode, const int do_
 
 		if (this->mapping_size == 0)
 			throw MDFN_Error(errno, "File does not exist");
+
+	} else if (mode == MODE_READ_WRITE) {
+		throw MDFN_Error(0, "Unsupported file mode: MODE_READ_WRITE");
 	}
 }
 
@@ -37,44 +57,19 @@ FileStream::~FileStream()
 
 uint64 FileStream::attributes(void)
 {
-	uint64 ret = ATTRIBUTE_SEEKABLE;
-
-	switch (this->OpenedMode) {
-		case MODE_READ:
-			ret |= ATTRIBUTE_READABLE;
-			break;
-		case MODE_READ_WRITE:
-			ret |= ATTRIBUTE_READABLE | ATTRIBUTE_WRITEABLE;
-			break;
-		case MODE_WRITE_INPLACE:
-		case MODE_WRITE_SAFE:
-		case MODE_WRITE:
-			ret |= ATTRIBUTE_WRITEABLE;
-			break;
-	}
-
-	return ret;
+	return ATTRIBUTE_SEEKABLE |
+		(this->OpenedMode == MODE_READ ? ATTRIBUTE_READABLE : ATTRIBUTE_WRITEABLE);
 }
 
-uint8 *FileStream::map(void) noexcept
+void FileStream::write(const void *data, uint64 count)
 {
-	return (uint8 *) this->mapping;
+	this->pos += count;
+
+	if (FILE_STREAM_WRITE)
+		FILE_STREAM_WRITE(this->path_humesc.c_str(), data, count, FILE_STREAM_OPAQUE);
 }
 
-uint64 FileStream::map_size(void) noexcept
-{
-	return this->mapping_size;
-}
-
-void FileStream::unmap(void) noexcept
-{
-}
-
-void FileStream::set_buffer_size(uint32 new_size)
-{
-}
-
-uint64 FileStream::read_ub(void* data, uint64 count)
+uint64 FileStream::read(void *data, uint64 count, bool error_on_eos)
 {
 	uint64 rem = this->mapping_size - this->pos;
 	uint64 n = rem < count ? rem : count;
@@ -82,44 +77,10 @@ uint64 FileStream::read_ub(void* data, uint64 count)
 	memcpy(data, (uint8 *) this->mapping + this->pos, n);
 	this->pos += n;
 
-	return n;
-}
-
-uint64 FileStream::write_ub(const void* data, uint64 count)
-{
-	this->pos += count;
-
-	core_log("*** FileStream::write_ub: count=%u, file=%s\n", count, this->path_humesc.c_str());
-
-	return count;
-}
-
-void FileStream::write_buffered_data(void)
-{
-}
-
-void FileStream::write(const void *data, uint64 count)
-{
-	this->write_ub(data, count);
-}
-
-uint64 FileStream::read(void *data, uint64 count, bool error_on_eos)
-{
-	uint64 n = this->read_ub(data, count);
-
 	if (n != count && error_on_eos)
 		throw MDFN_Error(0, "Unexpected EOF");
 
 	return n;
-}
-
-void FileStream::truncate(uint64 length)
-{
-	if (this->OpenedMode == MODE_READ)
-		throw MDFN_Error(0, "Error truncating file in MODE_READ");
-
-	if (length < this->pos)
-		this->pos = length;
 }
 
 void FileStream::seek(int64 offset, int whence)
@@ -132,10 +93,6 @@ void FileStream::seek(int64 offset, int whence)
 	}
 }
 
-void FileStream::flush(void)
-{
-}
-
 uint64 FileStream::tell(void)
 {
 	return this->pos;
@@ -146,32 +103,81 @@ uint64 FileStream::size(void)
 	return this->mapping_size;
 }
 
-void FileStream::lock(bool nb)
-{
-}
-
-void FileStream::unlock(void)
-{
-}
-
 void FileStream::close(void)
 {
 }
 
+
+// Unimplemented
+
+uint8 *FileStream::map(void) noexcept
+{
+	core_log("*** FileStream::map\n");
+
+	return NULL;
+}
+
+uint64 FileStream::map_size(void) noexcept
+{
+	core_log("*** FileStream::map_size\n");
+
+	return 0;
+}
+
+void FileStream::unmap(void) noexcept
+{
+	core_log("*** FileStream::unmap\n");
+}
+
+void FileStream::set_buffer_size(uint32 new_size)
+{
+	core_log("*** FileStream::set_buffer_size\n");
+}
+
+uint64 FileStream::read_ub(void* data, uint64 count)
+{
+	core_log("*** FileStream::read_ub\n");
+
+	return 0;
+}
+
+uint64 FileStream::write_ub(const void* data, uint64 count)
+{
+	core_log("*** FileStream::write_ub\n");
+
+	return 0;
+}
+
+void FileStream::write_buffered_data(void)
+{
+	core_log("*** FileStream::write_buffered_data\n");
+}
+
+void FileStream::truncate(uint64 length)
+{
+	core_log("*** FileStream::truncate\n");
+}
+
+void FileStream::flush(void)
+{
+	core_log("*** FileStream::flush\n");
+}
+
+void FileStream::lock(bool nb)
+{
+	core_log("*** FileStream::lock\n");
+}
+
+void FileStream::unlock(void)
+{
+	core_log("*** FileStream::unlock\n");
+}
+
 int FileStream::get_line(std::string &str)
 {
-	int c;
+	core_log("*** FileStream::get_line\n");
 
-	str.clear();
-
-	while((c = get_char()) >= 0) {
-		if(c == '\r' || c == '\n' || c == 0)
-			return(c);
-
-		str.push_back(c);
-	}
-
-	return(str.length() ? 256 : -1);
+	return 0;
 }
 
 }

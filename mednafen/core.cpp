@@ -5,6 +5,8 @@
 
 #include "../core.h"
 
+#include "shim/filestream-cb.h"
+
 #include <stdlib.h>
 
 struct Core {
@@ -76,6 +78,29 @@ void Mednafen::MDFND_SetMovieStatus(StateStatusStruct *status) noexcept
 }
 
 
+// FileStream callbacks
+
+bool core_file_stream_write(const char *path, const void *buf, uint64_t size, void *opaque)
+{
+	const char *ext = strrchr(path, '.');
+
+	if (ext)
+		core_log("WRITE CB: %s, %u\n", ext, size);
+
+	return false;
+}
+
+bool core_file_stream_read(const char *path, void **buf, uint64_t *size, void *opaque)
+{
+	const char *ext = strrchr(path, '.');
+
+	if (ext)
+		core_log("READ CB: %s\n", ext);
+
+	return false;
+}
+
+
 // Core
 
 void CoreUnloadGame(Core **core)
@@ -94,6 +119,8 @@ void CoreUnloadGame(Core **core)
 	free(ctx->cropped);
 
 	Mednafen::MDFNI_Kill();
+
+	file_stream_set_callbacks(NULL, NULL, NULL);
 
 	free(ctx);
 	*core = NULL;
@@ -117,6 +144,21 @@ void CoreSetVideoFunc(CoreVideoFunc func, void *opaque)
 	CORE_VIDEO_OPAQUE = opaque;
 }
 
+static void core_settings(CoreSystem system)
+{
+	switch (system) {
+		case CORE_SYSTEM_PS:
+			Mednafen::MDFNI_SetSettingB("psx.input.port1.memcard", true);
+
+			for (uint8_t x = 2; x < 9; x++) {
+				char setting[64];
+				snprintf(setting, 64, "psx.input.port%u.memcard", x);
+				Mednafen::MDFNI_SetSettingB(setting, false);
+			}
+			break;
+	}
+}
+
 Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 	const void *saveData, size_t saveDataSize)
 {
@@ -127,6 +169,10 @@ Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 		return NULL;
 
 	Core *ctx = (Core *) calloc(1, sizeof(Core));
+	file_stream_set_callbacks(core_file_stream_write, core_file_stream_read, ctx);
+
+	core_settings(system);
+
 	ctx->gi = Mednafen::MDFNI_LoadGame(NULL, &::Mednafen::NVFS, path, false);
 
 	if (ctx->gi) {
@@ -168,7 +214,7 @@ void CoreRun(Core *ctx)
 	Mednafen::EmulateSpecStruct spec = {
 		.surface = ctx->surface,
 		.LineWidths = ctx->line_widths,
-		.SoundRate = 48000,
+		.SoundRate = 44100,
 		.SoundBuf = ctx->audio,
 		.SoundBufMaxSize = (10 * 1024 * 1024) / 4,
 	};
@@ -190,7 +236,7 @@ void CoreRun(Core *ctx)
 	}
 
 	if (CORE_AUDIO)
-		CORE_AUDIO(ctx->audio, spec.SoundBufSize, 48000, CORE_AUDIO_OPAQUE);
+		CORE_AUDIO(ctx->audio, spec.SoundBufSize, 44100, CORE_AUDIO_OPAQUE);
 }
 
 void *CoreGetSaveData(Core *ctx, size_t *size)

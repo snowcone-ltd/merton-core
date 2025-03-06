@@ -11,7 +11,7 @@ FLAGS = \
 	-Wall \
 	-Wextra \
 	-fwrapv \
-	-O2 \
+	-Wno-switch \
 	-Wno-unused-parameter \
 	-Wno-unknown-pragmas \
 	-Wno-missing-field-initializers \
@@ -44,6 +44,9 @@ DEFS = $(DEFS) \
 	-Dssize_t=SSIZE_T \
 	-DSSIZE_MAX=INT64_MAX
 
+INCLUDES = $(INCLUDES) \
+	-IC:\Users\cdd\Documents\clang\include
+
 LIBS = \
 	libvcruntime.lib \
 	libucrt.lib \
@@ -52,8 +55,17 @@ LIBS = \
 	kernel32.lib \
 	winmm.lib
 
-INCLUDES = $(INCLUDES) \
-	-IC:\Users\cdd\Documents\clang\include
+L_FLAGS = \
+	/nodefaultlib \
+	/nologo \
+	/dll
+
+!IFDEF DEBUG
+FLAGS = $(FLAGS) -O0 -g
+L_FLAGS = $(L_FLAGS) /debug
+!ELSE
+FLAGS = $(FLAGS) -O2
+!ENDIF
 
 OBJS = $(OBJS) \
 	shim/unistd.$(O) \
@@ -62,7 +74,7 @@ OBJS = $(OBJS) \
 	$(PROJ)/src/time/Time_Win32.$(O)
 
 all: clear $(OBJS)
-	link /out:$(NAME).dll /nodefaultlib /nologo /dll /debug $(OBJS) $(LIBS)
+	link /out:$(NAME).dll $(L_FLAGS) $(OBJS) $(LIBS)
 
 clean:
 	@-del /q *.lib 2>nul

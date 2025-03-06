@@ -137,7 +137,6 @@ MDFN_OBJS = \
 	$(PROJ)/src/MemoryStream.$(O) \
 	$(PROJ)/src/mempatcher.$(O) \
 	$(PROJ)/src/movie.$(O) \
-	$(PROJ)/src/NativeVFS.$(O) \
 	$(PROJ)/src/player.$(O) \
 	$(PROJ)/src/settings.$(O) \
 	$(PROJ)/src/state.$(O) \
@@ -176,6 +175,7 @@ PSX_OBJS = \
 
 SHIM_OBJS = \
 	shim/FileStream.$(O) \
+	shim/NativeVFS.$(O) \
 	shim/netplay.$(O) \
 	shim/PSFLoader.$(O) \
 	shim/qtrecord.$(O)
