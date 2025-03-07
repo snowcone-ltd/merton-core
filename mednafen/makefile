@@ -25,13 +25,11 @@ FLAGS = \
 	-Wno-sign-compare \
 	-Wno-unused-variable \
 	-Wno-self-assign \
-	-Wno-shift-negative-value \
-	-Wno-c++11-narrowing
+	-Wno-shift-negative-value
 
 DEFS = $(DEFS) \
 	-DWIN32 \
 	-D_CRT_SECURE_NO_WARNINGS \
-	-DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP \
 	-DMDFN_DISABLE_NO_OPT_ERRWARN \
 	-DMDFN_DISABLE_PICPIE_ERRWARN \
 	-D__USING_SJLJ_EXCEPTIONS__ \
@@ -40,9 +38,7 @@ DEFS = $(DEFS) \
 	-DARCH_X86_64 \
 	-DMDFN_PSS_STYLE=2 \
 	-Dstrdup=_strdup \
-	-Dstrcmpi=_stricmp \
-	-Dssize_t=SSIZE_T \
-	-DSSIZE_MAX=INT64_MAX
+	-Dstrcmpi=_stricmp
 
 INCLUDES = $(INCLUDES) \
 	-IC:\Users\cdd\Documents\clang\include
@@ -68,10 +64,9 @@ FLAGS = $(FLAGS) -O2
 !ENDIF
 
 OBJS = $(OBJS) \
-	shim/unistd.$(O) \
-	$(PROJ)/src/win32-common.$(O) \
 	$(PROJ)/src/mthreading/MThreading_Win32.$(O) \
-	$(PROJ)/src/time/Time_Win32.$(O)
+	$(PROJ)/src/time/Time_Win32.$(O) \
+	$(PROJ)/src/win32-common.$(O)
 
 all: clear $(OBJS)
 	link /out:$(NAME).dll $(L_FLAGS) $(OBJS) $(LIBS)

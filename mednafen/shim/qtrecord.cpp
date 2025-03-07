@@ -25,7 +25,6 @@ void QTRecord::w64(uint64 val)
 {
 }
 
-// fixed_len doesn't include the leading 1-byte count
 void QTRecord::wps(const char *str, uint8 fixed_len)
 {
 }
@@ -66,43 +65,39 @@ void QTRecord::WriteFrame(const MDFN_Surface *surface, const MDFN_Rect &DisplayR
 {
 }
 
-void QTRecord::Write_ftyp(void) // Leaf
+void QTRecord::Write_ftyp(void)
 {
 }
 
-void QTRecord::Write_mvhd(void)	// Leaf
+void QTRecord::Write_mvhd(void)
 {
 }
 
-void QTRecord::Write_tkhd(void)	// Leaf
+void QTRecord::Write_tkhd(void)
 {
 }
 
-// Sample description
-void QTRecord::Write_stsd(void) // Leaf
+void QTRecord::Write_stsd(void)
 {
 }
 
-// Time-to-sample
-void QTRecord::Write_stts(void)	// Leaf
+void QTRecord::Write_stts(void)
 {
 }
 
-// Sample-to-chunk
-void QTRecord::Write_stsc(void) // Leaf
+void QTRecord::Write_stsc(void)
 {
 }
 
-void QTRecord::Write_stsz(void) // Leaf
+void QTRecord::Write_stsz(void)
 {
 }
 
-// Chunk offset atom(64-bit style)
-void QTRecord::Write_co64(void) // Leaf
+void QTRecord::Write_co64(void)
 {
 }
 
-void QTRecord::Write_stco(void) // Leaf
+void QTRecord::Write_stco(void)
 {
 }
 
@@ -110,22 +105,19 @@ void QTRecord::Write_stbl(void)
 {
 }
 
-// Media header atom
-void QTRecord::Write_mdhd(void)	// Leaf
+void QTRecord::Write_mdhd(void)
 {
 }
 
-// Sound media information header
-void QTRecord::Write_smhd(void) // Leaf
+void QTRecord::Write_smhd(void)
 {
 }
 
-// Video media information header
-void QTRecord::Write_vmhd(void) // Leaf
+void QTRecord::Write_vmhd(void)
 {
 }
 
-void QTRecord::Write_hdlr(const char *str, const char *comp_name) // Leaf
+void QTRecord::Write_hdlr(const char *str, const char *comp_name)
 {
 }
 

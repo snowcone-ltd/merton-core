@@ -2,7 +2,6 @@
 #include "state-driver.h"
 #include "netplay-driver.h"
 #include "MemoryStream.h"
-
 #include "cdrom/CDInterface.h"
 #include "psx/psx.h"
 #include "psx/cdc.h"
@@ -18,11 +17,13 @@ using namespace Mednafen;
 struct Core {
 	MDFNGI *gi;
 	MDFN_Surface *surface;
+	CDInterface *cdif;
 	uint8_t *cropped;
 	uint8_t *input;
 	int16_t *audio;
 	int32_t *line_widths;
 
+	CoreSystem system;
 	void *sdata;
 	size_t sdata_size_max;
 	size_t sdata_size_cur;
@@ -36,6 +37,8 @@ static void *CORE_VIDEO_OPAQUE;
 
 static CoreAudioFunc CORE_AUDIO;
 static void *CORE_AUDIO_OPAQUE;
+
+static uint8_t CORE_SS_RESET_BUTTON;
 
 
 // Logging
@@ -96,9 +99,14 @@ void core_file_stream_write(const char *path, const void *buf, uint64_t size, vo
 	Core *ctx = (Core *) opaque;
 
 	const char *ext = strrchr(path, '.');
+	if (!ext)
+		ext = "";
 
-	// PSX
-	if (ext && strcmp(ext, ".mcr") == 0) {
+	bool sav =
+		strcmp(ext, ".mcr") == 0 || // PSX
+		strcmp(ext, ".bkr") == 0;   // SS
+
+	if (ext && sav) {
 		if (size > ctx->sdata_size_max) {
 			ctx->sdata_size_max = size;
 			ctx->sdata = realloc(ctx->sdata, ctx->sdata_size_max);
@@ -116,9 +124,14 @@ bool core_file_stream_read(const char *path, void **buf, uint64_t *size, void *o
 	Core *ctx = (Core *) opaque;
 
 	const char *ext = strrchr(path, '.');
+	if (!ext)
+		ext = "";
 
-	// PSX
-	if (ext && strcmp(ext, ".mcr") == 0) {
+	bool sav =
+		strcmp(ext, ".mcr") == 0 || // PSX
+		strcmp(ext, ".bkr") == 0;   // SS
+
+	if (ext && sav) {
 		if (ctx->sdata) {
 			*size = ctx->sdata_size_cur;
 			*buf = malloc(*size);
@@ -147,6 +160,7 @@ void CoreUnloadGame(Core **core)
 		MDFNI_CloseGame();
 
 	delete ctx->surface;
+	delete ctx->cdif;
 	free(ctx->audio);
 	free(ctx->line_widths);
 	free(ctx->cropped);
@@ -182,7 +196,6 @@ static void core_settings(CoreSystem system)
 {
 	switch (system) {
 		case CORE_SYSTEM_PS:
-			MDFNI_SetSettingB("psx.h_overscan", false);
 			MDFNI_SetSettingB("psx.input.port1.memcard", true);
 
 			for (uint8_t x = 2; x < 9; x++) {
@@ -190,6 +203,9 @@ static void core_settings(CoreSystem system)
 				snprintf(setting, 64, "psx.input.port%u.memcard", x);
 				MDFNI_SetSettingB(setting, false);
 			}
+			break;
+		case CORE_SYSTEM_SS:
+			MDFNI_SetSetting("ss.cart", "none");
 			break;
 	}
 }
@@ -204,6 +220,8 @@ Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 		return NULL;
 
 	Core *ctx = (Core *) calloc(1, sizeof(Core));
+	ctx->system = system;
+
 	file_stream_set_callbacks(core_file_stream_write, core_file_stream_read, ctx);
 
 	if (saveData && saveDataSize > 0) {
@@ -225,7 +243,10 @@ Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 		ctx->line_widths = (int32_t *) calloc(ctx->gi->fb_height, 4);
 		ctx->cropped = (uint8_t *) calloc(ctx->gi->fb_width * ctx->gi->fb_height, 4);
 
-		ctx->input = MDFNI_SetInput(0, 1); // PSX 'gamepad'
+		if (system == CORE_SYSTEM_SS)
+			ctx->gi->SetInput(12, "", &CORE_SS_RESET_BUTTON);
+
+		ctx->input = MDFNI_SetInput(0, 1); // 'gamepad'
 		MDFNI_SetMedia(0, 2, 0, 0); // '2' means 'Tray closed'
 
 	} else {
@@ -237,14 +258,55 @@ Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 
 double CoreGetFrameRate(Core *ctx)
 {
-	return 59.95;
+	CoreSystem s = ctx ? ctx->system : CORE_SYSTEM_UNKNOWN;
+
+	switch (s) {
+		case CORE_SYSTEM_PS:
+			return 59.95;
+	}
+
+	return 60.0;
 }
 
 float CoreGetAspectRatio(Core *ctx)
 {
-	return 4.0f / 3.0f;
+	CoreSystem s = ctx ? ctx->system : CORE_SYSTEM_UNKNOWN;
 
-	// TODO
+	switch (s) {
+		case CORE_SYSTEM_PS:
+			return 4.0f / 3.2f;
+	}
+
+	return 4.0f / 3.0f;
+}
+
+static void core_apply_res_hacks(int32_t *w, int32_t *x_off)
+{
+	switch (*w) {
+		case 280:
+			*w = 256;
+			*x_off += 15 * 4; // +3
+			break;
+		case 350:
+			*w = 320;
+			*x_off += 18 * 4; // +3
+			break;
+		case 400:
+			*w = 384;
+			*x_off += 10 * 4; // +2
+			break;
+		case 560:
+			*w = 512;
+			*x_off += 24 * 4;
+			break;
+		case 700:
+			*w = 640;
+			*x_off += 30 * 4;
+			break;
+		default:
+			core_log("Unhandeled width: %d\n", *w);
+			break;
+	}
 }
 
 void CoreRun(Core *ctx)
@@ -268,10 +330,11 @@ void CoreRun(Core *ctx)
 		int32_t w = spec.DisplayRect.w > 0 ? spec.DisplayRect.w : ctx->line_widths[0];
 		int32_t h = spec.DisplayRect.h;
 		int32_t pitch = ctx->surface->pitchinpix * 4;
-		int32_t cpitch = w * 4;
 
-		//core_log("x=%d, y=%d, w=%d, lw=%d, h=%d, ar=%.3f\n", spec.DisplayRect.x, spec.DisplayRect.y, spec.DisplayRect.w,
-		//	ctx->line_widths[0], spec.DisplayRect.h, (float) w / h);
+		if (ctx->system == CORE_SYSTEM_PS)
+			core_apply_res_hacks(&w, &x_off);
+
+		int32_t cpitch = w * 4;
 
 		for (int32_t y = y_off; y < h; y++)
 			memcpy(ctx->cropped + cpitch * y, (uint8_t *) ctx->surface->pixels + pitch * y + x_off, cpitch);
@@ -307,6 +370,52 @@ void CoreReset(Core *ctx)
 	MDFNI_Reset();
 }
 
+#define SET_STATE_BIT(n) \
+	*s = pressed ? *s | (1 << n) : *s & ~(1 << n)
+
+static void core_button_psx(CoreButton button, bool pressed, uint16_t *s)
+{
+	switch (button) {
+		case CORE_BUTTON_SELECT: SET_STATE_BIT(0);  break;
+		case CORE_BUTTON_START:  SET_STATE_BIT(3);  break;
+		case CORE_BUTTON_DPAD_U: SET_STATE_BIT(4);  break;
+		case CORE_BUTTON_DPAD_R: SET_STATE_BIT(5);  break;
+		case CORE_BUTTON_DPAD_D: SET_STATE_BIT(6);  break;
+		case CORE_BUTTON_DPAD_L: SET_STATE_BIT(7);  break;
+		case CORE_BUTTON_L2:     SET_STATE_BIT(8);  break;
+		case CORE_BUTTON_R2:     SET_STATE_BIT(9);  break;
+		case CORE_BUTTON_L:      SET_STATE_BIT(10); break;
+		case CORE_BUTTON_R:      SET_STATE_BIT(11); break;
+		case CORE_BUTTON_Y:      SET_STATE_BIT(12); break; // Triangle
+		case CORE_BUTTON_B:      SET_STATE_BIT(13); break; // Circle
+		case CORE_BUTTON_A:      SET_STATE_BIT(14); break; // X
+		case CORE_BUTTON_X:      SET_STATE_BIT(15); break; // Square
+	}
+}
+
+static void core_button_ss(CoreButton button, bool pressed, uint16_t *s)
+{
+	switch (button) {
+		case CORE_BUTTON_R:      SET_STATE_BIT(3);  break;
+		case CORE_BUTTON_DPAD_U: SET_STATE_BIT(4);  break;
+		case CORE_BUTTON_DPAD_D: SET_STATE_BIT(5);  break;
+		case CORE_BUTTON_DPAD_L: SET_STATE_BIT(6);  break;
+		case CORE_BUTTON_DPAD_R: SET_STATE_BIT(7);  break;
+		case CORE_BUTTON_A:      SET_STATE_BIT(8);  break; // B
+		case CORE_BUTTON_B:      SET_STATE_BIT(9);  break; // C
+		case CORE_BUTTON_X:      SET_STATE_BIT(10); break; // A
+		case CORE_BUTTON_START:  SET_STATE_BIT(11); break;
+		case CORE_BUTTON_L:      SET_STATE_BIT(15); break;
+
+		case CORE_BUTTON_L2: SET_STATE_BIT(14); break;
+		case CORE_BUTTON_R2: SET_STATE_BIT(13); break;
+		case CORE_BUTTON_SELECT: SET_STATE_BIT(0); break;
+		case CORE_BUTTON_L3: SET_STATE_BIT(1); break;
+		case CORE_BUTTON_R3: SET_STATE_BIT(2); break;
+		case CORE_BUTTON_Y: SET_STATE_BIT(12); break;
+	}
+}
+
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
 	if (!ctx)
@@ -314,28 +423,12 @@ void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 
 	uint16_t state = ctx->input[0] | ((uint16_t) ctx->input[1] << 8);
 
-	#define SET_STATE_BIT(n) \
-		state = pressed ? state | (1 << n) : state & ~(1 << n)
-
-	switch (button) {
-		case CORE_BUTTON_SELECT: SET_STATE_BIT(0); break;
-		case CORE_BUTTON_L3: SET_STATE_BIT(1); break;
-		case CORE_BUTTON_R3: SET_STATE_BIT(2); break;
-		case CORE_BUTTON_START: SET_STATE_BIT(3); break;
-		case CORE_BUTTON_DPAD_U: SET_STATE_BIT(4); break;
-		case CORE_BUTTON_DPAD_R: SET_STATE_BIT(5); break;
-		case CORE_BUTTON_DPAD_D: SET_STATE_BIT(6); break;
-		case CORE_BUTTON_DPAD_L: SET_STATE_BIT(7); break;
-		case CORE_BUTTON_L2: SET_STATE_BIT(8); break;
-		case CORE_BUTTON_R2: SET_STATE_BIT(9); break;
-		case CORE_BUTTON_L: SET_STATE_BIT(10); break;
-		case CORE_BUTTON_R: SET_STATE_BIT(11); break;
-		case CORE_BUTTON_Y: SET_STATE_BIT(12); break;
-		case CORE_BUTTON_B: SET_STATE_BIT(13); break;
-		case CORE_BUTTON_A: SET_STATE_BIT(14); break;
-		case CORE_BUTTON_X: SET_STATE_BIT(15); break;
+	switch (ctx->system) {
+		case CORE_SYSTEM_PS: core_button_psx(button, pressed, &state); break;
+		case CORE_SYSTEM_SS: core_button_ss(button, pressed, &state); break;
 		default:
-			return;
+			state = 0;
+			break;
 	}
 
 	ctx->input[0] = state & 0xFF;
@@ -393,13 +486,13 @@ bool CoreInsertDisc(Core *ctx, const char *path)
 		return false;
 
 	MDFN_IEN_PSX::CDC->SetDisc(true, NULL, NULL);
-
 	CoreRun(ctx);
 
-	CDInterface *cdif = CDInterface::Open(&::NVFS, path, true, 0);
+	delete ctx->cdif;
+	ctx->cdif = CDInterface::Open(&::NVFS, path, true, 0);
 
 	const char *disc_id = "SCEA"; // TODO Proper region
-	MDFN_IEN_PSX::CDC->SetDisc(false, cdif, disc_id);
+	MDFN_IEN_PSX::CDC->SetDisc(false, ctx->cdif, disc_id);
 
 	return true;
 }

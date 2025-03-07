@@ -13,6 +13,7 @@ DEFS = \
 	-DCORE_EXPORT \
 	-DLSB_FIRST \
 	-DWANT_PSX_EMU \
+	-DWANT_SS_EMU \
 	-DMEDNAFEN_VERSION_NUMERIC=0x00103201 \
 	-DMEDNAFEN_VERSION=\"1.32.1\" \
 	-DSIZEOF_CHAR=1 \
@@ -29,15 +30,10 @@ DEPS_OBJS = \
 	deps/zlib/compress.$(O) \
 	deps/zlib/crc32.$(O) \
 	deps/zlib/deflate.$(O) \
-	deps/zlib/gzclose.$(O) \
-	deps/zlib/gzlib.$(O) \
-	deps/zlib/gzread.$(O) \
-	deps/zlib/gzwrite.$(O) \
 	deps/zlib/inffast.$(O) \
 	deps/zlib/inflate.$(O) \
 	deps/zlib/inftrees.$(O) \
 	deps/zlib/trees.$(O) \
-	deps/zlib/uncompr.$(O) \
 	deps/zlib/zutil.$(O) \
 	$(PROJ)/src/trio/trio.$(O) \
 	$(PROJ)/src/trio/trionan.$(O) \
@@ -49,11 +45,9 @@ DEPS_OBJS = \
 	$(PROJ)/src/hash/sha256.$(O) \
 	$(PROJ)/src/compress/ArchiveReader.$(O) \
 	$(PROJ)/src/compress/DecompressFilter.$(O) \
-	$(PROJ)/src/compress/GZFileStream.$(O) \
 	$(PROJ)/src/compress/ZIPReader.$(O) \
 	$(PROJ)/src/compress/ZLInflateFilter.$(O) \
 	$(PROJ)/src/compress/ZstdDecompressFilter.$(O) \
-	$(PROJ)/src/sound/Blip_Buffer.$(O) \
 	$(PROJ)/src/sound/DSPUtility.$(O) \
 	$(PROJ)/src/sound/Fir_Resampler.$(O) \
 	$(PROJ)/src/sound/OwlResampler.$(O) \
@@ -130,7 +124,6 @@ MDFN_OBJS = \
 	$(PROJ)/src/ExtMemStream.$(O) \
 	$(PROJ)/src/general.$(O) \
 	$(PROJ)/src/git.$(O) \
-	$(PROJ)/src/IPSPatcher.$(O) \
 	$(PROJ)/src/mednafen.$(O) \
 	$(PROJ)/src/memory.$(O) \
 	$(PROJ)/src/MemoryStream.$(O) \
@@ -138,12 +131,17 @@ MDFN_OBJS = \
 	$(PROJ)/src/movie.$(O) \
 	$(PROJ)/src/player.$(O) \
 	$(PROJ)/src/settings.$(O) \
+	$(PROJ)/src/SSFLoader.$(O) \
 	$(PROJ)/src/state.$(O) \
 	$(PROJ)/src/state_rewind.$(O) \
 	$(PROJ)/src/Stream.$(O) \
 	$(PROJ)/src/tests.$(O) \
 	$(PROJ)/src/testsexp.$(O) \
 	$(PROJ)/src/VirtualFS.$(O)
+
+HW_OBJS = \
+	$(PROJ)/src/hw_cpu/m68k/gen.$(O) \
+	$(PROJ)/src/hw_cpu/m68k/m68k.$(O)
 
 PSX_OBJS = \
 	$(PROJ)/src/cheat_formats/psx.$(O) \
@@ -172,9 +170,47 @@ PSX_OBJS = \
 	$(PROJ)/src/psx/spu.$(O) \
 	$(PROJ)/src/psx/timer.$(O)
 
+SS_OBJS = \
+	$(PROJ)/src/ss/cart/ar4mp.$(O) \
+	$(PROJ)/src/ss/cart/backup.$(O) \
+	$(PROJ)/src/ss/cart/bootrom.$(O) \
+	$(PROJ)/src/ss/cart/cs1ram.$(O) \
+	$(PROJ)/src/ss/cart/extram.$(O) \
+	$(PROJ)/src/ss/cart/rom.$(O) \
+	$(PROJ)/src/ss/cart/stv.$(O) \
+	$(PROJ)/src/ss/input/3dpad.$(O) \
+	$(PROJ)/src/ss/input/gamepad.$(O) \
+	$(PROJ)/src/ss/input/gun.$(O) \
+	$(PROJ)/src/ss/input/jpkeyboard.$(O) \
+	$(PROJ)/src/ss/input/keyboard.$(O) \
+	$(PROJ)/src/ss/input/mission.$(O) \
+	$(PROJ)/src/ss/input/mouse.$(O) \
+	$(PROJ)/src/ss/input/multitap.$(O) \
+	$(PROJ)/src/ss/input/wheel.$(O) \
+	$(PROJ)/src/ss/ak93c45.$(O) \
+	$(PROJ)/src/ss/cart.$(O) \
+	$(PROJ)/src/ss/cdb.$(O) \
+	$(PROJ)/src/ss/db.$(O) \
+	$(PROJ)/src/ss/scu_dsp_gen.$(O) \
+	$(PROJ)/src/ss/scu_dsp_jmp.$(O) \
+	$(PROJ)/src/ss/scu_dsp_misc.$(O) \
+	$(PROJ)/src/ss/scu_dsp_mvi.$(O) \
+	$(PROJ)/src/ss/smpc.$(O) \
+	$(PROJ)/src/ss/sound.$(O) \
+	$(PROJ)/src/ss/ss.$(O) \
+	$(PROJ)/src/ss/ssf.$(O) \
+	$(PROJ)/src/ss/stvio.$(O) \
+	$(PROJ)/src/ss/vdp1.$(O) \
+	$(PROJ)/src/ss/vdp1_line.$(O) \
+	$(PROJ)/src/ss/vdp1_poly.$(O) \
+	$(PROJ)/src/ss/vdp1_sprite.$(O) \
+	$(PROJ)/src/ss/vdp2.$(O) \
+	$(PROJ)/src/ss/vdp2_render.$(O)
+
 SHIM_OBJS = \
 	shim/FileStream.$(O) \
 	shim/file.$(O) \
+	shim/GZFileStream.$(O) \
 	shim/NativeVFS.$(O) \
 	shim/netplay.$(O) \
 	shim/PSFLoader.$(O) \
@@ -185,4 +221,6 @@ OBJS = \
 	$(SHIM_OBJS) \
 	$(DEPS_OBJS) \
 	$(MDFN_OBJS) \
-	$(PSX_OBJS)
+	$(HW_OBJS) \
+	$(PSX_OBJS) \
+	$(SS_OBJS)
