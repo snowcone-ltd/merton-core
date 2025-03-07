@@ -128,7 +128,6 @@ MDFN_OBJS = \
 	$(PROJ)/src/endian.$(O) \
 	$(PROJ)/src/error.$(O) \
 	$(PROJ)/src/ExtMemStream.$(O) \
-	$(PROJ)/src/file.$(O) \
 	$(PROJ)/src/general.$(O) \
 	$(PROJ)/src/git.$(O) \
 	$(PROJ)/src/IPSPatcher.$(O) \
@@ -175,6 +174,7 @@ PSX_OBJS = \
 
 SHIM_OBJS = \
 	shim/FileStream.$(O) \
+	shim/file.$(O) \
 	shim/NativeVFS.$(O) \
 	shim/netplay.$(O) \
 	shim/PSFLoader.$(O) \

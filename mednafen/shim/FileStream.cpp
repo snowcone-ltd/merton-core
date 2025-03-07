@@ -46,7 +46,7 @@ FileStream::FileStream(const std::string& path, const uint32 mode, const int do_
 			throw MDFN_Error(errno, "File does not exist");
 
 	} else if (mode == MODE_READ_WRITE) {
-		throw MDFN_Error(0, "Unsupported file mode: MODE_READ_WRITE");
+		throw MDFN_Error(0, "Unsupported file mode: MODE_READ_WRITE: %s", path.c_str());
 	}
 }
 

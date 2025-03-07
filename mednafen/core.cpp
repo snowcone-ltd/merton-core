@@ -3,19 +3,29 @@
 #include "netplay-driver.h"
 #include "MemoryStream.h"
 
+#include "cdrom/CDInterface.h"
+#include "psx/psx.h"
+#include "psx/cdc.h"
+
 #include "../core.h"
 
 #include "shim/filestream-cb.h"
 
 #include <stdlib.h>
 
+using namespace Mednafen;
+
 struct Core {
-	Mednafen::MDFNGI *gi;
-	Mednafen::MDFN_Surface *surface;
+	MDFNGI *gi;
+	MDFN_Surface *surface;
 	uint8_t *cropped;
 	uint8_t *input;
 	int16_t *audio;
 	int32_t *line_widths;
+
+	void *sdata;
+	size_t sdata_size_max;
+	size_t sdata_size_cur;
 };
 
 static CoreLogFunc CORE_LOG;
@@ -26,6 +36,7 @@ static void *CORE_VIDEO_OPAQUE;
 
 static CoreAudioFunc CORE_AUDIO;
 static void *CORE_AUDIO_OPAQUE;
+
 
 // Logging
 
@@ -80,22 +91,44 @@ void Mednafen::MDFND_SetMovieStatus(StateStatusStruct *status) noexcept
 
 // FileStream callbacks
 
-bool core_file_stream_write(const char *path, const void *buf, uint64_t size, void *opaque)
+void core_file_stream_write(const char *path, const void *buf, uint64_t size, void *opaque)
 {
+	Core *ctx = (Core *) opaque;
+
 	const char *ext = strrchr(path, '.');
 
-	if (ext)
-		core_log("WRITE CB: %s, %u\n", ext, size);
+	// PSX
+	if (ext && strcmp(ext, ".mcr") == 0) {
+		if (size > ctx->sdata_size_max) {
+			ctx->sdata_size_max = size;
+			ctx->sdata = realloc(ctx->sdata, ctx->sdata_size_max);
+		}
 
-	return false;
+		memcpy(ctx->sdata, buf, size);
+		ctx->sdata_size_cur = size;
+
+		core_log("[SDATA] Saved, size=%u\n", size);
+	}
 }
 
 bool core_file_stream_read(const char *path, void **buf, uint64_t *size, void *opaque)
 {
+	Core *ctx = (Core *) opaque;
+
 	const char *ext = strrchr(path, '.');
 
-	if (ext)
-		core_log("READ CB: %s\n", ext);
+	// PSX
+	if (ext && strcmp(ext, ".mcr") == 0) {
+		if (ctx->sdata) {
+			*size = ctx->sdata_size_cur;
+			*buf = malloc(*size);
+			memcpy(*buf, ctx->sdata, *size);
+
+			core_log("[SDATA] Read, size=%u\n", *size);
+
+			return true;
+		}
+	}
 
 	return false;
 }
@@ -111,14 +144,15 @@ void CoreUnloadGame(Core **core)
 	Core *ctx = *core;
 
 	if (ctx->gi)
-		Mednafen::MDFNI_CloseGame();
+		MDFNI_CloseGame();
 
 	delete ctx->surface;
 	free(ctx->audio);
 	free(ctx->line_widths);
 	free(ctx->cropped);
+	free(ctx->sdata);
 
-	Mednafen::MDFNI_Kill();
+	MDFNI_Kill();
 
 	file_stream_set_callbacks(NULL, NULL, NULL);
 
@@ -148,12 +182,13 @@ static void core_settings(CoreSystem system)
 {
 	switch (system) {
 		case CORE_SYSTEM_PS:
-			Mednafen::MDFNI_SetSettingB("psx.input.port1.memcard", true);
+			MDFNI_SetSettingB("psx.h_overscan", false);
+			MDFNI_SetSettingB("psx.input.port1.memcard", true);
 
 			for (uint8_t x = 2; x < 9; x++) {
 				char setting[64];
 				snprintf(setting, 64, "psx.input.port%u.memcard", x);
-				Mednafen::MDFNI_SetSettingB(setting, false);
+				MDFNI_SetSettingB(setting, false);
 			}
 			break;
 	}
@@ -162,28 +197,36 @@ static void core_settings(CoreSystem system)
 Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 	const void *saveData, size_t saveDataSize)
 {
-	if (!Mednafen::MDFNI_Init())
+	if (!MDFNI_Init())
 		return NULL;
 
-	if (!Mednafen::MDFNI_InitFinalize(systemDir))
+	if (!MDFNI_InitFinalize(systemDir))
 		return NULL;
 
 	Core *ctx = (Core *) calloc(1, sizeof(Core));
 	file_stream_set_callbacks(core_file_stream_write, core_file_stream_read, ctx);
 
+	if (saveData && saveDataSize > 0) {
+		ctx->sdata = malloc(saveDataSize);
+		ctx->sdata_size_max = saveDataSize;
+		ctx->sdata_size_cur = saveDataSize;
+
+		memcpy(ctx->sdata, saveData, saveDataSize);
+	}
+
 	core_settings(system);
 
-	ctx->gi = Mednafen::MDFNI_LoadGame(NULL, &::Mednafen::NVFS, path, false);
+	ctx->gi = MDFNI_LoadGame(NULL, &::NVFS, path, false);
 
 	if (ctx->gi) {
-		ctx->surface = new Mednafen::MDFN_Surface(NULL, ctx->gi->fb_width, ctx->gi->fb_height,
-			ctx->gi->fb_width * 4, Mednafen::MDFN_PixelFormat::ABGR32_8888);
+		ctx->surface = new MDFN_Surface(NULL, ctx->gi->fb_width, ctx->gi->fb_height,
+			ctx->gi->fb_width * 4, MDFN_PixelFormat::ABGR32_8888);
 		ctx->audio = (int16_t *) calloc(10 * 1024 * 1024, 1);
 		ctx->line_widths = (int32_t *) calloc(ctx->gi->fb_height, 4);
 		ctx->cropped = (uint8_t *) calloc(ctx->gi->fb_width * ctx->gi->fb_height, 4);
 
-		ctx->input = Mednafen::MDFNI_SetInput(0, 1); // PSX 'gamepad'
-		Mednafen::MDFNI_SetMedia(0, 2, 0, 0); // '2' means 'Tray closed'
+		ctx->input = MDFNI_SetInput(0, 1); // PSX 'gamepad'
+		MDFNI_SetMedia(0, 2, 0, 0); // '2' means 'Tray closed'
 
 	} else {
 		CoreUnloadGame(&ctx);
@@ -194,16 +237,14 @@ Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 
 double CoreGetFrameRate(Core *ctx)
 {
-	// TODO
-
-	return 60;
+	return 59.95;
 }
 
 float CoreGetAspectRatio(Core *ctx)
 {
-	// TODO
-
 	return 4.0f / 3.0f;
+
+	// TODO
 }
 
 void CoreRun(Core *ctx)
@@ -211,7 +252,7 @@ void CoreRun(Core *ctx)
 	if (!ctx)
 		return;
 
-	Mednafen::EmulateSpecStruct spec = {
+	EmulateSpecStruct spec = {
 		.surface = ctx->surface,
 		.LineWidths = ctx->line_widths,
 		.SoundRate = 44100,
@@ -219,7 +260,7 @@ void CoreRun(Core *ctx)
 		.SoundBufMaxSize = (10 * 1024 * 1024) / 4,
 	};
 
-	Mednafen::MDFNI_Emulate(&spec);
+	MDFNI_Emulate(&spec);
 
 	if (CORE_VIDEO) {
 		int32_t x_off = spec.DisplayRect.x * 4;
@@ -228,6 +269,9 @@ void CoreRun(Core *ctx)
 		int32_t h = spec.DisplayRect.h;
 		int32_t pitch = ctx->surface->pitchinpix * 4;
 		int32_t cpitch = w * 4;
+
+		//core_log("x=%d, y=%d, w=%d, lw=%d, h=%d, ar=%.3f\n", spec.DisplayRect.x, spec.DisplayRect.y, spec.DisplayRect.w,
+		//	ctx->line_widths[0], spec.DisplayRect.h, (float) w / h);
 
 		for (int32_t y = y_off; y < h; y++)
 			memcpy(ctx->cropped + cpitch * y, (uint8_t *) ctx->surface->pixels + pitch * y + x_off, cpitch);
@@ -241,12 +285,15 @@ void CoreRun(Core *ctx)
 
 void *CoreGetSaveData(Core *ctx, size_t *size)
 {
-	// TODO
-
-	if (!ctx)
+	if (!ctx || !ctx->sdata)
 		return NULL;
 
-	return NULL;
+	*size = ctx->sdata_size_cur;
+
+	void *sdata = malloc(*size);
+	memcpy(sdata, ctx->sdata, *size);
+
+	return sdata;
 }
 
 void CoreReset(Core *ctx)
@@ -257,7 +304,7 @@ void CoreReset(Core *ctx)
 	if (ctx->surface && ctx->surface->pixels)
 		memset(ctx->surface->pixels, 0, ctx->surface->h * ctx->surface->pitchinpix * 4);
 
-	Mednafen::MDFNI_Reset();
+	MDFNI_Reset();
 }
 
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
@@ -305,7 +352,7 @@ void *CoreGetState(Core *ctx, size_t *size)
 	if (!ctx)
 		return NULL;
 
-	Mednafen::MemoryStream st(65536);
+	MemoryStream st(65536);
 
 	try {
 		MDFNSS_SaveSM(&st, true);
@@ -327,7 +374,7 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 	if (!ctx)
 		return false;
 
-	Mednafen::MemoryStream st(size, -1);
+	MemoryStream st(size, -1);
 	memcpy(st.map(), state, size);
 
 	try {
@@ -342,12 +389,19 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 
 bool CoreInsertDisc(Core *ctx, const char *path)
 {
-	// TODO
-
 	if (!ctx)
 		return false;
 
-	return false;
+	MDFN_IEN_PSX::CDC->SetDisc(true, NULL, NULL);
+
+	CoreRun(ctx);
+
+	CDInterface *cdif = CDInterface::Open(&::NVFS, path, true, 0);
+
+	const char *disc_id = "SCEA"; // TODO Proper region
+	MDFN_IEN_PSX::CDC->SetDisc(false, cdif, disc_id);
+
+	return true;
 }
 
 CoreSetting *CoreGetSettings(uint32_t *len)
