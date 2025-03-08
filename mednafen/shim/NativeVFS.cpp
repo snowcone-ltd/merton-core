@@ -2,10 +2,9 @@
 #include "NativeVFS.h"
 #include "FileStream.h"
 
-void core_log(const char *fmt, ...);
+using namespace Mednafen;
 
-namespace Mednafen
-{
+void core_log(const char *fmt, ...);
 
 NativeVFS::NativeVFS() : VirtualFS(MDFN_PS, (MDFN_PSS_STYLE == 2) ? "\\/" : MDFN_PSS)
 {
@@ -117,6 +116,4 @@ void NativeVFS::rename(const std::string& oldpath, const std::string& newpath, c
 void NativeVFS::readdirentries(const std::string& path, std::function<bool(const std::string&)> callb)
 {
 	core_log("*** NativeVFS::readdirentries\n");
-}
-
 }

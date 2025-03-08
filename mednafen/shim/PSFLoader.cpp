@@ -1,8 +1,7 @@
 #include "mednafen.h"
 #include "PSFLoader.h"
 
-namespace Mednafen
-{
+using namespace Mednafen;
 
 PSFTags::PSFTags()
 {
@@ -68,6 +67,4 @@ void PSFLoader::HandleReserved(Stream* fp, uint32 len)
 
 void PSFLoader::HandleEXE(Stream* fp, bool ignore_pcsp)
 {
-}
-
 }

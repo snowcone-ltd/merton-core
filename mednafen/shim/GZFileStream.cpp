@@ -1,10 +1,9 @@
 #include "mednafen.h"
 #include "GZFileStream.h"
 
-void core_log(const char *fmt, ...);
+using namespace Mednafen;
 
-namespace Mednafen
-{
+void core_log(const char *fmt, ...);
 
 GZFileStream::GZFileStream(const std::string& path, const MODE mode, const int level) :
 	OpenedMode(mode), path_humesc(MDFN_strhumesc(path))
@@ -74,6 +73,4 @@ uint64 GZFileStream::attributes(void)
 	core_log("*** GZFileStream::attributes\n");
 
 	return 0;
-}
-
 }

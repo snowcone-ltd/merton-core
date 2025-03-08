@@ -12,6 +12,9 @@
 
 #include <stdlib.h>
 
+#define CORE_SAMPLE_RATE   44100
+#define CORE_AUDIO_BUF_MAX (5 * 1024 * 1024)
+
 using namespace Mednafen;
 
 struct Core {
@@ -38,7 +41,7 @@ static void *CORE_VIDEO_OPAQUE;
 static CoreAudioFunc CORE_AUDIO;
 static void *CORE_AUDIO_OPAQUE;
 
-static uint8_t CORE_SS_RESET_BUTTON;
+static uint8_t *CORE_SS_RESET;
 
 
 // Logging
@@ -62,12 +65,12 @@ void core_log(const char *fmt, ...)
 
 void Mednafen::MDFND_OutputNotice(MDFN_NoticeType t, const char* s) noexcept
 {
-	core_log("[Notice] %s\n", s);
+	core_log("%s\n", s);
 }
 
 void Mednafen::MDFND_OutputInfo(const char *s) noexcept
 {
-	core_log("[Info] %s", s);
+	core_log("%s", s);
 }
 
 void Mednafen::MDFND_SetStateStatus(StateStatusStruct *status) noexcept
@@ -80,7 +83,7 @@ void Mednafen::MDFND_NetplayText(const char* text, bool NetEcho)
 
 void Mednafen::MDFND_MediaSetNotification(uint32 drive_idx, uint32 state_idx, uint32 media_idx, uint32 orientation_idx)
 {
-	core_log("[Media] drive_idx=%u, state_idx=%u, media_idx=%u\n", drive_idx, state_idx, media_idx);
+	core_log("Media set: drive_idx=%u, state_idx=%u, media_idx=%u\n", drive_idx, state_idx, media_idx);
 }
 
 void Mednafen::MDFND_MidSync(EmulateSpecStruct *espec, const unsigned flags)
@@ -115,7 +118,7 @@ void core_file_stream_write(const char *path, const void *buf, uint64_t size, vo
 		memcpy(ctx->sdata, buf, size);
 		ctx->sdata_size_cur = size;
 
-		core_log("[SDATA] Saved, size=%u\n", size);
+		core_log("SDATA saved (%s), size=%u\n", ext, size);
 	}
 }
 
@@ -137,7 +140,7 @@ bool core_file_stream_read(const char *path, void **buf, uint64_t *size, void *o
 			*buf = malloc(*size);
 			memcpy(*buf, ctx->sdata, *size);
 
-			core_log("[SDATA] Read, size=%u\n", *size);
+			core_log("SDATA read (%s), size=%u\n", ext, *size);
 
 			return true;
 		}
@@ -166,12 +169,12 @@ void CoreUnloadGame(Core **core)
 	free(ctx->cropped);
 	free(ctx->sdata);
 
-	MDFNI_Kill();
-
 	file_stream_set_callbacks(NULL, NULL, NULL);
 
 	free(ctx);
 	*core = NULL;
+
+	MDFNI_Kill();
 }
 
 void CoreSetLogFunc(CoreLogFunc func, void *opaque)
@@ -196,7 +199,7 @@ static void core_settings(CoreSystem system)
 {
 	switch (system) {
 		case CORE_SYSTEM_PS:
-			MDFNI_SetSettingB("psx.input.port1.memcard", true);
+			MDFNI_SetSettingB("psx.h_overscan", false);
 
 			for (uint8_t x = 2; x < 9; x++) {
 				char setting[64];
@@ -206,6 +209,8 @@ static void core_settings(CoreSystem system)
 			break;
 		case CORE_SYSTEM_SS:
 			MDFNI_SetSetting("ss.cart", "none");
+			MDFNI_SetSettingB("ss.h_blend", true);
+			MDFNI_SetSettingB("ss.h_overscan", false);
 			break;
 	}
 }
@@ -239,12 +244,12 @@ Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 	if (ctx->gi) {
 		ctx->surface = new MDFN_Surface(NULL, ctx->gi->fb_width, ctx->gi->fb_height,
 			ctx->gi->fb_width * 4, MDFN_PixelFormat::ABGR32_8888);
-		ctx->audio = (int16_t *) calloc(10 * 1024 * 1024, 1);
+		ctx->audio = (int16_t *) calloc(CORE_AUDIO_BUF_MAX, 1);
 		ctx->line_widths = (int32_t *) calloc(ctx->gi->fb_height, 4);
 		ctx->cropped = (uint8_t *) calloc(ctx->gi->fb_width * ctx->gi->fb_height, 4);
 
 		if (system == CORE_SYSTEM_SS)
-			ctx->gi->SetInput(12, "", &CORE_SS_RESET_BUTTON);
+			CORE_SS_RESET = MDFNI_SetInput(12, 0);
 
 		ctx->input = MDFNI_SetInput(0, 1); // 'gamepad'
 		MDFNI_SetMedia(0, 2, 0, 0); // '2' means 'Tray closed'
@@ -283,25 +288,25 @@ float CoreGetAspectRatio(Core *ctx)
 static void core_apply_res_hacks(int32_t *w, int32_t *x_off)
 {
 	switch (*w) {
-		case 280:
+		case 264:
 			*w = 256;
-			*x_off += 15 * 4; // +3
+			*x_off += 4 * 4;
 			break;
-		case 350:
+		case 330:
 			*w = 320;
-			*x_off += 18 * 4; // +3
+			*x_off += 5 * 4;
 			break;
-		case 400:
+		case 378:
 			*w = 384;
-			*x_off += 10 * 4; // +2
+			*x_off -= 3 * 4;
 			break;
-		case 560:
+		case 528:
 			*w = 512;
-			*x_off += 24 * 4;
+			*x_off += 8 * 4;
 			break;
-		case 700:
+		case 660:
 			*w = 640;
-			*x_off += 30 * 4;
+			*x_off += 10 * 4;
 			break;
 		default:
 			core_log("Unhandeled width: %d\n", *w);
@@ -317,9 +322,9 @@ void CoreRun(Core *ctx)
 	EmulateSpecStruct spec = {
 		.surface = ctx->surface,
 		.LineWidths = ctx->line_widths,
-		.SoundRate = 44100,
+		.SoundRate = CORE_SAMPLE_RATE,
 		.SoundBuf = ctx->audio,
-		.SoundBufMaxSize = (10 * 1024 * 1024) / 4,
+		.SoundBufMaxSize = CORE_AUDIO_BUF_MAX / 4,
 	};
 
 	MDFNI_Emulate(&spec);
@@ -343,7 +348,7 @@ void CoreRun(Core *ctx)
 	}
 
 	if (CORE_AUDIO)
-		CORE_AUDIO(ctx->audio, spec.SoundBufSize, 44100, CORE_AUDIO_OPAQUE);
+		CORE_AUDIO(ctx->audio, spec.SoundBufSize, CORE_SAMPLE_RATE, CORE_AUDIO_OPAQUE);
 }
 
 void *CoreGetSaveData(Core *ctx, size_t *size)
@@ -367,7 +372,17 @@ void CoreReset(Core *ctx)
 	if (ctx->surface && ctx->surface->pixels)
 		memset(ctx->surface->pixels, 0, ctx->surface->h * ctx->surface->pitchinpix * 4);
 
-	MDFNI_Reset();
+	if (ctx->system == CORE_SYSTEM_SS) {
+		*CORE_SS_RESET = 1;
+
+		for (uint8_t x = 0; x < 3; x++)
+			CoreRun(ctx);
+
+		*CORE_SS_RESET = 0;
+
+	} else {
+		MDFNI_Reset();
+	}
 }
 
 #define SET_STATE_BIT(n) \
@@ -396,6 +411,9 @@ static void core_button_psx(CoreButton button, bool pressed, uint16_t *s)
 static void core_button_ss(CoreButton button, bool pressed, uint16_t *s)
 {
 	switch (button) {
+		case CORE_BUTTON_L2:     SET_STATE_BIT(0);  break; // Z
+		case CORE_BUTTON_R2:     SET_STATE_BIT(1);  break; // Y
+		case CORE_BUTTON_Y:      SET_STATE_BIT(2);  break; // X
 		case CORE_BUTTON_R:      SET_STATE_BIT(3);  break;
 		case CORE_BUTTON_DPAD_U: SET_STATE_BIT(4);  break;
 		case CORE_BUTTON_DPAD_D: SET_STATE_BIT(5);  break;
@@ -406,13 +424,6 @@ static void core_button_ss(CoreButton button, bool pressed, uint16_t *s)
 		case CORE_BUTTON_X:      SET_STATE_BIT(10); break; // A
 		case CORE_BUTTON_START:  SET_STATE_BIT(11); break;
 		case CORE_BUTTON_L:      SET_STATE_BIT(15); break;
-
-		case CORE_BUTTON_L2: SET_STATE_BIT(14); break;
-		case CORE_BUTTON_R2: SET_STATE_BIT(13); break;
-		case CORE_BUTTON_SELECT: SET_STATE_BIT(0); break;
-		case CORE_BUTTON_L3: SET_STATE_BIT(1); break;
-		case CORE_BUTTON_R3: SET_STATE_BIT(2); break;
-		case CORE_BUTTON_Y: SET_STATE_BIT(12); break;
 	}
 }
 
@@ -485,16 +496,20 @@ bool CoreInsertDisc(Core *ctx, const char *path)
 	if (!ctx)
 		return false;
 
-	MDFN_IEN_PSX::CDC->SetDisc(true, NULL, NULL);
-	CoreRun(ctx);
-
 	delete ctx->cdif;
 	ctx->cdif = CDInterface::Open(&::NVFS, path, true, 0);
 
-	const char *disc_id = "SCEA"; // TODO Proper region
-	MDFN_IEN_PSX::CDC->SetDisc(false, ctx->cdif, disc_id);
+	switch (ctx->system) {
+		case CORE_SYSTEM_PS:
+			MDFN_IEN_PSX::CDC->SetDisc(true, NULL, NULL);
+			CoreRun(ctx);
 
-	return true;
+			const char *disc_id = "SCEA"; // TODO Proper region
+			MDFN_IEN_PSX::CDC->SetDisc(false, ctx->cdif, disc_id);
+			return true;
+	}
+
+	return false;
 }
 
 CoreSetting *CoreGetSettings(uint32_t *len)

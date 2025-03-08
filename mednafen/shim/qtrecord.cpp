@@ -1,8 +1,7 @@
 #include "mednafen.h"
 #include "qtrecord.h"
 
-namespace Mednafen
-{
+using namespace Mednafen;
 
 void QTRecord::w16(uint16 val)
 {
@@ -19,7 +18,6 @@ void QTRecord::w32s(const char *str)
 void QTRecord::w64s(const char *str)
 {
 }
-
 
 void QTRecord::w64(uint64 val)
 {
@@ -41,7 +39,6 @@ void QTRecord::atom_begin(uint32 type, bool small_atom)
 {
 }
 
-
 void QTRecord::atom_begin(const char *type, bool small_atom)
 {
 }
@@ -51,12 +48,6 @@ void QTRecord::atom_end(void)
 }
 
 QTRecord::QTRecord(const std::string& path, const VideoSpec &spec) : qtfile(path, FileStream::MODE_WRITE_SAFE), resampler(NULL)
-{
-}
-
-
-template<typename T, uint64 rgb16_tag = 0>
-static void DecodeLine(const T* src, const MDFN_PixelFormat& src_pf, int src_width, uint8* dest, bool dest_bgr, uint32 dest_width)
 {
 }
 
@@ -155,6 +146,4 @@ void QTRecord::Finish(void)
 
 QTRecord::~QTRecord(void)
 {
-}
-
 }

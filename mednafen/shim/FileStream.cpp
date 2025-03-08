@@ -2,6 +2,8 @@
 
 #include "filestream-cb.h"
 
+using namespace Mednafen;
+
 void core_log(const char *fmt, ...);
 
 static FILE_STREAM_WRITE_CB FILE_STREAM_WRITE;
@@ -14,9 +16,6 @@ void file_stream_set_callbacks(FILE_STREAM_WRITE_CB write_cb, FILE_STREAM_READ_C
 	FILE_STREAM_READ = read_cb;
 	FILE_STREAM_OPAQUE = opaque;
 }
-
-namespace Mednafen
-{
 
 FileStream::FileStream(const std::string& path, const uint32 mode, const int do_lock, const uint32 buffer_size)
 	: pos(0), mapping(NULL), mapping_size(0), OpenedMode(mode), path_humesc(MDFN_strhumesc(path))
@@ -129,25 +128,6 @@ void FileStream::unmap(void) noexcept
 	core_log("*** FileStream::unmap\n");
 }
 
-void FileStream::set_buffer_size(uint32 new_size)
-{
-	core_log("*** FileStream::set_buffer_size\n");
-}
-
-uint64 FileStream::read_ub(void* data, uint64 count)
-{
-	core_log("*** FileStream::read_ub\n");
-
-	return 0;
-}
-
-uint64 FileStream::write_ub(const void* data, uint64 count)
-{
-	core_log("*** FileStream::write_ub\n");
-
-	return 0;
-}
-
 void FileStream::write_buffered_data(void)
 {
 	core_log("*** FileStream::write_buffered_data\n");
@@ -163,21 +143,9 @@ void FileStream::flush(void)
 	core_log("*** FileStream::flush\n");
 }
 
-void FileStream::lock(bool nb)
-{
-	core_log("*** FileStream::lock\n");
-}
-
-void FileStream::unlock(void)
-{
-	core_log("*** FileStream::unlock\n");
-}
-
 int FileStream::get_line(std::string &str)
 {
 	core_log("*** FileStream::get_line\n");
 
 	return 0;
-}
-
 }
