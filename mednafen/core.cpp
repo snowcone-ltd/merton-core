@@ -28,6 +28,7 @@ struct Core {
 
 	CoreSystem system;
 	void *sdata;
+	bool sdata_dirty;
 	size_t sdata_size_max;
 	size_t sdata_size_cur;
 };
@@ -110,6 +111,9 @@ void core_file_stream_write(const char *path, const void *buf, uint64_t size, vo
 		strcmp(ext, ".bkr") == 0;   // SS
 
 	if (ext && sav) {
+		if (size == ctx->sdata_size_cur && memcmp(buf, ctx->sdata, size) == 0)
+			return;
+
 		if (size > ctx->sdata_size_max) {
 			ctx->sdata_size_max = size;
 			ctx->sdata = realloc(ctx->sdata, ctx->sdata_size_max);
@@ -117,6 +121,7 @@ void core_file_stream_write(const char *path, const void *buf, uint64_t size, vo
 
 		memcpy(ctx->sdata, buf, size);
 		ctx->sdata_size_cur = size;
+		ctx->sdata_dirty = true;
 
 		core_log("SDATA saved (%s), size=%u\n", ext, size);
 	}
@@ -353,8 +358,10 @@ void CoreRun(Core *ctx)
 
 void *CoreGetSaveData(Core *ctx, size_t *size)
 {
-	if (!ctx || !ctx->sdata)
+	if (!ctx || !ctx->sdata || !ctx->sdata_dirty)
 		return NULL;
+
+	ctx->sdata_dirty = false;
 
 	*size = ctx->sdata_size_cur;
 

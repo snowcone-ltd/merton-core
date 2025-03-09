@@ -60,7 +60,7 @@ L_FLAGS = \
 FLAGS = $(FLAGS) -O0 -g
 L_FLAGS = $(L_FLAGS) /debug
 !ELSE
-FLAGS = $(FLAGS) -O2
+FLAGS = $(FLAGS) -O3 -g0
 !ENDIF
 
 OBJS = $(OBJS) \
