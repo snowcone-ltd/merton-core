@@ -177,6 +177,10 @@ void CoreRun(Core *ctx)
 	audio_stream_finish();
 }
 
+void CorePauseThreads(Core *ctx, bool pause)
+{
+}
+
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
 	if (!ctx)

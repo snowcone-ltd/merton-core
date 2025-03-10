@@ -300,6 +300,10 @@ void CoreRun(Core *ctx)
 	}
 }
 
+void CorePauseThreads(Core *ctx, bool pause)
+{
+}
+
 void *CoreGetSaveData(Core *ctx, size_t *size)
 {
 	if (!ctx)

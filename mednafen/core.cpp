@@ -375,6 +375,10 @@ void CoreRun(Core *ctx)
 		CORE_AUDIO(ctx->audio, spec.SoundBufSize, CORE_SAMPLE_RATE, CORE_AUDIO_OPAQUE);
 }
 
+void CorePauseThreads(Core *ctx, bool pause)
+{
+}
+
 void *CoreGetSaveData(Core *ctx, size_t *size)
 {
 	if (!ctx || !ctx->sdata || !ctx->sdata_dirty)

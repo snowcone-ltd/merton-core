@@ -174,6 +174,10 @@ void CoreRun(Core *ctx)
 	memcpy(ctx->ram, console.system().m6532().getRAM(), 128);
 }
 
+void CorePauseThreads(Core *ctx, bool pause)
+{
+}
+
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
 	if (!ctx)
