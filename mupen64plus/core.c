@@ -116,10 +116,6 @@ static void core_debug_callback(void *aContext, int aLevel, const char *aMessage
 	core_log("%s\n", aMessage);
 }
 
-static void core_state_callback(void *Context, m64p_core_param param_type, int new_value)
-{
-}
-
 void CoreUnloadGame(Core **core)
 {
 	if (!core || !*core)
@@ -234,7 +230,7 @@ Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 	ctx->cond = SDL_CreateCondition();
 
 	m64p_error r = CoreStartup(FRONTEND_API_VERSION, systemDir, systemDir,
-		NULL, core_debug_callback, NULL, core_state_callback);
+		NULL, core_debug_callback, NULL, NULL);
 
 	if (r != M64ERR_SUCCESS) {
 		loaded = false;
@@ -273,19 +269,12 @@ Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 	if (saveData)
 		osal_set_read_data(saveData, saveDataSize);
 
-	// int param = 0;
-	// CoreDoCommand(M64CMD_CORE_STATE_SET, M64CORE_SPEED_LIMITER, &param);
-
 	except:
 
 	if (!loaded)
 		CoreUnloadGame(&ctx);
 
 	return ctx;
-}
-
-static void core_frame_callback(unsigned int index)
-{
 }
 
 static void core_new_frame(void *pixels, uint32_t width, uint32_t height, void *opaque)
@@ -324,8 +313,6 @@ void CoreRun(Core *ctx)
 
 	SDL_LockMutex(ctx->mutex);
 
-	// g_rom_pause = 0;
-
 	if (ctx->prev_frame_ctr == ctx->frame_ctr)
 		SDL_WaitCondition(ctx->cond, ctx->mutex);
 
@@ -339,9 +326,15 @@ void CoreRun(Core *ctx)
 		CORE_VIDEO(NULL, CORE_COLOR_FORMAT_UNKNOWN, 0, 0, 0, CORE_VIDEO_OPAQUE);
 	}
 
-	// g_rom_pause = 1;
-
 	SDL_UnlockMutex(ctx->mutex);
+}
+
+void CorePauseThreads(Core *ctx, bool pause)
+{
+	if (!ctx)
+		return;
+
+	g_rom_pause = pause ? 1 : 0;
 }
 
 void CoreReset(Core *ctx)
@@ -376,6 +369,9 @@ void *CoreGetSaveData(Core *ctx, size_t *size)
 
 	switch (ROM_SETTINGS.savetype) {
 		case SAVETYPE_EEPROM_4K:
+			*size = 0x200;
+			ptr = eeprom->data;
+			break;
 		case SAVETYPE_EEPROM_16K:
 			*size = 0x800;
 			ptr = eeprom->data;

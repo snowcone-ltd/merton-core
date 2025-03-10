@@ -421,6 +421,10 @@ void CoreRun(Core *ctx)
 	core_get_logs();
 }
 
+void CorePauseThreads(Core *ctx, bool pause)
+{
+}
+
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
 	if (!ctx)
