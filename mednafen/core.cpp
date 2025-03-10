@@ -98,6 +98,44 @@ void Mednafen::MDFND_SetMovieStatus(StateStatusStruct *status) noexcept
 }
 
 
+// Save data conversion (mister compatibility)
+
+static const uint8_t CORE_SS_MAGIC_PACKED[12] = {0xFF, 'B', 0xFF, 'a', 0xFF, 'c', 0xFF, 'k', 0xFF, 'U', 0xFF, 'p'};
+static const uint8_t CORE_SS_MAGIC_UNPACKED[6] = {'B', 'a', 'c', 'k', 'U', 'p'};
+
+static void *core_unpack_ss_sdata(const void *psdata, size_t sdata_size, size_t *size)
+{
+	if (memcmp(psdata, CORE_SS_MAGIC_PACKED, 12) == 0 && sdata_size >= 64 * 1024) {
+		*size = 32 * 1024;
+		uint8_t *sdata = (uint8_t *) malloc(*size);
+
+		for (size_t x = 1, y = 0; x < 64 * 1024; x += 2, y++)
+			sdata[y] = ((const uint8_t *) psdata)[x];
+
+		return sdata;
+	}
+
+	return NULL;
+}
+
+static void *core_pack_ss_sdata(const void *sdata, size_t sdata_size, size_t *size)
+{
+	if (memcmp(sdata, CORE_SS_MAGIC_UNPACKED, 6) == 0 && sdata_size >= 32 * 1024) {
+		*size = 64 * 1024;
+		uint8_t *psdata = (uint8_t *) malloc(*size);
+
+		for (size_t x = 0, y = 0; x < 32 * 1024; x++, y += 2) {
+			psdata[y + 0] = 0xFF;
+			psdata[y + 1] = ((const uint8_t *) sdata)[x];
+		}
+
+		return psdata;
+	}
+
+	return NULL;
+}
+
+
 // FileStream callbacks
 
 void core_file_stream_write(const char *path, const void *buf, uint64_t size, void *opaque)
@@ -250,11 +288,15 @@ Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 	file_stream_set_callbacks(core_file_stream_write, core_file_stream_read, ctx);
 
 	if (saveData && saveDataSize > 0) {
-		ctx->sdata = malloc(saveDataSize);
-		ctx->sdata_size_max = saveDataSize;
-		ctx->sdata_size_cur = saveDataSize;
+		ctx->sdata = core_unpack_ss_sdata(saveData, saveDataSize, &ctx->sdata_size_cur);
 
-		memcpy(ctx->sdata, saveData, saveDataSize);
+		if (!ctx->sdata) {
+			ctx->sdata = malloc(saveDataSize);
+			ctx->sdata_size_cur = saveDataSize;
+			memcpy(ctx->sdata, saveData, saveDataSize);
+		}
+
+		ctx->sdata_size_max = ctx->sdata_size_cur;
 	}
 
 	core_settings(system);
@@ -386,9 +428,13 @@ void *CoreGetSaveData(Core *ctx, size_t *size)
 
 	ctx->sdata_dirty = false;
 
+	void *sdata = core_pack_ss_sdata(ctx->sdata, ctx->sdata_size_cur, size);
+	if (sdata)
+		return sdata;
+
 	*size = ctx->sdata_size_cur;
 
-	void *sdata = malloc(*size);
+	sdata = malloc(*size);
 	memcpy(sdata, ctx->sdata, *size);
 
 	return sdata;
