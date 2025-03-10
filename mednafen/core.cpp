@@ -5,6 +5,8 @@
 #include "cdrom/CDInterface.h"
 #include "psx/psx.h"
 #include "psx/cdc.h"
+#include "pce/pce.h"
+#include "pce/huc.h"
 
 #include "../core.h"
 
@@ -220,6 +222,19 @@ static void core_settings(CoreSystem system)
 	}
 }
 
+static bool core_is_cd_system(CoreSystem system)
+{
+	switch (system) {
+		case CORE_SYSTEM_PS:
+		case CORE_SYSTEM_SS:
+			return true;
+		case CORE_SYSTEM_TG16:
+			return MDFN_IEN_PCE::PCE_IsCD;
+	}
+
+	return false;
+}
+
 Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 	const void *saveData, size_t saveDataSize)
 {
@@ -257,7 +272,9 @@ Core *CoreLoadGame(CoreSystem system, const char *systemDir, const char *path,
 			CORE_SS_RESET = MDFNI_SetInput(12, 0);
 
 		ctx->input = MDFNI_SetInput(0, 1); // 'gamepad'
-		MDFNI_SetMedia(0, 2, 0, 0); // '2' means 'Tray closed'
+
+		if (core_is_cd_system(system))
+			MDFNI_SetMedia(0, 2, 0, 0); // '2' means 'Tray closed'
 
 	} else {
 		CoreUnloadGame(&ctx);
@@ -337,19 +354,21 @@ void CoreRun(Core *ctx)
 	if (CORE_VIDEO) {
 		int32_t x_off = spec.DisplayRect.x * 4;
 		int32_t y_off = spec.DisplayRect.y;
-		int32_t w = spec.DisplayRect.w > 0 ? spec.DisplayRect.w : ctx->line_widths[0];
+		int32_t w = ctx->line_widths[0] > 0 ? ctx->line_widths[0] : spec.DisplayRect.w;
 		int32_t h = spec.DisplayRect.h;
 		int32_t pitch = ctx->surface->pitchinpix * 4;
 
-		if (ctx->system == CORE_SYSTEM_PS)
-			core_apply_res_hacks(&w, &x_off);
+		if (w > 0 && h > 0) {
+			if (ctx->system == CORE_SYSTEM_PS)
+				core_apply_res_hacks(&w, &x_off);
 
-		int32_t cpitch = w * 4;
+			int32_t cpitch = w * 4;
 
-		for (int32_t y = y_off; y < h; y++)
-			memcpy(ctx->cropped + cpitch * y, (uint8_t *) ctx->surface->pixels + pitch * y + x_off, cpitch);
+			for (int32_t y = 0; y < h; y++)
+				memcpy(ctx->cropped + cpitch * y, (uint8_t *) ctx->surface->pixels + pitch * (y + y_off) + x_off, cpitch);
 
-		CORE_VIDEO(ctx->cropped, CORE_COLOR_FORMAT_RGBA, w, h, cpitch, CORE_VIDEO_OPAQUE);
+			CORE_VIDEO(ctx->cropped, CORE_COLOR_FORMAT_RGBA, w, h, cpitch, CORE_VIDEO_OPAQUE);
+		}
 	}
 
 	if (CORE_AUDIO)
@@ -434,6 +453,11 @@ static void core_button_ss(CoreButton button, bool pressed, uint16_t *s)
 	}
 }
 
+static void core_button_pce(CoreButton button, bool pressed, uint16_t *s)
+{
+	// TODO
+}
+
 void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 {
 	if (!ctx)
@@ -444,6 +468,7 @@ void CoreSetButton(Core *ctx, uint8_t player, CoreButton button, bool pressed)
 	switch (ctx->system) {
 		case CORE_SYSTEM_PS: core_button_psx(button, pressed, &state); break;
 		case CORE_SYSTEM_SS: core_button_ss(button, pressed, &state); break;
+		case CORE_SYSTEM_TG16: core_button_pce(button, pressed, &state); break;
 		default:
 			state = 0;
 			break;

@@ -11,17 +11,18 @@ void MDFNFILE::ApplyIPS(Stream *ips)
 
 MDFNFILE::MDFNFILE(VirtualFS* vfs, const std::string& path, const std::vector<FileExtensionSpecStruct>& known_ext, const char *purpose, int* monocomp_double_ext)
 {
-	core_log("*** MDFNFILE::MDFNFILE:0\n");
+	std::unique_ptr<Stream> tfp(vfs->open(path, VirtualFS::MODE_READ));
+	this->str = std::move(tfp);
 }
 
 MDFNFILE::MDFNFILE(VirtualFS* vfs, const std::string& path, const char *purpose, int* monocomp_double_ext)
 {
-	core_log("*** MDFNFILE::MDFNFILE:1\n");
+	std::unique_ptr<Stream> tfp(vfs->open(path, VirtualFS::MODE_READ));
+	this->str = std::move(tfp);
 }
 
 MDFNFILE::~MDFNFILE()
 {
-	core_log("*** MDFNFILE::~MDFNFILE\n");
 }
 
 VirtualFS* Mednafen::MDFN_OpenArchive(VirtualFS* vfs, const std::string& path, const std::vector<FileExtensionSpecStruct>& known_ext, std::string* path_out)
@@ -41,4 +42,14 @@ void MDFNFILE::Close(void) noexcept
 
 void Mednafen::MDFN_BackupSavFile(const uint8 max_backup_count, const char* sav_ext)
 {
+}
+
+bool Mednafen::MDFN_DumpToFile(const std::string& path, const void *data, const uint64 length, bool throw_on_error)
+{
+	core_log("*** MDFN_DumpToFile\n");
+
+	if (throw_on_error)
+		throw;
+
+	return false;
 }
