@@ -14,6 +14,7 @@ DEFS = \
 	-DLSB_FIRST \
 	-DWANT_PSX_EMU \
 	-DWANT_SS_EMU \
+	-DWANT_PCE_EMU \
 	-DMEDNAFEN_VERSION_NUMERIC=0x00103201 \
 	-DMEDNAFEN_VERSION=\"1.32.1\" \
 	-DSIZEOF_CHAR=1 \
@@ -50,6 +51,7 @@ DEPS_OBJS = \
 	$(PROJ)/src/compress/ZstdDecompressFilter.$(O) \
 	$(PROJ)/src/sound/DSPUtility.$(O) \
 	$(PROJ)/src/sound/Fir_Resampler.$(O) \
+	$(PROJ)/src/sound/okiadpcm.$(O) \
 	$(PROJ)/src/sound/OwlResampler.$(O) \
 	$(PROJ)/src/sound/SwiftResampler.$(O) \
 	$(PROJ)/src/sound/WAVRecord.$(O) \
@@ -79,6 +81,7 @@ DEPS_OBJS = \
 	$(PROJ)/src/cdrom/lec.$(O) \
 	$(PROJ)/src/cdrom/l-ec.$(O) \
 	$(PROJ)/src/cdrom/recover-raw.$(O) \
+	$(PROJ)/src/cdrom/scsicd.$(O) \
 	$(PROJ)/src/mpcdec/crc32.$(O) \
 	$(PROJ)/src/mpcdec/huffman.$(O) \
 	$(PROJ)/src/mpcdec/mpc_bits_reader.$(O) \
@@ -141,7 +144,10 @@ MDFN_OBJS = \
 
 HW_OBJS = \
 	$(PROJ)/src/hw_cpu/m68k/gen.$(O) \
-	$(PROJ)/src/hw_cpu/m68k/m68k.$(O)
+	$(PROJ)/src/hw_cpu/m68k/m68k.$(O) \
+	$(PROJ)/src/hw_misc/arcade_card/arcade_card.$(O) \
+	$(PROJ)/src/hw_sound/pce_psg/pce_psg.$(O) \
+	$(PROJ)/src/hw_video/huc6270/vdc.$(O)
 
 PSX_OBJS = \
 	$(PROJ)/src/cheat_formats/psx.$(O) \
@@ -207,6 +213,21 @@ SS_OBJS = \
 	$(PROJ)/src/ss/vdp2.$(O) \
 	$(PROJ)/src/ss/vdp2_render.$(O)
 
+PCE_OBJS = \
+	$(PROJ)/src/pce/input/gamepad.$(O) \
+	$(PROJ)/src/pce/input/mouse.$(O) \
+	$(PROJ)/src/pce/input/tsushinkb.$(O) \
+	$(PROJ)/src/pce/dis6280.$(O) \
+	$(PROJ)/src/pce/hes.$(O) \
+	$(PROJ)/src/pce/huc.$(O) \
+	$(PROJ)/src/pce/huc6280.$(O) \
+	$(PROJ)/src/pce/input.$(O) \
+	$(PROJ)/src/pce/mcgenjin.$(O) \
+	$(PROJ)/src/pce/pce.$(O) \
+	$(PROJ)/src/pce/pcecd.$(O) \
+	$(PROJ)/src/pce/tsushin.$(O) \
+	$(PROJ)/src/pce/vce.$(O)
+
 SHIM_OBJS = \
 	shim/FileStream.$(O) \
 	shim/file.$(O) \
@@ -223,4 +244,5 @@ OBJS = \
 	$(MDFN_OBJS) \
 	$(HW_OBJS) \
 	$(PSX_OBJS) \
-	$(SS_OBJS)
+	$(SS_OBJS) \
+	$(PCE_OBJS)
