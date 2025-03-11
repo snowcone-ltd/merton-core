@@ -308,6 +308,8 @@ void CoreRun(Core *ctx)
 	if (!ctx)
 		return;
 
+	CorePauseThreads(ctx, false);
+
 	if (!ctx->game_thread)
 		ctx->game_thread = SDL_CreateThread(core_game_thread, NULL, ctx);
 
@@ -342,7 +344,8 @@ void CoreReset(Core *ctx)
 	if (!ctx)
 		return;
 
-	CoreDoCommand(M64CMD_RESET, 0, NULL);
+	// '1' means 'hard reset'
+	CoreDoCommand(M64CMD_RESET, 1, NULL);
 }
 
 double CoreGetFrameRate(Core *ctx)
@@ -420,6 +423,7 @@ void *CoreGetState(Core *ctx, size_t *size)
 
 	osal_lock();
 
+	CorePauseThreads(ctx, false);
 	m64p_error r = CoreDoCommand(M64CMD_STATE_SAVE, savestates_type_m64p, "memory");
 
 	if (r == M64ERR_SUCCESS) {
@@ -443,6 +447,7 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 
 	osal_set_read_data(state, size);
 
+	CorePauseThreads(ctx, false);
 	m64p_error r = CoreDoCommand(M64CMD_STATE_LOAD, 0, "memory");
 
 	return r == M64ERR_SUCCESS;
