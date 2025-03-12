@@ -247,7 +247,7 @@ bool CoreSetState(Core *ctx, const void *state, size_t size)
 	return true;
 }
 
-void *CoreGetSaveData(Core *ctx, size_t *size)
+void *CoreGetSaveData(Core *ctx, size_t *size, CoreSaveDataType *type)
 {
 	return NULL;
 }

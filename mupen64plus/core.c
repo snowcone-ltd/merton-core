@@ -358,7 +358,7 @@ float CoreGetAspectRatio(Core *ctx)
 	return 4.0f / 3.0f;
 }
 
-void *CoreGetSaveData(Core *ctx, size_t *size)
+void *CoreGetSaveData(Core *ctx, size_t *size, CoreSaveDataType *type)
 {
 	if (!ctx)
 		return NULL;
@@ -373,18 +373,22 @@ void *CoreGetSaveData(Core *ctx, size_t *size)
 	switch (ROM_SETTINGS.savetype) {
 		case SAVETYPE_EEPROM_4K:
 			*size = 0x200;
+			*type = CORE_SAVE_DATA_EEPROM;
 			ptr = eeprom->data;
 			break;
 		case SAVETYPE_EEPROM_16K:
 			*size = 0x800;
+			*type = CORE_SAVE_DATA_EEPROM;
 			ptr = eeprom->data;
 			break;
 		case SAVETYPE_SRAM:
 			*size = SRAM_SIZE;
+			*type = CORE_SAVE_DATA_SRAM;
 			ptr = sram->data;
 			break;
 		case SAVETYPE_FLASH_RAM:
 			*size = FLASHRAM_SIZE;
+			*type = CORE_SAVE_DATA_FLASH_RAM;
 			ptr = flashram->data;
 			break;
 	}
