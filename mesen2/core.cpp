@@ -473,7 +473,7 @@ bool CoreInsertDisc(Core *ctx, const char *path)
 	return false;
 }
 
-void *CoreGetSaveData(Core *ctx, size_t *size)
+void *CoreGetSaveData(Core *ctx, size_t *size, CoreSaveDataType *type)
 {
 	if (!ctx)
 		return NULL;

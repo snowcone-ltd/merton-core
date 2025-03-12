@@ -296,7 +296,7 @@ bool CoreInsertDisc(Core *ctx, const char *path)
 	return System::InsertMedia(path);
 }
 
-void *CoreGetSaveData(Core *ctx, size_t *size)
+void *CoreGetSaveData(Core *ctx, size_t *size, CoreSaveDataType *type)
 {
 	if (!ctx)
 		return NULL;
