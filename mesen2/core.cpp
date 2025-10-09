@@ -229,8 +229,8 @@ static void core_set_gameboy_settings(Core *ctx)
 	// Do not blur frames
 	cfg.BlendFrames = false;
 
-	// Use original gameboy by default
-	// cfg.Model = GameboyModel::AutoFavorGb;
+	// Original vs. color
+	cfg.Model = CMP_ENUM("model", "Game Boy") ? GameboyModel::Gameboy : GameboyModel::GameboyColor;
 
 	ctx->emu->GetSettings()->SetGameboyConfig(cfg);
 }

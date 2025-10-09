@@ -23,6 +23,7 @@ static CoreSetting *core_setting(const char *name)
 }
 
 static CoreSetting CORE_SETTINGS[] = {{
+// NES
 	CORE_SYSTEM_NES,
 	CORE_SETTING_BOOL,
 	CORE_SETTING_GROUP_VIDEO,
@@ -49,4 +50,15 @@ static CoreSetting CORE_SETTINGS[] = {{
 	{""},
 	"true",
 	0,
+
+// Game Boy
+}, {
+	CORE_SYSTEM_GAMEBOY,
+	CORE_SETTING_ENUM,
+	CORE_SETTING_GROUP_GENERAL,
+	"Model",
+	"model",
+	{"Game Boy", "Game Boy Color"},
+	"Game Boy",
+	2,
 }};
