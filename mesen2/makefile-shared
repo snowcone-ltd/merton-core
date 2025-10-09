@@ -226,6 +226,7 @@ CORE_SNES_OBJS = \
 	$(PROJ)/Core/SNES/DSP/DspVoice.$(O) \
 	$(PROJ)/Core/SNES/Input/Multitap.$(O) \
 	$(PROJ)/Core/SNES/Input/SnesController.$(O) \
+	$(PROJ)/Core/SNES/Input/SnesRumbleController.$(O) \
 	$(PROJ)/Core/SNES/AluMulDiv.$(O) \
 	$(PROJ)/Core/SNES/BaseCartridge.$(O) \
 	$(PROJ)/Core/SNES/InternalRegisters.$(O) \

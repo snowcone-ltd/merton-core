@@ -16,7 +16,7 @@ git -C mednafen/mednafen checkout f44bdf3cddc4937c273d2ff10087efe0da0399d7
 git clone git@github.com:SourMesen/Mesen2 mesen2/Mesen2
 git -C mesen2/Mesen2 fetch
 git -C mesen2/Mesen2 reset --hard HEAD
-git -C mesen2/Mesen2 checkout 211b42e91ca323d9a8df4accbd277a187765d127
+git -C mesen2/Mesen2 checkout fabc9a62174f8734a113df6d244f5539ef6b8fcf
 
 git clone git@github.com:mgba-emu/mgba mgba/mgba
 git -C mgba/mgba fetch

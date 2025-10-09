@@ -181,6 +181,7 @@ template void Debugger::ProcessMemoryAccess<CpuType::Sms, MemoryType::SmsPort, M
 
 template void Debugger::ProcessIdleCycle<CpuType::Snes>();
 template void Debugger::ProcessIdleCycle<CpuType::Sa1>();
+template void Debugger::ProcessIdleCycle<CpuType::Pce>();
 
 template void Debugger::ProcessHaltedCpu<CpuType::Snes>();
 template void Debugger::ProcessHaltedCpu<CpuType::Spc>();
