@@ -11,6 +11,7 @@ INCLUDES = \
 	-I$(PROJ)/core/m68k \
 	-I$(PROJ)/core/ntsc \
 	-I$(PROJ)/core/sound \
+	-I$(PROJ)/core/sound/minimp3 \
 	-I$(PROJ)/core/z80
 
 DEFS = \
@@ -29,11 +30,13 @@ OBJS = \
 	$(PROJ)/core/cart_hw/eeprom_93c.$(O) \
 	$(PROJ)/core/cart_hw/eeprom_i2c.$(O) \
 	$(PROJ)/core/cart_hw/eeprom_spi.$(O) \
+	$(PROJ)/core/cart_hw/flash_cfi.$(O) \
 	$(PROJ)/core/cart_hw/ggenie.$(O) \
 	$(PROJ)/core/cart_hw/md_cart.$(O) \
 	$(PROJ)/core/cart_hw/megasd.$(O) \
 	$(PROJ)/core/cart_hw/sms_cart.$(O) \
 	$(PROJ)/core/cart_hw/sram.$(O) \
+	$(PROJ)/core/cart_hw/yx5200.$(O) \
 	$(PROJ)/core/cd_hw/cd_cart.$(O) \
 	$(PROJ)/core/cd_hw/cdc.$(O) \
 	$(PROJ)/core/cd_hw/cdd.$(O) \

@@ -6,7 +6,7 @@ git -C duckstation/duckstation checkout 5a185654ba5d50ad137a5f7fc4c80854e66addb0
 git clone git@github.com:ekeeke/Genesis-Plus-GX genesis-plus-gx/Genesis-Plus-GX
 git -C genesis-plus-gx/Genesis-Plus-GX fetch
 git -C genesis-plus-gx/Genesis-Plus-GX reset --hard HEAD
-git -C genesis-plus-gx/Genesis-Plus-GX checkout a203bbf2ab6c7164051ff90ad30cc8f6352a56ac
+git -C genesis-plus-gx/Genesis-Plus-GX checkout 220b22d96fe196488c3f3a2b32175f7f61283800
 
 git clone git@github.com:snowcone-ltd/mednafen mednafen/mednafen
 git -C mednafen/mednafen fetch
