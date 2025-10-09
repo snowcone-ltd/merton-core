@@ -26,7 +26,7 @@ git -C mgba/mgba checkout 3571b112dc821d3612e5073afb8b6be41a35dc55
 git clone git@github.com:mupen64plus/mupen64plus-core mupen64plus/mupen64plus-core
 git -C mupen64plus/mupen64plus-core fetch
 git -C mupen64plus/mupen64plus-core reset --hard HEAD
-git -C mupen64plus/mupen64plus-core checkout e170c409fb006aa38fd02031b5eefab6886ec125
+git -C mupen64plus/mupen64plus-core checkout 614c363d90002c577d26f06a22eb0ef95bf818ad
 
 git clone git@github.com:ata4/angrylion-rdp-plus mupen64plus/angrylion-rdp-plus
 git -C mupen64plus/angrylion-rdp-plus fetch
@@ -36,7 +36,7 @@ git -C mupen64plus/angrylion-rdp-plus checkout 9c8b9ed3e7d7f00dff8bc872ccdd3fba1
 git clone git@github.com:mupen64plus/mupen64plus-rsp-cxd4 mupen64plus/mupen64plus-rsp-cxd4
 git -C mupen64plus/mupen64plus-rsp-cxd4 fetch
 git -C mupen64plus/mupen64plus-rsp-cxd4 reset --hard HEAD
-git -C mupen64plus/mupen64plus-rsp-cxd4 checkout 162860dae86edd14e40601e7178bd7087b25a391
+git -C mupen64plus/mupen64plus-rsp-cxd4 checkout 01c6cd826ebd0eb975b4aca3297170fe6858e49d
 
 git clone git@github.com:Themaister/parallel-rdp-standalone mupen64plus/parallel-rdp
 git -C mupen64plus/parallel-rdp fetch
