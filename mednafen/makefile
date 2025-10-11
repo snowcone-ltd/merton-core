@@ -1,6 +1,9 @@
 !INCLUDE ..\windows-shared
 !INCLUDE makefile-shared
 
+# XXX Make sure the symlink rename/mednafen is properly created on Windows
+# XXX Must have clang available in path, clang headers must be in USERPROFILE\Documents\clang\include
+
 .cpp.obj:
 	clang $(INCLUDES) $(DEFS) $(FLAGS) -std=c++14 -c -o $@ $<
 
@@ -41,7 +44,7 @@ DEFS = $(DEFS) \
 	-Dstrcmpi=_stricmp
 
 INCLUDES = $(INCLUDES) \
-	-IC:\Users\cdd\Documents\clang\include
+	-I$(USERPROFILE)\Documents\clang\include
 
 LIBS = \
 	libvcruntime.lib \
