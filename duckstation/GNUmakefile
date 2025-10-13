@@ -46,7 +46,11 @@ endif ### Linux
 ifeq ($(UNAME_S), Darwin)
 
 LIBS := $(LIBS) \
-	-lc++
+	-lc++ \
+	-framework IOKit
+
+FLAGS := $(FLAGS) \
+	-Wno-deprecated-non-prototype
 
 endif ### Apple
 
