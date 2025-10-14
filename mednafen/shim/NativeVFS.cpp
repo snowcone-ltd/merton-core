@@ -2,6 +2,8 @@
 #include "NativeVFS.h"
 #include "FileStream.h"
 
+#include <sys/stat.h>
+
 using namespace Mednafen;
 
 void core_log(const char *fmt, ...);

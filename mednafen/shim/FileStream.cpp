@@ -1,5 +1,7 @@
 #include "FileStream.h"
 
+#include <sys/stat.h>
+
 #include "filestream-cb.h"
 
 using namespace Mednafen;
