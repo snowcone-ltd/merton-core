@@ -23,6 +23,7 @@ FLAGS := $(FLAGS) \
 	-Wno-absolute-value
 
 DEFS := $(DEFS) \
+	-DMDFN_DISABLE_PICPIE_ERRWARN \
 	-DHAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP \
 	-D_FILE_OFFSET_BITS=64 \
 	-DMDFN_PSS_STYLE=1 \
@@ -44,9 +45,6 @@ endif ### Linux
 
 ### Apple
 ifeq ($(UNAME_S), Darwin)
-
-DEFS := $(DEFS) \
-	-DMDFN_DISABLE_PICPIE_ERRWARN
 
 LIBS := $(LIBS) \
 	-lc++
