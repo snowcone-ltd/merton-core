@@ -28,7 +28,8 @@ FLAGS = \
 	-Wno-sign-compare \
 	-Wno-unused-variable \
 	-Wno-self-assign \
-	-Wno-shift-negative-value
+	-Wno-shift-negative-value \
+	-Wno-character-conversion
 
 DEFS = $(DEFS) \
 	-DWIN32 \
@@ -45,6 +46,7 @@ DEFS = $(DEFS) \
 	-Dstrcmpi=_stricmp
 
 INCLUDES = $(INCLUDES) \
+	-Irename\windows \
 	-I$(USERPROFILE)\Documents\clang\include
 
 LIBS = \

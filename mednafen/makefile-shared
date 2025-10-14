@@ -4,7 +4,7 @@ NAME = mednafen
 INCLUDES = \
 	-I.. \
 	-Irename \
-	-Ideps\zlib \
+	-Ideps/zlib \
 	-I$(PROJ) \
 	-I$(PROJ)/src \
 	-I$(PROJ)/src/compress \
