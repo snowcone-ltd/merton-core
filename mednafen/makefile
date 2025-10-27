@@ -28,8 +28,7 @@ FLAGS = \
 	-Wno-sign-compare \
 	-Wno-unused-variable \
 	-Wno-self-assign \
-	-Wno-shift-negative-value \
-	-Wno-character-conversion
+	-Wno-shift-negative-value
 
 DEFS = $(DEFS) \
 	-DWIN32 \
